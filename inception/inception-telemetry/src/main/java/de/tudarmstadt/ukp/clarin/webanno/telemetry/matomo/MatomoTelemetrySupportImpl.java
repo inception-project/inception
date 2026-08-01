@@ -42,8 +42,9 @@ import org.apache.wicket.model.IModel;
 import org.matomo.java.tracking.MatomoRequest;
 import org.matomo.java.tracking.MatomoTracker;
 import org.matomo.java.tracking.TrackerConfiguration;
+import org.matomo.java.tracking.parameters.CustomVariable;
+import org.matomo.java.tracking.parameters.CustomVariables;
 import org.matomo.java.tracking.parameters.VisitorId;
-import org.piwik.java.tracking.CustomVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
@@ -341,16 +342,18 @@ public class MatomoTelemetrySupportImpl
             request.setActionName(aAction);
             request.setVisitorId(VisitorId.fromHex(format("%016x", uuid.getMostSignificantBits())));
             request.setUserId(id.getId());
-            request.setVisitCustomVariable(new CustomVariable("app", applicationName), 1);
-            request.setVisitCustomVariable(
+            var customVariables = new CustomVariables();
+            customVariables.add(new CustomVariable("app", applicationName), 1);
+            customVariables.add(
                     new CustomVariable("version", getVersionProperties().getProperty(PROP_VERSION)),
                     2);
-            request.setVisitCustomVariable(new CustomVariable("activeUsers",
+            customVariables.add(new CustomVariable("activeUsers",
                     String.valueOf(sessionRegistry.getAllPrincipals().size())), 3);
-            request.setVisitCustomVariable(new CustomVariable("enabledUsers",
+            customVariables.add(new CustomVariable("enabledUsers",
                     String.valueOf(userService.listEnabledUsers().size())), 4);
-            request.setVisitCustomVariable(new CustomVariable("deploymentMode",
+            customVariables.add(new CustomVariable("deploymentMode",
                     telemetryService.getDeploymentMode().toString()), 5);
+            request.setVisitCustomVariables(customVariables);
 
             getTracker().sendRequestAsync(request);
             LOG.debug("Telemetry sent ({})", aAction);

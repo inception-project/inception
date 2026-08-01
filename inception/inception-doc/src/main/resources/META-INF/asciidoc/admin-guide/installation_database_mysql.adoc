@@ -29,11 +29,7 @@ If you want to use {product-name} with MySQL instead of MariaDB, you may also ha
 database.driver=org.mariadb.jdbc.Driver
 ----
 
-In most cases, {product-name} can auto-configure the database dialect to use. However, in some cases, this auto-detection may fail - in particular when using MySQL. For example, when using INCEpTION with MySQL 8, it may be necessary to explicitly add a database dialect configuration to the `settings.properties` file:
-
-----
-database.dialect=org.hibernate.dialect.MySQL8Dialect
-----
+When a `mysql` JDBC URL is used, {product-name} automatically configures a suitable database dialect, so normally no `database.dialect` setting is required. Note that the versioned Hibernate dialect classes (e.g. `MySQL8Dialect`) no longer exist in current Hibernate versions - if you have such a setting left over from an older installation, remove it.
 
 Finally, recent versions of MySQL may need this setting to avoid schema validation to fail during startup:
 

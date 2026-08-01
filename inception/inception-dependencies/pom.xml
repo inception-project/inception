@@ -297,6 +297,17 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
           </exclusion>
+          <!--
+            mock-oauth2-server does not use kotlinx-serialization itself, but pulls it in
+            transitively. Merely having it on the test classpath makes Spring auto-register
+            KotlinSerializationJsonMessageConverter ahead of the Jackson converter, which then
+            fails for every plain Java message class (e.g. MTaskStateUpdate) sent over
+            WebSocket/STOMP.
+          -->
+          <exclusion>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-serialization-json-jvm</artifactId>
+          </exclusion>
         </exclusions>
       </dependency>
       <dependency>
