@@ -24,6 +24,23 @@ NOTE: It is a good idea to back up your installation and data before an upgrade.
       you can actually re-create a working installation by restoring your backup. A backup which cannot be
       successfully restored is worthless.
 
+== INCEpTION 42.0
+
+=== Legacy remote API disabled by default
+
+The legacy WebAnno remote API under `/api/v1` is deprecated and is no longer enabled along with the
+remote API. Previously, `remote-api.enabled=true` enabled both the AERO API (`/api/aero/v1`) and the
+legacy API. Now, the legacy API additionally requires `remote-api.legacy.enabled=true` in the
+`settings.properties` file.
+
+If you have clients accessing `/api/v1`, they will stop working after the upgrade unless you add
+that setting. Mind that the legacy API will be removed entirely in a future version - it is not
+supported by pycaprio and it will not be extended to support project slugs. Hence, it is
+recommended to migrate such clients to the AERO API instead of enabling the legacy API again.
+See <<sect_remote_api>>.
+
+Clients using the AERO API under `/api/aero/v1` are not affected.
+
 == INCEpTION 41.0
 
 === Lucene 10 upgrade
