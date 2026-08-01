@@ -33,8 +33,12 @@ Note the change of the filename to `inception.jar`.
 +
 [source,text]
 ----
-JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception"
+JAVA_OPTS="-Djava.awt.headless=true -Dinception.home=/srv/inception --add-modules jdk.incubator.vector --enable-native-access=ALL-UNNAMED"
 ----
++
+NOTE: The `--add-modules` and `--enable-native-access` options are used by the search index.
+Without them, {product-name} still works, but it logs warnings during startup and the vector
+search runs more slowly. See <<sect_jvm_options>> for details.
 +
 * In the previous step, you have already created the `/srv/inception/settings.properties` file.
 You *may optionally* configure the Tomcat port using the following line
@@ -108,6 +112,32 @@ $ systemctl stop inception
 ----
 
 NOTE: If you encounter strange errors, e.g. `+{status=203/EXEC}+`  and INCEpTION starts when directly executing the jar but not via systemd, then we recommend to disable SELinux.
+
+[[sect_jvm_options]]
+== Recommended JVM options
+
+The search index (Apache Lucene) uses two modern JVM facilities that must be explicitly enabled.
+Both options are JVM options, so they need to appear *before* the `-jar` argument on the command
+line. In the service file shown above, `$JAVA_OPTS` is already placed accordingly, so adding them
+to `inception.conf` is sufficient.
+
+`--add-modules jdk.incubator.vector`::
+  Enables the Vector API which is used to speed up vector-based (semantic) search. Without it,
+  {product-name} logs `Java vector incubator module is not readable` during startup and falls back
+  to a slower implementation. As the name suggests, this is still an *incubator* module and it must
+  therefore be enabled explicitly.
+
+`--enable-native-access=ALL-UNNAMED`::
+  Permits the use of the foreign function and memory API which is used to access the index files.
+  Without it, the JVM prints a `WARNING: A restricted method in java.lang.foreign.Linker has been
+  called` message during startup. Note that future Java versions are expected to turn this warning
+  into an error.
++
+NOTE: `ALL-UNNAMED` is required here because {product-name} is started from an executable JAR, so
+all classes are loaded into the unnamed module and the permission cannot be narrowed down further.
+
+The {product-name} Docker image as well as the Windows and macOS installers already set these
+options. They only need to be configured manually when running the standalone JAR.
 
 == Loading extra Java libraries
 

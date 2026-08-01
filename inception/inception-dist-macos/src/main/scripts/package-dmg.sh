@@ -99,6 +99,8 @@ echo "Building ${TARGET_ARCH} DMG via $JPACKAGE..."
   --main-class "$MAIN_CLASS" \
   --java-options -Xmx4g \
   --java-options -Dinception.app-bundle=true \
+  --java-options "--add-modules jdk.incubator.vector" \
+  --java-options "--enable-native-access=ALL-UNNAMED" \
   --icon "$ICON" \
   --mac-sign \
   --mac-signing-key-user-name "$SIGNING_IDENTITY" \
