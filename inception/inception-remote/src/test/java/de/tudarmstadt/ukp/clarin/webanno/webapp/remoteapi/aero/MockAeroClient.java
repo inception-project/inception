@@ -66,7 +66,7 @@ class MockAeroClient
         roles = aRoles;
     }
 
-    ResultActions importTextDocument(long aProjectId, String aName, String aContent)
+    ResultActions importTextDocument(Object aProjectId, String aName, String aContent)
         throws Exception
     {
         return mvc.perform(multipart(API_BASE + "/projects/" + aProjectId + "/documents")
@@ -77,7 +77,7 @@ class MockAeroClient
                 .param("format", "text"));
     }
 
-    ResultActions exportTextDocument(long aProjectId, long aDocId) throws Exception
+    ResultActions exportTextDocument(Object aProjectId, long aDocId) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/documents/" + aDocId)
                 .with(csrf().asHeader()) //
@@ -85,29 +85,73 @@ class MockAeroClient
                 .param("format", "text"));
     }
 
-    ResultActions deleteDocument(long aProjectId, long aDocId) throws Exception
+    ResultActions deleteDocument(Object aProjectId, long aDocId) throws Exception
     {
         return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/documents/" + aDocId) //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions listDocuments(long aProjectId) throws Exception
+    ResultActions listDocuments(Object aProjectId) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/documents") //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions createProject(String aName) throws Exception
+    ResultActions createProject(String aSlug) throws Exception
     {
         return mvc.perform(post(API_BASE + "/projects") //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)) //
+                .param("slug", aSlug));
+    }
+
+    ResultActions createProject(String aSlug, String aTitle) throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)) //
+                .param("slug", aSlug) //
+                .param("title", aTitle));
+    }
+
+    /**
+     * Create a project using the deprecated {@code name} parameter instead of {@code slug}.
+     */
+    ResultActions createProjectUsingNameParameter(String aSlug) throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)) //
+                .param("name", aSlug));
+    }
+
+    ResultActions createProjectUsingSlugAndNameParameters(String aSlug, String aName)
+        throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)) //
+                .param("slug", aSlug) //
                 .param("name", aName));
     }
 
-    ResultActions deleteProject(long aProjectId) throws Exception
+    ResultActions createProjectWithoutSlugOrName() throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
+    }
+
+    ResultActions readProject(Object aProjectId) throws Exception
+    {
+        return mvc.perform(get(API_BASE + "/projects/" + aProjectId) //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)));
+    }
+
+    ResultActions deleteProject(Object aProjectId) throws Exception
     {
         return mvc.perform(delete(API_BASE + "/projects/" + aProjectId) //
                 .with(csrf().asHeader()) //
@@ -121,7 +165,7 @@ class MockAeroClient
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions exportProject(long aProjectId) throws Exception
+    ResultActions exportProject(Object aProjectId) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/export.zip") //
                 .with(csrf().asHeader()) //
@@ -141,13 +185,13 @@ class MockAeroClient
                 .param("importPermissions", Boolean.toString(aImportPermissions)));
     }
 
-    ResultActions createAnnotations(long aProjectId, long aDocId, String aUser, String aContent)
+    ResultActions createAnnotations(Object aProjectId, long aDocId, String aUser, String aContent)
         throws Exception
     {
         return createAnnotations(aProjectId, aDocId, aUser, aContent, null);
     }
 
-    ResultActions createAnnotations(long aProjectId, long aDocId, String aUser, String aContent,
+    ResultActions createAnnotations(Object aProjectId, long aDocId, String aUser, String aContent,
             String aState)
         throws Exception
     {
@@ -161,7 +205,7 @@ class MockAeroClient
                 .param("state", aState));
     }
 
-    ResultActions updateAnnotationState(int aProjectId, int aDocId, String aUser, String aState)
+    ResultActions updateAnnotationState(Object aProjectId, int aDocId, String aUser, String aState)
         throws Exception
     {
         var url = API_BASE + "/projects/" + aProjectId + "/documents/" + aDocId + "/annotations/"
@@ -172,7 +216,7 @@ class MockAeroClient
                 .param("state", aState));
     }
 
-    ResultActions listAnnotations(long aProjectId, long aDocId) throws Exception
+    ResultActions listAnnotations(Object aProjectId, long aDocId) throws Exception
     {
         var url = API_BASE + "/projects/" + aProjectId + "/documents/" + aDocId + "/annotations";
         return mvc.perform(get(url) //
@@ -180,7 +224,7 @@ class MockAeroClient
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions importCurations(long aProjectId, long aDocId, String aContent, String aState)
+    ResultActions importCurations(Object aProjectId, long aDocId, String aContent, String aState)
         throws Exception, UnsupportedEncodingException
     {
         var url = API_BASE + "/projects/" + aProjectId + "/documents/" + aDocId + "/curation";
@@ -192,7 +236,7 @@ class MockAeroClient
                 .param("state", aState));
     }
 
-    ResultActions deleteCurations(long aProjectId, long aDocId) throws Exception
+    ResultActions deleteCurations(Object aProjectId, long aDocId) throws Exception
     {
         var url = API_BASE + "/projects/" + aProjectId + "/documents/" + aDocId + "/curation";
         return mvc.perform(delete(url) //
@@ -200,7 +244,8 @@ class MockAeroClient
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions grantProjectRole(long aProjectId, String aUser, String... aRoles) throws Exception
+    ResultActions grantProjectRole(Object aProjectId, String aUser, String... aRoles)
+        throws Exception
     {
         return mvc.perform(post(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
                 .with(csrf().asHeader()) //
@@ -208,28 +253,28 @@ class MockAeroClient
                 .param("roles", aRoles));
     }
 
-    ResultActions grantProjectRoleWithoutRoles(long aProjectId, String aUser) throws Exception
+    ResultActions grantProjectRoleWithoutRoles(Object aProjectId, String aUser) throws Exception
     {
         return mvc.perform(post(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions listPermissionsForUser(long aProjectId, String aUser) throws Exception
+    ResultActions listPermissionsForUser(Object aProjectId, String aUser) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions listPermissionsForProject(long aProjectId) throws Exception
+    ResultActions listPermissionsForProject(Object aProjectId) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/permissions") //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions revokeProjectRole(long aProjectId, String aUser, String... aRoles)
+    ResultActions revokeProjectRole(Object aProjectId, String aUser, String... aRoles)
         throws Exception
     {
         return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
@@ -238,35 +283,35 @@ class MockAeroClient
                 .param("roles", aRoles));
     }
 
-    ResultActions revokeProjectRoleWithoutRoles(long aProjectId, String aUser) throws Exception
+    ResultActions revokeProjectRoleWithoutRoles(Object aProjectId, String aUser) throws Exception
     {
         return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/permissions/" + aUser) //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions listTasks(long aProjectId) throws Exception
+    ResultActions listTasks(Object aProjectId) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/tasks") //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions cancelTask(long aProjectId, long aTaskId) throws Exception
+    ResultActions cancelTask(Object aProjectId, long aTaskId) throws Exception
     {
         return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/tasks/" + aTaskId) //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions listUsers(long aProjectId) throws Exception
+    ResultActions listUsers(Object aProjectId) throws Exception
     {
         return mvc.perform(get(API_BASE + "/projects/" + aProjectId + "/users") //
                 .with(csrf().asHeader()) //
                 .with(user(username).roles(roles)));
     }
 
-    ResultActions createUser(long aProjectId, String aDisplayName) throws Exception
+    ResultActions createUser(Object aProjectId, String aDisplayName) throws Exception
     {
         return mvc.perform(post(API_BASE + "/projects/" + aProjectId + "/users") //
                 .with(csrf().asHeader()) //
@@ -274,7 +319,7 @@ class MockAeroClient
                 .param("name", aDisplayName));
     }
 
-    ResultActions deleteUser(long aProjectId, String aDisplayName) throws Exception
+    ResultActions deleteUser(Object aProjectId, String aDisplayName) throws Exception
     {
         return mvc.perform(delete(API_BASE + "/projects/" + aProjectId + "/users") //
                 .with(csrf().asHeader()) //

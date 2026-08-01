@@ -88,9 +88,10 @@ public class TaskBulkPredictionController
     public ResponseEntity<RResponse<RTaskState>> create( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @RequestParam(PARAM_RECOMMENDER_NAME) //
             @Schema(description = """
                     Recommender name.
@@ -161,7 +162,7 @@ public class TaskBulkPredictionController
         return ResponseEntity.ok(new RResponse<>(new RTaskState(task)));
     }
 
-    private void assertRecommenderCanBeTriggered(long aProjectId, Recommender aRecommender)
+    private void assertRecommenderCanBeTriggered(String aProjectId, Recommender aRecommender)
     {
         if (!aRecommender.isEnabled()) {
             throw new IllegalArgumentException("Recommender [" + aRecommender.getName()
@@ -188,7 +189,7 @@ public class TaskBulkPredictionController
         }
     }
 
-    private HashMap<AnnotationFeature, Serializable> convertMetadata(long aProjectId,
+    private HashMap<AnnotationFeature, Serializable> convertMetadata(String aProjectId,
             List<RMetadataAnnotation> aMetadata, Project project)
     {
         var metadata = new HashMap<AnnotationFeature, Serializable>();

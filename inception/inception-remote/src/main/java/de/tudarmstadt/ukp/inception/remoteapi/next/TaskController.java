@@ -65,9 +65,10 @@ public class TaskController
     public ResponseEntity<RResponse<List<RTaskState>>> list( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId)
+            String aProjectId)
         throws Exception
     {
         var project = getProject(aProjectId);
@@ -91,9 +92,10 @@ public class TaskController
     public ResponseEntity<RResponse<Void>> cancel( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_TASK_ID) //
             @Schema(description = """
                     Task identifier.

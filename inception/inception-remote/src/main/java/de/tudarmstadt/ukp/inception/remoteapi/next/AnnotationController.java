@@ -72,9 +72,10 @@ public class AnnotationController
     public ResponseEntity<RResponse<RAnnotation>> updateState( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.

@@ -122,11 +122,19 @@ public class AeroProjectController
             consumes = { ALL_VALUE, MULTIPART_FORM_DATA_VALUE }, //
             produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<RProject>> create( //
-            @RequestParam(PARAM_NAME) //
+            @RequestParam(PARAM_SLUG) //
             @Schema(description = """
                     URL slug of the project. This is used to create a URL for the project.
+                    Exactly one of `slug` or the deprecated `name` must be provided.
                     """) //
-            String aSlug, //
+            Optional<String> aSlugParam, //
+            @RequestParam(PARAM_NAME) //
+            @Schema(description = """
+                    URL slug of the project. Deprecated - use `slug` instead. Note that this
+                    parameter sets the slug and not the human-readable project name which is
+                    set via `title`.
+                    """, deprecated = true) //
+            Optional<String> aNameParam, //
             @RequestParam(PARAM_TITLE) //
             @Schema(description = """
                     Name of the project. It not specified, the slug will be used as the name.
@@ -143,6 +151,21 @@ public class AeroProjectController
             UriComponentsBuilder aUcb)
         throws Exception
     {
+        // The slug used to be passed via the "name" parameter which is confusing since the
+        // human-readable project name is passed via "title". Thus, "slug" is preferred nowadays
+        // while "name" is still accepted for backwards compatibility.
+        if (aSlugParam.isPresent() && aNameParam.isPresent()) {
+            throw new IllegalNameException(
+                    "Only one of the parameters [%s] and [%s] can be used at the same time - "
+                            + "prefer [%s] as [%s] is deprecated.",
+                    PARAM_SLUG, PARAM_NAME, PARAM_SLUG, PARAM_NAME);
+        }
+
+        var aSlug = aSlugParam.or(() -> aNameParam)
+                .orElseThrow(() -> new IllegalNameException(
+                        "One of the parameters [%s] or [%s] must be provided.", PARAM_SLUG,
+                        PARAM_NAME));
+
         // Get current user - this will throw an exception if the current user does not exit
         var sessionOwner = getSessionOwner();
 
@@ -197,7 +220,13 @@ public class AeroProjectController
     @Operation(summary = "Get information about a project")
     @GetMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID
             + "}"), produces = APPLICATION_JSON_VALUE)
-    public ResponseEntity<RResponse<RProject>> read(@PathVariable(PARAM_PROJECT_ID) long aProjectId)
+    public ResponseEntity<RResponse<RProject>> read( //
+            @PathVariable(PARAM_PROJECT_ID) //
+            @Schema(description = """
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
+                    """) //
+            String aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -212,9 +241,10 @@ public class AeroProjectController
     public ResponseEntity<RResponse<Void>> delete( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId)
+            String aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -323,9 +353,10 @@ public class AeroProjectController
     public ResponseEntity<InputStreamResource> download( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @RequestParam(value = PARAM_FORMAT) //
             @Schema(description = """
                     If this parameter is specified, the project export will include a second copy

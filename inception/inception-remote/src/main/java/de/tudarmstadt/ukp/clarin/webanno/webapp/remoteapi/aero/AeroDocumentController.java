@@ -96,9 +96,10 @@ public class AeroDocumentController
     public ResponseEntity<RResponse<List<RDocument>>> list( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId)
+            String aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -122,9 +123,10 @@ public class AeroDocumentController
     public ResponseEntity<RResponse<RDocument>> create( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @RequestParam(PARAM_NAME) //
             @Schema(description = """
                     Document name.
@@ -223,9 +225,10 @@ public class AeroDocumentController
     public ResponseEntity<?> read( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -323,9 +326,10 @@ public class AeroDocumentController
     public ResponseEntity<RResponse<Void>> delete( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
