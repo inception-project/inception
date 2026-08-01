@@ -155,3 +155,29 @@ and set the realm to `external:inception-client`.
 NOTE: link:https://pycaprio.readthedocs.io/en/latest/[Pycaprio] does currently not support OAuth2
       authentication - only HTTP basic authentication.
 
+== 🪦 Legacy remote API (deprecated)
+
+Next to the AERO remote API, {product-name} still carries the legacy WebAnno remote API which
+uses `<APPLICATION_URL>/api/v1` as the base URL for its operations. This API is **deprecated** and
+will be removed in a future version. It is not supported by
+link:https://pycaprio.readthedocs.io/en/latest/[pycaprio] and it will not be extended to support
+project slugs. If you are still using it, migrate to the AERO API described above.
+
+The legacy API is disabled by default. Enabling the remote API via `remote-api.enabled=true` no
+longer enables it. If you still need it, you have to opt in explicitly by additionally adding
+`remote-api.legacy.enabled=true` to the `settings.properties` file.
+
+.Legacy remote API settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `remote-api.legacy.enabled`
+| Enable the deprecated legacy remote API (requires `remote-api.enabled=true`)
+| `false`
+| `true`
+|===
+
