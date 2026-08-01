@@ -134,6 +134,51 @@ public class AeroDocumentControllerTest
     }
 
     @Test
+    void testCreateListDeleteDocumentAddressingProjectBySlug() throws Exception
+    {
+        var documentName = "test.txt";
+
+        adminActor.importTextDocument("project1", documentName, "This is a test.") //
+                .andExpect(status().isCreated()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.name").value(documentName));
+
+        adminActor.listDocuments("project1") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body[0].id").value("1")) //
+                .andExpect(jsonPath("$.body[0].name").value(documentName));
+
+        // A document created via the slug must also be visible when addressing the project by ID
+        adminActor.listDocuments(1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body[0].id").value("1"));
+
+        adminActor.exportTextDocument("project1", 1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(TEXT_PLAIN_VALUE)) //
+                .andExpect(content().string("This is a test."));
+
+        adminActor.deleteDocument("project1", 1l) //
+                .andExpect(status().isOk());
+
+        adminActor.listDocuments("project1") //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body").isEmpty());
+    }
+
+    @Test
+    void thatNonManagerCannotImportDocumentsWhenAddressingProjectBySlug() throws Exception
+    {
+        adminActor.grantProjectRole(1, "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk());
+
+        userActor.importTextDocument("project1", "test.txt", "This is a test.") //
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void testImportExportDocument() throws Exception
     {
         var documentName = "test.txt";

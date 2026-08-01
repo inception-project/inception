@@ -74,9 +74,10 @@ public class UserController
     public ResponseEntity<RResponse<List<RUser>>> list( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId)
+            String aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
@@ -101,9 +102,10 @@ public class UserController
     public ResponseEntity<RResponse<RUser>> create( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @RequestParam(PARAM_NAME) //
             @Schema(description = """
                     Display name.
@@ -137,9 +139,10 @@ public class UserController
     public ResponseEntity<RResponse<RUser>> delete( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @RequestParam(PARAM_NAME) //
             @Schema(description = """
                     Display name.

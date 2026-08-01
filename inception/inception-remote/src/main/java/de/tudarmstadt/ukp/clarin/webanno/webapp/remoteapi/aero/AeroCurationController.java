@@ -88,9 +88,10 @@ public class AeroCurationController
     public ResponseEntity<RResponse<RAnnotation>> create( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -175,9 +176,10 @@ public class AeroCurationController
     public ResponseEntity<byte[]> read( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -209,9 +211,10 @@ public class AeroCurationController
     public ResponseEntity<RResponse<Void>> delete( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.

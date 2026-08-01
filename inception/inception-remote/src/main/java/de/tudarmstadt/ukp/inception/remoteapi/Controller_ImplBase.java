@@ -94,6 +94,7 @@ public abstract class Controller_ImplBase
     public static final String PARAM_FILE = "file";
     public static final String PARAM_CONTENT = "content";
     public static final String PARAM_NAME = "name";
+    public static final String PARAM_SLUG = "slug";
     public static final String PARAM_TITLE = "title";
     public static final String PARAM_FORMAT = "format";
     public static final String PARAM_STATE = "state";
@@ -178,10 +179,6 @@ public abstract class Controller_ImplBase
     protected Project getProject(long aProjectId)
         throws ObjectNotFoundException, AccessForbiddenException
     {
-        // Get current user - this will throw an exception if the current user does not exit
-        var sessionOwner = getSessionOwner();
-
-        // Get project
         Project project;
         try {
             project = projectService.getProject(aProjectId);
@@ -190,14 +187,69 @@ public abstract class Controller_ImplBase
             throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
         }
 
+        return assertCanAccessProject(project, String.valueOf(aProjectId));
+    }
+
+    /**
+     * Look up a project either by its numeric ID or by its URL slug. Since a project slug can never
+     * start with a digit (cf. {@link Project#isValidProjectSlug}), a numeric identifier is
+     * unambiguously an ID and any other identifier is unambiguously a slug.
+     *
+     * @param aProjectId
+     *            the numeric project ID or the project slug.
+     * @return the project.
+     * @throws ObjectNotFoundException
+     *             if the project does not exist.
+     * @throws AccessForbiddenException
+     *             if the session owner may not access the project.
+     */
+    protected Project getProject(String aProjectId)
+        throws ObjectNotFoundException, AccessForbiddenException
+    {
+        var projectId = toProjectId(aProjectId);
+        if (projectId != null) {
+            return getProject(projectId.longValue());
+        }
+
+        Project project;
+        try {
+            project = projectService.getProjectBySlug(aProjectId);
+        }
+        catch (NoResultException e) {
+            throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
+        }
+
+        return assertCanAccessProject(project, aProjectId);
+    }
+
+    /**
+     * @return the given identifier as a numeric project ID or {@code null} if it is not a
+     *         well-formed numeric ID and should hence be treated as a project slug.
+     */
+    private static Long toProjectId(String aProjectId)
+    {
+        try {
+            return Long.valueOf(aProjectId);
+        }
+        catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Project assertCanAccessProject(Project aProject, String aProjectId)
+        throws ObjectNotFoundException, AccessForbiddenException
+    {
+        // Get current user - this will throw an exception if the current user does not exit
+        var sessionOwner = getSessionOwner();
+
         // Check for the access
         assertPermission(
                 "User [" + sessionOwner.getUsername() + "] is not allowed to access project ["
                         + aProjectId + "]",
-                projectService.hasRole(sessionOwner, project, MANAGER)
+                projectService.hasRole(sessionOwner, aProject, MANAGER)
                         || userRepository.isAdministrator(sessionOwner));
 
-        return project;
+        return aProject;
     }
 
     protected SourceDocument getDocument(Project aProject, long aDocumentId)
@@ -239,7 +291,7 @@ public abstract class Controller_ImplBase
         }
     }
 
-    protected CAS createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
+    protected CAS createCompatibleCas(String aProjectId, long aDocumentId, MultipartFile aFile,
             Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
@@ -317,7 +369,7 @@ public abstract class Controller_ImplBase
         return annotationCas;
     }
 
-    protected ResponseEntity<byte[]> readAnnotation(long aProjectId, long aDocumentId,
+    protected ResponseEntity<byte[]> readAnnotation(String aProjectId, long aDocumentId,
             String aAnnotatorId, Mode aMode, Optional<String> aFormat)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {

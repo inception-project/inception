@@ -18,17 +18,44 @@
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class RProject
 {
+    @Schema(description = """
+            Numeric project identifier. Can be used in place of the slug when addressing the
+            project in API paths.
+            """)
     public long id;
+
+    /**
+     * @deprecated Use {@link #slug} instead. This field carries the project slug, not the
+     *             human-readable project name - the latter is available as {@link #title}.
+     */
+    @Deprecated
+    @Schema(description = """
+            URL slug of the project. Deprecated - use `slug` instead. Note that this field
+            carries the slug and not the human-readable project name which is available as
+            `title`.
+            """)
     public String name;
+
+    @Schema(description = """
+            URL slug of the project. Can be used in place of the numeric ID when addressing
+            the project in API paths.
+            """)
+    public String slug;
+
+    @Schema(description = """
+            Human-readable name of the project.
+            """)
     public String title;
 
     public RProject(Project aProject)
     {
         id = aProject.getId();
         name = aProject.getSlug();
+        slug = aProject.getSlug();
         title = aProject.getName();
     }
 
@@ -37,6 +64,7 @@ public class RProject
         super();
         id = aId;
         name = aSlug;
+        slug = aSlug;
         title = aTitle;
     }
 }

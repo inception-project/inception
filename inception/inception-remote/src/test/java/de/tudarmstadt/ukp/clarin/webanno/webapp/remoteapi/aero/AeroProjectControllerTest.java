@@ -125,6 +125,150 @@ public class AeroProjectControllerTest
                 .andExpect(jsonPath("$.messages").isEmpty());
     }
 
+    @Test
+    void testReadProjectByIdAndBySlug() throws Exception
+    {
+        adminActor.createProject("project1") //
+                .andExpect(status().isCreated()) //
+                .andExpect(jsonPath("$.body.id").value("1"));
+
+        adminActor.readProject(1l) //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.slug").value("project1"));
+
+        adminActor.readProject("project1") //
+                .andExpect(status().isOk()) //
+                .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
+                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.slug").value("project1"));
+    }
+
+    @Test
+    void testReadProjectByUnknownSlugIsNotFound() throws Exception
+    {
+        adminActor.createProject("project1") //
+                .andExpect(status().isCreated());
+
+        adminActor.readProject("no-such-project") //
+                .andExpect(status().isNotFound()) //
+                .andExpect(jsonPath("$.messages[0].level").value("ERROR")) //
+                .andExpect(
+                        jsonPath("$.messages[0].message").value(containsString("no-such-project")));
+    }
+
+    @Test
+    void testReadProjectByUnknownIdIsNotFound() throws Exception
+    {
+        adminActor.createProject("project1") //
+                .andExpect(status().isCreated());
+
+        adminActor.readProject(9999l) //
+                .andExpect(status().isNotFound()) //
+                .andExpect(jsonPath("$.messages[0].level").value("ERROR"));
+    }
+
+    @Test
+    void testReadProjectByMalformedIdentifierIsNotFound() throws Exception
+    {
+        adminActor.createProject("project1") //
+                .andExpect(status().isCreated());
+
+        // These are all digit sequences which cannot be parsed as a numeric project ID. Since they
+        // are not valid slugs either, they must be reported as not found instead of causing an
+        // internal server error.
+        for (var identifier : new String[] { //
+                "99999999999999999999", // exceeds the long range
+                "٤٢", // Arabic-Indic digits
+                "-1" }) {
+            adminActor.readProject(identifier) //
+                    .andExpect(status().isNotFound()) //
+                    .andExpect(jsonPath("$.messages[0].level").value("ERROR"));
+        }
+    }
+
+    @Test
+    void testProjectResponseExposesSlugAndDeprecatedName() throws Exception
+    {
+        // Use a slug which differs from the title so that mixing up the two fields is actually
+        // detectable - "name" carries the slug for backwards compatibility while the
+        // human-readable project name is reported as "title".
+        adminActor.createProject("project-slug", "Project Title") //
+                .andExpect(status().isCreated()) //
+                .andExpect(jsonPath("$.body.slug").value("project-slug")) //
+                .andExpect(jsonPath("$.body.name").value("project-slug")) //
+                .andExpect(jsonPath("$.body.title").value("Project Title"));
+
+        adminActor.readProject("project-slug") //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body.slug").value("project-slug")) //
+                .andExpect(jsonPath("$.body.name").value("project-slug")) //
+                .andExpect(jsonPath("$.body.title").value("Project Title"));
+
+        adminActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body[0].slug").value("project-slug")) //
+                .andExpect(jsonPath("$.body[0].name").value("project-slug")) //
+                .andExpect(jsonPath("$.body[0].title").value("Project Title"));
+    }
+
+    @Test
+    void testCreateProjectUsingDeprecatedNameParameter() throws Exception
+    {
+        // The "name" parameter sets the slug - it is deprecated in favor of "slug" but must
+        // keep working for existing clients.
+        adminActor.createProjectUsingNameParameter("project-slug") //
+                .andExpect(status().isCreated()) //
+                .andExpect(jsonPath("$.body.slug").value("project-slug")) //
+                .andExpect(jsonPath("$.body.name").value("project-slug")) //
+                .andExpect(jsonPath("$.body.title").value("project-slug"));
+
+        adminActor.readProject("project-slug") //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body.slug").value("project-slug"));
+    }
+
+    @Test
+    void testCreateProjectWithBothSlugAndNameIsRejected() throws Exception
+    {
+        adminActor.createProjectUsingSlugAndNameParameters("project-slug", "other-slug") //
+                .andExpect(status().isBadRequest()) //
+                .andExpect(jsonPath("$.messages[0].level").value("ERROR"));
+
+        // Nothing must have been created
+        adminActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body").isEmpty());
+    }
+
+    @Test
+    void testCreateProjectWithoutSlugOrNameIsRejected() throws Exception
+    {
+        adminActor.createProjectWithoutSlugOrName() //
+                .andExpect(status().isBadRequest()) //
+                .andExpect(jsonPath("$.messages[0].level").value("ERROR"));
+
+        adminActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body").isEmpty());
+    }
+
+    @Test
+    void testDeleteProjectBySlug() throws Exception
+    {
+        adminActor.createProject("project1") //
+                .andExpect(status().isCreated());
+
+        adminActor.deleteProject("project1") //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.messages[0].message").value(containsString("deleted")));
+
+        adminActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body").isEmpty());
+    }
+
     @SpringBootConfiguration
     static class TestContext
     {
