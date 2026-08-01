@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.security.client.auth;
 import java.io.Serializable;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -45,5 +46,12 @@ public abstract class AuthenticationTraits
 {
     private static final long serialVersionUID = 5358860222920519699L;
 
+    /**
+     * @return the authentication type. This is not serialized as a bean property - the "type"
+     *         property in the JSON is contributed by the Jackson type resolution mechanism (see the
+     *         JsonTypeInfo/JsonSubTypes annotations above). Declaring it as a bean property as well
+     *         would make Jackson reject the class due to the conflicting property definitions.
+     */
+    @JsonIgnore
     public abstract AuthenticationType getType();
 }

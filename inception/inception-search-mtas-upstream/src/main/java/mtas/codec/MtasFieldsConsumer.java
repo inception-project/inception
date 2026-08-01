@@ -675,8 +675,8 @@ public class MtasFieldsConsumer
             docBase += maxDoc;
         }
 
-        Fields mergedFields = new MappedMultiFields(mergeState, new MultiFields(
-                fields.toArray(Fields.EMPTY_ARRAY), slices.toArray(ReaderSlice.EMPTY_ARRAY)));
+        Fields mergedFields = new MappedMultiFields(mergeState,
+                new MultiFields(fields.toArray(new Fields[0]), slices.toArray(new ReaderSlice[0])));
         write(mergedFields, norms);
     }
 

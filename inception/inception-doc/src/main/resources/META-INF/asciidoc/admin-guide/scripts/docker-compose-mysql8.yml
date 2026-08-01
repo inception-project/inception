@@ -8,7 +8,7 @@ networks:
 
 services:
   db:
-    image: "mysql:8.3"
+    image: "mysql:8.4"
     environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=yes
       - MYSQL_DATABASE=inception
@@ -31,7 +31,6 @@ services:
     ports:
       - "${INCEPTION_PORT:-8080}:8080"
     environment:
-      - INCEPTION_DB_DIALECT=org.hibernate.dialect.MySQL8Dialect
       - INCEPTION_DB_DRIVER=org.mariadb.jdbc.Driver
       - INCEPTION_DB_URL=jdbc:mysql://db:3306/inception?useSSL=false&useUnicode=true&characterEncoding=UTF-8
       - INCEPTION_DB_USERNAME=${DBUSER:-inception}

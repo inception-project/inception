@@ -27,20 +27,18 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+// MySQL 8.4 - oldest supported LTS, documented minimum (EOL 2032-04)
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionPostgresql_16_9_IntegrationTest
+class InceptionMySql_LTS_Oldest_IntegrationTest
 {
-    // static DockerImageName image = DockerImageName.parse("pgvector/pgvector:pg16")
-    // .asCompatibleSubstituteFor("postgres");
     @SuppressWarnings("resource")
-    static final PostgreSQLContainer<?> dbContainer = new PostgreSQLContainer<>(
-            "postgres:16.9-alpine") //
-                    .withDatabaseName("testdb") //
-                    .withUsername("test") //
-                    .withPassword("test");
+    static final MySQLContainer<?> dbContainer = new MySQLContainer<>("mysql:8.4.11") //
+            .withDatabaseName("testdb") //
+            .withUsername("test") //
+            .withPassword("test");
 
     static @TempDir Path tempDir;
 
