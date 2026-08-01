@@ -39,6 +39,7 @@ import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
 import java.io.File;
@@ -301,6 +302,40 @@ public class CasStorageServiceImplTest
         var cas = makeCas("This is a test");
 
         assertThat(CasMetadataUtils.canMarkTransient(cas)).isTrue();
+    }
+
+    @Test
+    public void testThatCasWithoutCasMetadataTypeCanStillBeAccessed() throws Exception
+    {
+        // A CAS serialized with a type system predating the introduction of CASMetadata does not
+        // declare the type at all. Such a CAS must still be readable - stamping is simply skipped
+        // and the metadata accessors report "absent" instead of failing. Otherwise the CAS could
+        // not even be read for read-only purposes such as export or CasDoctor checks.
+        var tsd = UIMAFramework.getResourceSpecifierFactory().createTypeSystemDescription();
+        var cas = CasCreationUtils.createCas(tsd, null, null);
+
+        assertThat(CasMetadataUtils.supportsCasMetadata(cas)).isFalse();
+        assertThat(CasMetadataUtils.canMarkTransient(cas)).isFalse();
+
+        var doc = makeSourceDocument(15l, 15l, "test");
+
+        // Stamping must be a no-op rather than throwing
+        assertThatNoException()
+                .isThrownBy(() -> CasMetadataUtils.addOrUpdateCasMetadata(cas, 1234l, doc, "test"));
+
+        // ... and all accessors must report the metadata as absent
+        assertThat(CasMetadataUtils.getLastChanged(cas))
+                .isEqualTo(CasMetadataUtils.UNKNOWN_CAS_TIMESTAMP);
+        assertThat(CasMetadataUtils.isTransientCas(cas)).isFalse();
+        assertThat(CasMetadataUtils.getCasMetadataFS(cas)).isEmpty();
+        assertThat(CasMetadataUtils.getUsername(cas)).isEmpty();
+        assertThat(CasMetadataUtils.getSourceDocumentId(cas)).isEmpty();
+        assertThat(CasMetadataUtils.getSourceDocumentName(cas)).isEmpty();
+        assertThat(CasMetadataUtils.getProjectId(cas)).isEmpty();
+        assertThat(CasMetadataUtils.getProjectName(cas)).isEmpty();
+
+        // Clearing must also tolerate the missing type
+        assertThatNoException().isThrownBy(() -> CasMetadataUtils.clearCasMetadata(cas));
     }
 
     @Test
