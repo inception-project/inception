@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -411,14 +410,6 @@ public abstract class AnnotationDetailEditorPanel
         }
     }
 
-    @Deprecated
-    @Override
-    public void actionSelect(AjaxRequestTarget aTarget, AnnotationFS annoFs)
-        throws IOException, AnnotationException
-    {
-        actionSelect(aTarget, new VID(annoFs));
-    }
-
     @Override
     public void actionSelect(AjaxRequestTarget aTarget, VID aVid)
         throws IOException, AnnotationException
@@ -431,22 +422,6 @@ public abstract class AnnotationDetailEditorPanel
 
         state.setSelection(adapter.select(aVid, annoFs));
         actionSelect(aTarget);
-    }
-
-    @Deprecated
-    @Override
-    public void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
-        throws IOException, AnnotationException
-    {
-        editorPage.actionShowSelectedDocument(aTarget, getModelObject().getDocument(),
-                aFS.getBegin(), aFS.getEnd());
-    }
-
-    @Override
-    public void actionJump(AjaxRequestTarget aTarget, VID aVid)
-        throws IOException, AnnotationException
-    {
-        actionJump(aTarget, selectAnnotationByAddr(editorPage.getEditorCas(), aVid.getId()));
     }
 
     @Override
@@ -469,11 +444,10 @@ public abstract class AnnotationDetailEditorPanel
     }
 
     @Deprecated
-    @Override
-    public void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
+    private void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
         throws IOException, AnnotationException
     {
-        actionSelect(aTarget, annoFs);
+        actionSelect(aTarget, new VID(annoFs));
 
         var state = getModelObject();
         var doc = state.getDocument();
@@ -481,8 +455,8 @@ public abstract class AnnotationDetailEditorPanel
         // For arcs, pass the endpoint ranges as additional ping ranges
         if (state.getSelection().isArc()) {
             var cas = editorPage.getEditorCas();
-            var originFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getOrigin());
-            var targetFs = ICasUtil.selectAnnotationByAddr(cas, state.getSelection().getTarget());
+            var originFs = selectAnnotationByAddr(cas, state.getSelection().getOrigin());
+            var targetFs = selectAnnotationByAddr(cas, state.getSelection().getTarget());
             var endpointRanges = List.of(new VRange(originFs.getBegin(), originFs.getEnd()),
                     new VRange(targetFs.getBegin(), targetFs.getEnd()));
             editorPage.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd(),
@@ -498,144 +472,9 @@ public abstract class AnnotationDetailEditorPanel
         throws IOException, AnnotationException
     {
         var cas = editorPage.getEditorCas();
-        var targetFs = ICasUtil.selectFsByAddr(cas, aVid.getId());
+        var targetFs = selectFsByAddr(cas, aVid.getId());
         if (targetFs instanceof AnnotationFS) {
             actionSelectAndJump(aTarget, (AnnotationFS) targetFs);
-        }
-    }
-
-    @Override
-    @Deprecated
-    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
-        throws IOException, AnnotationException
-    {
-        LOG.trace("actionAnnotate");
-
-        editorPage.ensureIsEditable();
-
-        var state = getModelObject();
-        if (!state.getSelection().isSet()) {
-            return;
-        }
-
-        // Creating or updating an annotation should not change the current default layer - even
-        // though it might temporarily do so as e.g. a relation is created.
-        var savedDefaultLayer = state.getDefaultAnnotationLayer();
-
-        // Note that refresh changes the selected layer if a relation is created. Then the layer
-        // switches from the selected span layer to the relation layer that is attached to the span
-        try {
-            if (state.getSelection().isArc()) {
-                prepareCreateOrUpdateRelation(aTarget, aCas, state);
-            }
-            else {
-                // Re-set the selected layer from the drop-down since it might have changed if we
-                // have previously created a relation annotation
-                state.setSelectedAnnotationLayer(state.getDefaultAnnotationLayer());
-            }
-
-            // Can check state only now because the methods above may juggle the selection.. argh
-            if (state.getSelectableLayers().isEmpty()) {
-                info("No text-level annotation layers are available in this project.");
-                aTarget.addChildren(getPage(), IFeedback.class);
-                return;
-            }
-
-            if (state.getSelectedAnnotationLayer() == null) {
-                error("No layer is selected. First select a layer.");
-                aTarget.addChildren(getPage(), IFeedback.class);
-                return;
-            }
-
-            if (state.getSelectedAnnotationLayer().isReadonly()) {
-                error("Layer is not editable.");
-                aTarget.addChildren(getPage(), IFeedback.class);
-                return;
-            }
-
-            LOG.trace("actionAnnotate() selectedLayer: {}",
-                    state.getSelectedAnnotationLayer().getUiName());
-            LOG.trace("actionAnnotate() defaultLayer: {}",
-                    state.getDefaultAnnotationLayer().getUiName());
-
-            internalCommitAnnotation(aTarget, aCas);
-
-            internalCompleteAnnotation(aTarget, aCas);
-
-            if (aTarget != null) {
-                refresh(aTarget);
-            }
-
-            state.clearArmedSlot();
-        }
-        finally {
-            state.setDefaultAnnotationLayer(savedDefaultLayer);
-        }
-    }
-
-    /**
-     * @deprecated To be removed without replacement.
-     */
-    @Deprecated
-    private void prepareCreateOrUpdateRelation(AjaxRequestTarget aTarget, CAS aCas,
-            AnnotatorState state)
-        throws IllegalPlacementException, IOException, AnnotationException
-    {
-        LOG.trace("actionAnnotate() relation annotation - looking for attached layer");
-
-        // FIXME REC I think this whole section which meddles around with the selected
-        // annotation layer should be moved out of there to the place where we originally
-        // set the annotation layer...!
-
-        // Fetch the annotation representing the origin endpoint of the relation
-        var originFS = selectAnnotationByAddr(aCas, state.getSelection().getOrigin());
-        var targetFS = selectAnnotationByAddr(aCas, state.getSelection().getTarget());
-
-        if (!schemaProperties.isCrossLayerRelationsEnabled()
-                && !originFS.getType().equals(targetFS.getType())) {
-            reset(aTarget);
-            throw new IllegalPlacementException(
-                    "Cannot create relation between spans on different layers");
-        }
-
-        // Fetch the annotation layer for the origin annotation
-        var originLayer = annotationService.findLayer(state.getProject(), originFS);
-
-        var previousLayer = state.getSelectedAnnotationLayer();
-
-        // If we are creating a relation annotation, we have to set the current layer
-        // depending on the type of relation that is permitted between the source/target
-        // span. This is necessary because we have no separate UI control to set the
-        // relation annotation type.
-        // It is possible because currently only a single relation layer is allowed to
-        // attach to any given span layer.
-
-        // If we drag an arc in a chain layer, then the arc is of the same layer as the span
-        // Chain layers consist of arcs and spans
-        if (ChainLayerSupport.TYPE.equals(originLayer.getType())) {
-            // one layer both for the span and arc annotation
-            state.setSelectedAnnotationLayer(originLayer);
-        }
-        // Otherwise, look up the possible relation layer(s) in the database.
-        else {
-            var viableRelationLayers = annotationService.getRelationLayersFor(originLayer);
-            if (viableRelationLayers.isEmpty()) {
-                throw new IllegalPlacementException(
-                        "There are no relation layers that can be created between these endpoints");
-            }
-            if (viableRelationLayers.size() == 1) {
-                var relationLayer = viableRelationLayers.get(0);
-                state.setSelectedAnnotationLayer(relationLayer);
-            }
-        }
-
-        state.setDefaultAnnotationLayer(originLayer);
-
-        // If we switched layers, we need to initialize the feature editors for the new layer
-        if (!Objects.equals(previousLayer, state.getSelectedAnnotationLayer())) {
-            LOG.trace("Layer changed from {} to {} - need to reload feature editors", previousLayer,
-                    state.getSelectedAnnotationLayer());
-            loadFeatureEditorModels(aTarget);
         }
     }
 

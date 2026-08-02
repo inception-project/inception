@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.editor.action;
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -30,15 +29,6 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public interface AnnotationActionHandler
 {
-    /**
-     * @deprecated Replaced by {@code CreateRelationAnnotationHandler} and
-     *             {@code CreateSpanAnnotationHandler}.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas)
-        throws IOException, AnnotationException;
-
     /**
      * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
      * 
@@ -51,38 +41,9 @@ public interface AnnotationActionHandler
      */
     void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
-    /**
-     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
-     *             {@link #actionSelect(AjaxRequestTarget, VID)}
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
-        throws IOException, AnnotationException;
-
     void actionSelect(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
 
     void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
-        throws IOException, AnnotationException;
-
-    void actionJump(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
-
-    /**
-     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
-     *             {@link #actionSelectAndJump(AjaxRequestTarget, VID)}
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
-        throws IOException, AnnotationException;
-
-    /**
-     * @deprecated This method is not able to handle sub-annotations such as chain links. Better use
-     *             {@link #actionJump(AjaxRequestTarget, VID)}
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
         throws IOException, AnnotationException;
 
     void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
