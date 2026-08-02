@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.remoteapi;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.forceOverwriteSofa;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
@@ -60,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -176,18 +176,23 @@ public abstract class Controller_ImplBase
         return user;
     }
 
-    protected Project getProject(long aProjectId)
-        throws ObjectNotFoundException, AccessForbiddenException
+    /**
+     * Look up a project by its numeric ID or by its URL slug without performing any access check.
+     */
+    private Project lookupProject(String aProjectId) throws ObjectNotFoundException
     {
-        Project project;
+        var projectId = toProjectId(aProjectId);
+
         try {
-            project = projectService.getProject(aProjectId);
+            if (projectId != null) {
+                return projectService.getProject(projectId.longValue());
+            }
+
+            return projectService.getProjectBySlug(aProjectId);
         }
         catch (NoResultException e) {
             throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
         }
-
-        return assertCanAccessProject(project, String.valueOf(aProjectId));
     }
 
     /**
@@ -203,23 +208,11 @@ public abstract class Controller_ImplBase
      * @throws AccessForbiddenException
      *             if the session owner may not access the project.
      */
-    protected Project getProject(String aProjectId)
+    protected Project getProject(String aProjectId, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
         throws ObjectNotFoundException, AccessForbiddenException
     {
-        var projectId = toProjectId(aProjectId);
-        if (projectId != null) {
-            return getProject(projectId.longValue());
-        }
-
-        Project project;
-        try {
-            project = projectService.getProjectBySlug(aProjectId);
-        }
-        catch (NoResultException e) {
-            throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
-        }
-
-        return assertCanAccessProject(project, aProjectId);
+        return assertCanAccessProject(lookupProject(aProjectId), aProjectId, aRole, aMoreRoles);
     }
 
     /**
@@ -236,17 +229,19 @@ public abstract class Controller_ImplBase
         }
     }
 
-    private Project assertCanAccessProject(Project aProject, String aProjectId)
+    private Project assertCanAccessProject(Project aProject, String aProjectId,
+            PermissionLevel aRole, PermissionLevel... aMoreRoles)
         throws ObjectNotFoundException, AccessForbiddenException
     {
+
         // Get current user - this will throw an exception if the current user does not exit
         var sessionOwner = getSessionOwner();
 
         // Check for the access
         assertPermission(
-                "User [" + sessionOwner.getUsername() + "] is not allowed to access project ["
+                "User [" + sessionOwner.getUsername() + "] has insufficient privileges on project ["
                         + aProjectId + "]",
-                projectService.hasRole(sessionOwner, aProject, MANAGER)
+                projectService.hasRole(sessionOwner, aProject, aRole, aMoreRoles)
                         || userRepository.isAdministrator(sessionOwner));
 
         return aProject;
@@ -291,12 +286,11 @@ public abstract class Controller_ImplBase
         }
     }
 
-    protected CAS createCompatibleCas(String aProjectId, long aDocumentId, MultipartFile aFile,
+    protected CAS createCompatibleCas(Project aProject, long aDocumentId, MultipartFile aFile,
             Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
-        var project = getProject(aProjectId);
-        var document = getDocument(project, aDocumentId);
+        var document = getDocument(aProject, aDocumentId);
 
         // Check if the format is supported
         var format = aFormatId.orElse(FORMAT_DEFAULT);
@@ -369,14 +363,11 @@ public abstract class Controller_ImplBase
         return annotationCas;
     }
 
-    protected ResponseEntity<byte[]> readAnnotation(String aProjectId, long aDocumentId,
+    protected ResponseEntity<byte[]> readAnnotation(Project aProject, long aDocumentId,
             String aAnnotatorId, Mode aMode, Optional<String> aFormat)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
-        // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var doc = getDocument(project, aDocumentId);
+        var doc = getDocument(aProject, aDocumentId);
 
         // Check format
         String formatId;

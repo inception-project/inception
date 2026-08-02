@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.remoteapi.next;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.recommender.TrainingCapability.TRAINING_REQUIRED;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_COMPLETE;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_IN_PROGRESS;
@@ -132,7 +133,7 @@ public class TaskBulkPredictionController
             boolean aFinishDocumentsWithoutRecommendations)
         throws Exception
     {
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
         var sessionOwner = getSessionOwner();
 
         taskAccess.assertCanManageTasks(sessionOwner, project);

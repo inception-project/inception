@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_COMPLETE;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_IN_PROGRESS;
@@ -24,11 +25,11 @@ import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtil
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_NEW;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.annotationDocumentStateToString;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.parseAnnotationDocumentState;
+import static java.lang.invoke.MethodHandles.lookup;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -73,7 +74,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AeroAnnotationController
     extends Controller_ImplBase
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private final static Logger LOG = LoggerFactory.getLogger(lookup().lookupClass());
 
     @Operation(summary = "List annotations of a document in a project")
     @GetMapping( //
@@ -95,7 +96,7 @@ public class AeroAnnotationController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var doc = getDocument(project, aDocumentId);
 
@@ -160,11 +161,11 @@ public class AeroAnnotationController
         throws Exception
     {
         var annotator = getUser(aAnnotatorId);
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
         var document = getDocument(project, aDocumentId);
         var anno = getAnnotation(document, aAnnotatorId, true);
 
-        var annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        var annotationCas = createCompatibleCas(project, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
         documentService.writeAnnotationCas(annotationCas, document, annotator);
@@ -228,7 +229,10 @@ public class AeroAnnotationController
             Optional<String> aFormat)
         throws Exception
     {
-        return readAnnotation(aProjectId, aDocumentId, aAnnotatorId, Mode.ANNOTATION, aFormat);
+        // Get project (this also ensures that it exists and that the current user can access it
+        var project = getProject(aProjectId, MANAGER);
+
+        return readAnnotation(project, aDocumentId, aAnnotatorId, Mode.ANNOTATION, aFormat);
     }
 
     @Operation(summary = "Delete a user's annotations of one document from a project")
@@ -256,7 +260,7 @@ public class AeroAnnotationController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var doc = getDocument(project, aDocumentId);
         var anno = getAnnotation(doc, aAnnotatorId, false);

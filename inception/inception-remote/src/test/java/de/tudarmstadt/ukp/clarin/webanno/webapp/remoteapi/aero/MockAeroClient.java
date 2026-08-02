@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -35,9 +36,13 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.inception.annotation.storage.OpenCasStorageSessionForRequestFilter;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
+import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
+import tools.jackson.core.type.TypeReference;
 
 class MockAeroClient
 {
@@ -114,6 +119,52 @@ class MockAeroClient
                 .with(user(username).roles(roles)) //
                 .param("slug", aSlug) //
                 .param("title", aTitle));
+    }
+
+    ResultActions createProjectForCreator(String aSlug, String aCreator) throws Exception
+    {
+        return mvc.perform(post(API_BASE + "/projects") //
+                .with(csrf().asHeader()) //
+                .with(user(username).roles(roles)) //
+                .param("slug", aSlug) //
+                .param("creator", aCreator));
+    }
+
+    /**
+     * Create a project and return it as the server reported it back - in particular including the
+     * ID which the server assigned to it. Tests must operate on this ID instead of assuming that
+     * the identity sequence starts over for every test method.
+     */
+    RProject createProjectAndGet(String aSlug) throws Exception
+    {
+        return toRProject(createProject(aSlug));
+    }
+
+    /**
+     * @see #createProjectAndGet(String)
+     */
+    RProject createProjectForCreatorAndGet(String aSlug, String aCreator) throws Exception
+    {
+        return toRProject(createProjectForCreator(aSlug, aCreator));
+    }
+
+    /**
+     * Assert that a project was created and deserialize it from the response body. Use this when
+     * the test also needs to make assertions on the creation response itself - otherwise prefer
+     * {@link #createProjectAndGet(String)}.
+     */
+    RProject toRProject(ResultActions aResult) throws Exception
+    {
+        var response = aResult //
+                .andExpect(status().isCreated()) //
+                .andReturn() //
+                .getResponse() //
+                .getContentAsString();
+        return JSONUtil.getObjectMapper() //
+                .readValue(response, new TypeReference<RResponse<RProject>>()
+                {
+                }) //
+                .getBody();
     }
 
     /**

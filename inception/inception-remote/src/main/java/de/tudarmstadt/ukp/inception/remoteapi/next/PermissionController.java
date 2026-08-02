@@ -74,16 +74,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to list project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var permissions = projectService.listProjectPermissions(project).stream() //
                 .map(RPermission::new) //
@@ -112,16 +103,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to list project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var subjectUser = getUser(aSubjectUser);
 
@@ -158,16 +140,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to manage project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var subjectUser = getUser(aSubjectUser);
 
@@ -211,16 +184,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to manage project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var subjectUser = getUser(aSubjectUser);
 
