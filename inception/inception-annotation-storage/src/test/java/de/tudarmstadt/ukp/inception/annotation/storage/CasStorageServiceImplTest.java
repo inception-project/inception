@@ -41,6 +41,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -686,6 +688,116 @@ public class CasStorageServiceImplTest
             var cas = shortTimeoutSut.readCas(doc, set, EXCLUSIVE_WRITE_ACCESS);
             assertThat(cas).isNotNull();
         }
+    }
+
+    @Test
+    public void testExportCasWorksWhileEnclosingSessionHoldsExclusiveAccess() throws Exception
+    {
+        // A caller which already holds exclusive access to a CAS - e.g. the project exporter after
+        // lazily creating a missing initial CAS - must still be able to export it. Since the
+        // exclusive access pool is keyed per document, a second borrow on the same thread can never
+        // be satisfied: it would block until the borrow timeout and then fail. The export must
+        // therefore recognize the exclusive access held by the enclosing session instead of trying
+        // to borrow the CAS again.
+        var shortTimeoutSut = createStorageService(Duration.ofMillis(250));
+        var doc = makeSourceDocument(20l, 20l, "test");
+        var set = AnnotationSet.forTest("test");
+
+        try (var session = openNested(true)) {
+            createCasFile(shortTimeoutSut, doc, set, "This is a test");
+        }
+
+        var buffer = new ByteArrayOutputStream();
+        try (var session = CasStorageSession.open()) {
+            // Take exclusive access and keep it for the duration of the export
+            shortTimeoutSut.readCas(doc, set, EXCLUSIVE_WRITE_ACCESS);
+
+            shortTimeoutSut.exportCas(doc, set, buffer);
+        }
+
+        assertThat(buffer.size()).isGreaterThan(0);
+    }
+
+    @Test
+    public void testExportCasTakesExclusiveAccessWhenNobodyElseHoldsIt() throws Exception
+    {
+        // The counterpart to the test above: when no enclosing session holds the CAS, the export
+        // must acquire the exclusive access itself so that the CAS cannot be re-written on disk
+        // while its bytes are being copied.
+        var doc = makeSourceDocument(21l, 21l, "test");
+        var set = AnnotationSet.forTest("test");
+
+        try (var session = openNested(true)) {
+            createCasFile(doc, set, "This is a test");
+        }
+
+        var buffer = new ByteArrayOutputStream();
+        try (var session = CasStorageSession.open()) {
+            sut.exportCas(doc, set, buffer);
+
+            // The export must not leave the CAS registered in the caller's session
+            assertThat(session.getManagedState(doc.getId(), set)).isEmpty();
+        }
+
+        assertThat(buffer.size()).isGreaterThan(0);
+
+        // The CAS must have been returned to the pool - if it had not, this would block until the
+        // borrow timeout and then fail
+        try (var session = CasStorageSession.open()) {
+            assertThat(sut.readCas(doc, set, EXCLUSIVE_WRITE_ACCESS)).isNotNull();
+        }
+    }
+
+    @Test
+    public void testImportCasWorksWhileEnclosingSessionHoldsExclusiveAccess() throws Exception
+    {
+        // Same as for the export: a caller which already holds exclusive access must be able to
+        // import into the CAS without the import trying to borrow it a second time.
+        var shortTimeoutSut = createStorageService(Duration.ofMillis(250));
+        var doc = makeSourceDocument(22l, 22l, "test");
+        var set = AnnotationSet.forTest("test");
+
+        var exported = new ByteArrayOutputStream();
+        try (var session = CasStorageSession.open()) {
+            createCasFile(shortTimeoutSut, doc, set, "This is a test");
+            shortTimeoutSut.exportCas(doc, set, exported);
+        }
+
+        try (var session = CasStorageSession.open()) {
+            // Take exclusive access and keep it for the duration of the import
+            shortTimeoutSut.readCas(doc, set, EXCLUSIVE_WRITE_ACCESS);
+
+            shortTimeoutSut.importCas(doc, set, new ByteArrayInputStream(exported.toByteArray()));
+
+            assertThat(shortTimeoutSut.existsCas(doc, set)).isTrue();
+        }
+    }
+
+    @Test
+    public void testForceActionOnCasWorksWhenNobodyElseHoldsExclusiveAccess() throws Exception
+    {
+        // Unlike the export, forceActionOnCas replaces the CAS in the exclusive access holder. That
+        // requires it to have borrowed the CAS itself - it cannot replace a CAS which an enclosing
+        // session registered - so it is only exercised without an enclosing lock here.
+        var doc = makeSourceDocument(23l, 23l, "test");
+        var set = AnnotationSet.forTest("test");
+
+        try (var session = openNested(true)) {
+            createCasFile(doc, set, "This is a test");
+        }
+
+        var actionWasApplied = new AtomicBoolean(false);
+        try (var session = CasStorageSession.open()) {
+            sut.forceActionOnCas(doc, set, //
+                    (d, s) -> driver.readCas(d, s), //
+                    (d, s, cas) -> actionWasApplied.set(true), //
+                    true);
+
+            // The action must not leave the CAS registered in the caller's session
+            assertThat(session.getManagedState(doc.getId(), set)).isEmpty();
+        }
+
+        assertThat(actionWasApplied).isTrue();
     }
 
     @Test
