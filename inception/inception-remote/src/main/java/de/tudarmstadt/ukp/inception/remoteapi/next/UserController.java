@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.remoteapi.next;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.http.HttpStatus.CONFLICT;
@@ -81,7 +82,7 @@ public class UserController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var sessionOwner = getSessionOwner();
 
@@ -114,7 +115,7 @@ public class UserController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var sessionOwner = getSessionOwner();
 
@@ -151,7 +152,7 @@ public class UserController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var sessionOwner = getSessionOwner();
 

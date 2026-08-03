@@ -19,7 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
+import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -101,19 +104,17 @@ public class AeroProjectControllerTest
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.messages").isEmpty());
 
-        adminActor.createProject("project1") //
-                .andExpect(status().isCreated()) //
+        var project = adminActor.toRProject(adminActor.createProject("project1") //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
-                .andExpect(jsonPath("$.body.name").value("project1"));
+                .andExpect(jsonPath("$.body.name").value("project1")));
 
         adminActor.listProjects() //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body[0].id").value("1")) //
+                .andExpect(jsonPath("$.body[0].id").value(project.id())) //
                 .andExpect(jsonPath("$.body[0].name").value("project1"));
 
-        adminActor.deleteProject(1l) //
+        adminActor.deleteProject(project.id()) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
                 .andExpect(jsonPath("$.messages[0].level").value("INFO")) //
@@ -128,21 +129,159 @@ public class AeroProjectControllerTest
     @Test
     void testReadProjectByIdAndBySlug() throws Exception
     {
-        adminActor.createProject("project1") //
-                .andExpect(status().isCreated()) //
-                .andExpect(jsonPath("$.body.id").value("1"));
+        var project = adminActor.createProjectAndGet("project1");
 
-        adminActor.readProject(1l) //
+        // Addressing the project by its numeric ID and by its slug must resolve to the same
+        // project.
+        adminActor.readProject(project.id()) //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.id").value(project.id())) //
                 .andExpect(jsonPath("$.body.slug").value("project1"));
 
         adminActor.readProject("project1") //
                 .andExpect(status().isOk()) //
                 .andExpect(content().contentType(APPLICATION_JSON_VALUE)) //
-                .andExpect(jsonPath("$.body.id").value("1")) //
+                .andExpect(jsonPath("$.body.id").value(project.id())) //
                 .andExpect(jsonPath("$.body.slug").value("project1"));
+    }
+
+    @Test
+    void testProjectResponseExposesRolesOfSessionOwner() throws Exception
+    {
+        var userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        var project = adminActor.createProjectAndGet("project1");
+
+        adminActor.grantProjectRole(project.id(), "user", "MANAGER", "CURATOR") //
+                .andExpect(status().isOk());
+
+        // The roles must be those of the user making the request - not those of any other user.
+        // The admin holds all roles in this project, so reporting the admin's roles here would
+        // be detectable.
+        userActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body[0].roles", contains("CURATOR", "MANAGER")));
+
+        userActor.readProject(project.id()) //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body.roles", contains("CURATOR", "MANAGER")));
+    }
+
+    @Test
+    void testProjectsWithoutManagerRoleAreNotListedOrReadable() throws Exception
+    {
+        var userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        var project = adminActor.createProjectAndGet("project1");
+
+        adminActor.grantProjectRole(project.id(), "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk());
+
+        // The whole remote API requires the manager role, so a user who is merely an annotator or
+        // curator in a project must not see it in the project list at all.
+        userActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body").isEmpty());
+
+        userActor.readProject(project.id()) //
+                .andExpect(status().isForbidden());
+
+        userActor.readProject("project1") //
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void testProjectListReportsOnlyManagedProjects() throws Exception
+    {
+        var userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        var managedProject = adminActor.createProjectAndGet("managed");
+        var annotatedProject = adminActor.createProjectAndGet("annotated");
+        adminActor.createProject("unrelated") //
+                .andExpect(status().isCreated());
+
+        adminActor.grantProjectRole(managedProject.id(), "user", "MANAGER") //
+                .andExpect(status().isOk());
+        adminActor.grantProjectRole(annotatedProject.id(), "user", "ANNOTATOR", "CURATOR") //
+                .andExpect(status().isOk());
+
+        // Only the project in which the user is a manager may be reported - not the one where
+        // they are merely an annotator/curator and not the one they have no roles in at all.
+        userActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body", hasSize(1))) //
+                .andExpect(jsonPath("$.body[0].slug").value("managed")) //
+                .andExpect(jsonPath("$.body[0].roles", contains("MANAGER")));
+
+        // The administrator sees all projects, including those without any roles.
+        adminActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body", hasSize(3)));
+    }
+
+    @Test
+    void testProjectResponseReportsNoRolesForAdminWithoutRoles() throws Exception
+    {
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        // Create the project on behalf of the other user so that the admin ends up without any
+        // roles in it - an admin creating a project for themselves would receive all roles.
+        var project = adminActor.createProjectForCreatorAndGet("project1", "user");
+
+        // The admin can access the project but holds no explicitly assigned roles in it, so the
+        // roles must be reported as empty rather than being omitted or guessed from the access.
+        adminActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body[0].roles").isArray()) //
+                .andExpect(jsonPath("$.body[0].roles").isEmpty());
+
+        adminActor.readProject(project.id()) //
+                .andExpect(status().isOk()) //
+                .andExpect(jsonPath("$.body.roles").isEmpty());
+    }
+
+    @Test
+    void testProjectRolesAreReportedInStableOrder() throws Exception
+    {
+        var userActor = new MockAeroClient(context, "user", "USER", "REMOTE");
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        var project = adminActor.createProjectAndGet("project1");
+
+        // Assign the roles in an order which differs from the order in which they must be
+        // reported so that the sorting is actually detectable.
+        adminActor.grantProjectRole(project.id(), "user", "CURATOR", "MANAGER", "ANNOTATOR") //
+                .andExpect(status().isOk());
+
+        userActor.listProjects() //
+                .andExpect(status().isOk()) //
+                .andExpect(
+                        jsonPath("$.body[0].roles", contains("ANNOTATOR", "CURATOR", "MANAGER")));
+    }
+
+    @Test
+    void testCreateProjectForCreatorReportsRolesOfCreator() throws Exception
+    {
+        userRepository.create(new User("user", ROLE_USER, ROLE_REMOTE));
+
+        // When an administrator creates a project on behalf of somebody else, it is that other
+        // user who receives the roles - so it is their roles which must be reported. Reporting
+        // the roles of the administrator would always yield an empty list here.
+        adminActor.createProjectForCreator("project1", "user") //
+                .andExpect(status().isCreated()) //
+                .andExpect(jsonPath("$.body.roles", contains("ANNOTATOR", "CURATOR", "MANAGER")));
+    }
+
+    @Test
+    void testCreateProjectReportsOwnRolesWhenNoCreatorGiven() throws Exception
+    {
+        adminActor.createProject("project1") //
+                .andExpect(status().isCreated()) //
+                .andExpect(jsonPath("$.body.roles", contains("ANNOTATOR", "CURATOR", "MANAGER")));
     }
 
     @Test

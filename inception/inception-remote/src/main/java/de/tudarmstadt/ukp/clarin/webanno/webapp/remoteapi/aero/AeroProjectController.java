@@ -64,11 +64,13 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectExportTaskMonitor;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.ProjectPermission;
 import de.tudarmstadt.ukp.clarin.webanno.model.ProjectState;
 import de.tudarmstadt.ukp.clarin.webanno.model.ScriptDirection;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.IllegalNameException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectExistsException;
+import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.ObjectNotFoundException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.exception.UnsupportedFormatException;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RProject;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
@@ -94,26 +96,73 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AeroProjectController
     extends Controller_ImplBase
 {
-    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired ProjectExportService exportService;
 
-    @Operation(summary = "List the projects accessible by the authenticated user")
+    @Operation(summary = "List the projects manageable by the authenticated user")
     @GetMapping(value = ("/" + PROJECTS), produces = APPLICATION_JSON_VALUE)
     public ResponseEntity<RResponse<List<RProject>>> list() throws Exception
     {
         // Get current user - this will throw an exception if the current user does not exit
         var sessionOwner = getSessionOwner();
 
-        // Get projects with permission
-        var accessibleProjects = projectService.listAccessibleProjects(sessionOwner);
+        // Get projects with permission - along with the roles the session owner holds in them so
+        // that callers do not have to query the permissions of each project separately. Only
+        // projects which the session owner manages are reported - consistent with the other
+        // endpoints of this API, all of which require the manager role. Administrators see all
+        // projects, even those in which they hold no roles.
+        var isAdministrator = userRepository.isAdministrator(sessionOwner);
+        var accessibleProjects = projectService.listAccessibleProjectsWithPermissions(sessionOwner);
 
         // Collect all the projects
         var projectList = new ArrayList<RProject>();
-        for (var project : accessibleProjects) {
-            projectList.add(new RProject(project));
+        for (var entry : accessibleProjects.entrySet()) {
+            if (isAdministrator || entry.getValue().contains(MANAGER)) {
+                projectList.add(RProject.builder() //
+                        .withProject(entry.getKey()) //
+                        .withRoles(entry.getValue()) //
+                        .build());
+            }
         }
         return ResponseEntity.ok(new RResponse<>(projectList));
+    }
+
+    /**
+     * Renders the given project along with the roles which the session owner holds in it.
+     */
+    private RProject toRProject(Project aProject) throws ObjectNotFoundException
+    {
+        return toRProject(aProject, getSessionOwner().getUsername());
+    }
+
+    /**
+     * Renders the given project along with the roles which the given user holds in it. When a
+     * project is created or imported on behalf of another user, the roles of that other user are
+     * reported - the session owner (typically an administrator) does not receive any roles in that
+     * case, so reporting their roles would always yield an empty list and would not answer the
+     * question whether the roles were successfully assigned.
+     *
+     * @param aSubjectUser
+     *            the user whose roles to report or {@code null} if there is no such user, in which
+     *            case no roles are reported.
+     */
+    private RProject toRProject(Project aProject, String aSubjectUser)
+    {
+        if (aSubjectUser == null) {
+            return RProject.builder() //
+                    .withProject(aProject) //
+                    .build();
+        }
+
+        var roles = projectService.listProjectPermissionLevel(aSubjectUser, aProject).stream() //
+                .map(ProjectPermission::getLevel) //
+                .toList();
+
+        return RProject.builder() //
+                .withProject(aProject) //
+                .withRoles(roles) //
+                .build();
     }
 
     @Operation(summary = "Create a new project")
@@ -212,7 +261,9 @@ public class AeroProjectController
         String owner = aCreator.isPresent() ? aCreator.get() : sessionOwner.getUsername();
         projectService.assignRole(project, owner, MANAGER, CURATOR, ANNOTATOR);
 
-        RResponse<RProject> response = new RResponse<>(new RProject(project));
+        // Report the roles of the project owner - when an administrator creates a project on
+        // behalf of somebody else, it is the owner and not the administrator who receives roles.
+        RResponse<RProject> response = new RResponse<>(toRProject(project, owner));
         return ResponseEntity.created(aUcb.path(API_BASE + "/" + PROJECTS + "/{id}")
                 .buildAndExpand(project.getId()).toUri()).body(response);
     }
@@ -230,9 +281,9 @@ public class AeroProjectController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
-        return ResponseEntity.ok(new RResponse<>(new RProject(project)));
+        return ResponseEntity.ok(new RResponse<>(toRProject(project)));
     }
 
     @Operation(summary = "Delete an existing project")
@@ -248,7 +299,7 @@ public class AeroProjectController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         projectService.removeProject(project);
 
@@ -344,7 +395,11 @@ public class AeroProjectController
             tempFile.delete();
         }
 
-        return ResponseEntity.ok(new RResponse<>(new RProject(importedProject)));
+        // Report the roles of the user who was set up as the project manager during the import. If
+        // the permissions were imported from the archive, then nobody was set up as a manager and
+        // we do not report any roles.
+        return ResponseEntity.ok(new RResponse<>(
+                toRProject(importedProject, manager != null ? manager.getUsername() : null)));
     }
 
     @Operation(summary = "Export a project to a ZIP file")
@@ -377,7 +432,7 @@ public class AeroProjectController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         // Check if the format is supported
         if (aFormat.isPresent()) {

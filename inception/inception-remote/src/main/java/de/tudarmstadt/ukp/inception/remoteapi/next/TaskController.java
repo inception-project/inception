@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.remoteapi.next;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 import java.util.List;
@@ -71,7 +72,7 @@ public class TaskController
             String aProjectId)
         throws Exception
     {
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
         var sessionOwner = getSessionOwner();
 
         taskAccess.assertCanManageTasks(sessionOwner, project);
@@ -103,7 +104,7 @@ public class TaskController
             long aTaskId)
         throws Exception
     {
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
         var sessionOwner = getSessionOwner();
 
         taskAccess.assertCanManageTasks(sessionOwner, project);

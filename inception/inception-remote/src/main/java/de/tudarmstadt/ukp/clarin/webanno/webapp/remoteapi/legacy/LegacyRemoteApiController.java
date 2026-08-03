@@ -246,7 +246,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "List all the projects for a given user with their roles", deprecated = true)
+    @Operation(summary = "List all the projects managed by a given user with their roles", deprecated = true)
     @GetMapping(value = ("/" + PROJECTS))
     public ResponseEntity<String> projectList() throws Exception
     {
@@ -257,8 +257,10 @@ public class LegacyRemoteApiController
             return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
 
-        // Get projects with permission
-        List<Project> accessibleProjects = projectRepository.listAccessibleProjects(user);
+        // Get the projects which the user manages - the remote API requires the manager role
+        // throughout, so projects in which the user is merely an annotator or curator are not
+        // reported here. Administrators see all projects.
+        List<Project> accessibleProjects = projectRepository.listManageableProjects(user);
 
         // Add permissions for each project into JSON array and store in JSON object
         JSONObject returnJSONObj = new JSONObject();

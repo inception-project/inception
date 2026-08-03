@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_ANNOTATION_COMPLETE;
 import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.DOCUMENT_STATE_ANNOTATION_IN_PROGRESS;
@@ -86,7 +87,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class AeroDocumentController
     extends Controller_ImplBase
 {
-    private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired DocumentStorageService documentStorageService;
 
@@ -103,7 +104,7 @@ public class AeroDocumentController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var documents = documentService.listSourceDocuments(project);
 
@@ -158,7 +159,7 @@ public class AeroDocumentController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         // Check if the format is supported
         if (!importExportService.getReadableFormatById(aFormat).isPresent()) {
@@ -249,7 +250,7 @@ public class AeroDocumentController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var doc = getDocument(project, aDocumentId);
 
@@ -338,7 +339,7 @@ public class AeroDocumentController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var doc = getDocument(project, aDocumentId);
         documentService.removeSourceDocument(doc);
