@@ -5,3 +5,21 @@ Package: src/main/ts/src/pdfanno
 All files under this package are from PDFAnno and are licensed under the MIT.
 
 Original source: https://github.com/paperai/pdfanno
+
+
+== PDF.js
+
+Package: src/main/ts/pdfjs-web
+
+All files under this package are from the PDF.js viewer distribution and are licensed under the
+Apache License 2.0.
+
+  Copyright 2012, 2014, 2024 Mozilla Foundation
+
+Original source: https://github.com/mozilla/pdf.js
+Version:         5.4.449 (build 84b34b083)
+
+The viewer was modified to integrate with INCEpTION - mainly by disabling functionality that
+would interfere with the annotation workflow and by loading the resources through the Wicket
+resource system instead of through the inline script/link tags. The modifications are described
+in detail in src/main/ts/pdfjs-web/README-INCEpTION.md.
