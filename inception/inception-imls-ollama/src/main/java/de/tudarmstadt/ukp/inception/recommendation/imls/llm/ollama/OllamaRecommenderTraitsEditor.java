@@ -31,6 +31,7 @@ import org.apache.wicket.validation.validator.UrlValidator;
 
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.ollama.client.OllamaLlmChatClient;
@@ -45,7 +46,7 @@ public class OllamaRecommenderTraitsEditor
     private static final long serialVersionUID = 1677442652521110324L;
 
     private @SpringBean RecommendationEngineFactory<OllamaRecommenderTraits> toolFactory;
-    private @SpringBean OllamaLlmChatClient client;
+    private @SpringBean(name = "ollamaLlmChatClient") LlmChatClient client;
 
     public OllamaRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets)

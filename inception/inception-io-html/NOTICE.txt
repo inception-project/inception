@@ -1,0 +1,13 @@
+== jsoup
+
+File: src/main/java/de/tudarmstadt/ukp/inception/io/html/dkprocore/internal/JSoupUtil.java
+
+The methods in this class were copied from jsoup, which is licensed under the MIT License.
+They are private in jsoup and can therefore not be called directly.
+
+  Copyright (c) 2009-2026 Jonathan Hedley <https://jsoup.org/>
+
+Original source: https://github.com/jhy/jsoup
+Version:         1.22.2
+
+The exact origin of each method is documented by a permalink in the source file itself.

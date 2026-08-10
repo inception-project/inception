@@ -24,8 +24,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.uima.cas.text.AnnotationFS;
+import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.fit.util.FSUtil;
+import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.uima.jcas.tcas.Annotation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -140,8 +141,10 @@ public class KbLabelCachePrewarmStep
             return;
         }
 
-        for (var fs : aCas.<Annotation> select(type)) {
-            if (!overlapping(fs, aWindowBegin, aWindowEnd)) {
+        // Document-level layers are AnnotationBase subtypes without offsets - they are always
+        // in the window, so the overlap check applies only to proper Annotations.
+        for (var fs : aCas.<AnnotationBase> select(type)) {
+            if (fs instanceof Annotation ann && !overlapping(ann, aWindowBegin, aWindowEnd)) {
                 continue;
             }
             for (var info : featureInfos) {
@@ -163,7 +166,7 @@ public class KbLabelCachePrewarmStep
         return null;
     }
 
-    private void extractKeys(FeatureInfo aInfo, AnnotationFS aFs, Set<Key> aOut)
+    private void extractKeys(FeatureInfo aInfo, FeatureStructure aFs, Set<Key> aOut)
     {
         var feature = aInfo.feature();
         if (!aInfo.isMulti()) {

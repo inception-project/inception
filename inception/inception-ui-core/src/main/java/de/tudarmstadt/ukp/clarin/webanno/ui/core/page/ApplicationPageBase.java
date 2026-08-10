@@ -50,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.footer.FooterItemRegistry;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFeedbackPanel;
 import de.tudarmstadt.ukp.inception.support.interceptors.GlobalInterceptorsRegistry;
+import de.tudarmstadt.ukp.inception.support.wicket.PreserveScrollBehavior;
 import de.tudarmstadt.ukp.inception.ui.core.darkmode.DarkModeWrapper;
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -98,6 +99,8 @@ public abstract class ApplicationPageBase
         for (var interceptor : interceptorsRegistry.getInterceptors()) {
             interceptor.intercept(this);
         }
+
+        add(new PreserveScrollBehavior());
 
         add(body = new DarkModeWrapper("body"));
 

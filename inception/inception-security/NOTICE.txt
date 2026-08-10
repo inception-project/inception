@@ -1,0 +1,17 @@
+== Spring Security
+
+Files: src/main/java/de/tudarmstadt/ukp/inception/security/oauth/OAuth2AdapterImpl.java
+       src/main/java/de/tudarmstadt/ukp/inception/security/saml/Saml2AdapterImpl.java
+
+These classes contain code adapted from Spring Security, which is licensed under the
+Apache License 2.0.
+
+  Copyright 2002-2026 the original author or authors.
+
+Original source: https://github.com/spring-projects/spring-security
+Version:         7.0.5
+
+The adapted methods are OAuth2LoginConfigurer.getLoginLinks() and
+Saml2LoginConfigurer.getIdentityProviderUrlMap(String, RelyingPartyRegistrationRepository).
+They are private in Spring Security and can therefore not be called directly. The respective
+origin is also documented in the source files themselves.

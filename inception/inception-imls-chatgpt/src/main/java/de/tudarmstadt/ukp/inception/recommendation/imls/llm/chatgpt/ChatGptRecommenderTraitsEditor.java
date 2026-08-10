@@ -36,6 +36,7 @@ import org.apache.wicket.validation.validator.UrlValidator;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.chatgpt.client.ChatGptLlmChatClient;
+import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmChatClient;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.LlmEndpoint;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.client.ModelInfo;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.preset.Preset;
@@ -52,7 +53,7 @@ public class ChatGptRecommenderTraitsEditor
     private static final long serialVersionUID = 1677442652521110324L;
 
     private @SpringBean RecommendationEngineFactory<ChatGptRecommenderTraits> toolFactory;
-    private @SpringBean ChatGptLlmChatClient client;
+    private @SpringBean(name = "chatGptLlmChatClient") LlmChatClient client;
 
     public ChatGptRecommenderTraitsEditor(String aId, IModel<Recommender> aRecommender,
             IModel<List<Preset>> aPresets, IModel<List<Option<?>>> aOptions)
