@@ -26,7 +26,7 @@
 | database.dialect
 | Database dialect
 | _unset (auto detected)_
-| org.hibernate.dialect.MariaDB53Dialect
+| org.hibernate.dialect.MariaDBDialect
 
 | database.driver
 | Database driver
@@ -84,7 +84,7 @@ The following environment variables can be used:
 | `INCEPTION_DB_DIALECT`
 | Database dialect
 | _unset (auto detected)_
-| org.hibernate.dialect.MariaDB53Dialect
+| org.hibernate.dialect.MariaDBDialect
 
 | `INCEPTION_DB_DRIVER`
 | Database driver

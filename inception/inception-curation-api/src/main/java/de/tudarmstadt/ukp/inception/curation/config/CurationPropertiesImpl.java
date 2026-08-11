@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * <p>
- * This class is exposed as a Spring Component via {@link CurationServiceAutoConfiguration}.
+ * This class is exposed as a Spring Component via {@link CurationPropertiesAutoConfiguration}.
  * </p>
  */
 @ConfigurationProperties("curation")
@@ -32,15 +32,26 @@ public class CurationPropertiesImpl
      * If enabled, a document is considered curatable when at least one annotator has finished
      * working on it. Otherwise, a document is only considered curatable once it has reached the
      * annotation-finished state at the document level.
+     * 
+     * @deprecated To be removed when the legacy curatable document startegy is removed.
      */
+    @Deprecated
     private boolean legacyCuratableDocumentsStrategy = false;
 
+    /**
+     * @deprecated To be removed when the legacy curatable document startegy is removed.
+     */
+    @Deprecated
     @Override
     public boolean isLegacyCuratableDocumentsStrategy()
     {
         return legacyCuratableDocumentsStrategy;
     }
 
+    /**
+     * @deprecated To be removed when the legacy curatable document startegy is removed.
+     */
+    @Deprecated
     public void setLegacyCuratableDocumentsStrategy(boolean aLegacyCuratableDocumentsStrategy)
     {
         legacyCuratableDocumentsStrategy = aLegacyCuratableDocumentsStrategy;

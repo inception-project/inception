@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.annotation.feature.link;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.WITH_ROLE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.ARRAY;
+import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.getFeature;
 import static de.tudarmstadt.ukp.inception.schema.api.feature.MaterializedLink.toMaterializedLink;
 import static java.util.Collections.emptyList;
 import static org.apache.commons.collections4.CollectionUtils.disjunction;
@@ -214,7 +215,7 @@ public class LinkFeatureSupport
     @Override
     public List<LinkWithRoleModel> getFeatureValue(AnnotationFeature aFeature, FeatureStructure aFS)
     {
-        var linkFeature = aFS.getType().getFeatureByBaseName(aFeature.getName());
+        var linkFeature = getFeature(aFS, aFeature).orElse(null);
         if (linkFeature == null) {
             return emptyList();
         }

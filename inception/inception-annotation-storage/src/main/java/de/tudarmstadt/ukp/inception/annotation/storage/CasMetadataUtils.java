@@ -81,11 +81,15 @@ public class CasMetadataUtils
             String aUsername)
     {
         // If the type system of the CAS does not yet support CASMetadata, then we do not add it
-        // and wait for the next regular CAS upgrade before we include this data.
-        if (aCas.getTypeSystem().getType(CASMetadata.class.getName()) == null) {
-            throw new IllegalStateException("Annotation file of user [" + aUsername
-                    + "] for document " + aDocument + " in project " + aDocument.getProject() + " "
-                    + "does not support CASMetadata yet");
+        // and wait for the next regular CAS upgrade before we include this data. This can happen
+        // for CASes that were serialized with a type system predating the introduction of
+        // CASMetadata - we must still be able to read those (e.g. for read-only access such as
+        // export or CasDoctor checks) instead of failing outright.
+        if (!supportsCasMetadata(aCas)) {
+            LOG.debug("Annotation file of user [{}] for document {} in project {} does not support "
+                    + "CASMetadata yet - not stamping it. The metadata will be added on the "
+                    + "next regular CAS upgrade.", aUsername, aDocument, aDocument.getProject());
+            return;
         }
 
         var casMetadataType = getType(aCas, CASMetadata.class);
@@ -133,12 +137,24 @@ public class CasMetadataUtils
 
     public static Optional<FeatureStructure> getCasMetadataFS(CAS aCas)
     {
-        return Optional.ofNullable(CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class)));
+        // An older type system may not declare CASMetadata at all - treat it as absent.
+        var casMetadataType = aCas.getTypeSystem().getType(CASMetadata.class.getName());
+        if (casMetadataType == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(CasUtil.selectSingle(aCas, casMetadataType));
     }
 
     public static long getLastChanged(CAS aCas)
     {
-        var casMetadataType = getType(aCas, CASMetadata.class);
+        // An older type system may not declare CASMetadata at all. We tolerate this here and treat
+        // it as "no timestamp available".
+        var casMetadataType = aCas.getTypeSystem().getType(CASMetadata.class.getName());
+        if (casMetadataType == null) {
+            return UNKNOWN_CAS_TIMESTAMP;
+        }
+
         var feature = casMetadataType.getFeatureByBaseName(CASMetadata._FeatName_lastChangedOnDisk);
         if (feature == null) {
             // An older type system may have a CASMetadata type that does not yet include the
@@ -181,63 +197,55 @@ public class CasMetadataUtils
         return supportsCasMetadata(aCas) && getLastChanged(aCas) == TRANSIENT_CAS_TIMESTAMP;
     }
 
-    public static Optional<String> getUsername(CAS aCas)
+    /**
+     * Reads the given feature from the {@link CASMetadata} instance in the given CAS. Returns an
+     * empty {@link Optional} if the type system does not declare {@link CASMetadata} at all, if the
+     * (older) CASMetadata type does not declare the requested feature, or if the CAS does not
+     * contain exactly one CASMetadata instance.
+     */
+    private static <T> Optional<T> getCasMetadataFeature(CAS aCas, String aFeatureName,
+            Class<T> aClazz)
     {
         try {
-            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
-            return Optional.ofNullable(
-                    FSUtil.getFeature(fs, CASMetadata._FeatName_username, String.class));
+            var maybeFs = getCasMetadataFS(aCas);
+            if (maybeFs.isEmpty()) {
+                return Optional.empty();
+            }
+
+            var fs = maybeFs.get();
+            if (fs.getType().getFeatureByBaseName(aFeatureName) == null) {
+                return Optional.empty();
+            }
+
+            return Optional.ofNullable(FSUtil.getFeature(fs, aFeatureName, aClazz));
         }
         catch (IllegalArgumentException e) {
             return Optional.empty();
         }
+    }
+
+    public static Optional<String> getUsername(CAS aCas)
+    {
+        return getCasMetadataFeature(aCas, CASMetadata._FeatName_username, String.class);
     }
 
     public static Optional<Long> getSourceDocumentId(CAS aCas)
     {
-        try {
-            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
-            return Optional.ofNullable(
-                    FSUtil.getFeature(fs, CASMetadata._FeatName_sourceDocumentId, Long.class));
-        }
-        catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
+        return getCasMetadataFeature(aCas, CASMetadata._FeatName_sourceDocumentId, Long.class);
     }
 
     public static Optional<String> getSourceDocumentName(CAS aCas)
     {
-        try {
-            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
-            return Optional.ofNullable(
-                    FSUtil.getFeature(fs, CASMetadata._FeatName_sourceDocumentName, String.class));
-        }
-        catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
+        return getCasMetadataFeature(aCas, CASMetadata._FeatName_sourceDocumentName, String.class);
     }
 
     public static Optional<Long> getProjectId(CAS aCas)
     {
-        try {
-            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
-            return Optional
-                    .ofNullable(FSUtil.getFeature(fs, CASMetadata._FeatName_projectId, Long.class));
-        }
-        catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
+        return getCasMetadataFeature(aCas, CASMetadata._FeatName_projectId, Long.class);
     }
 
     public static Optional<String> getProjectName(CAS aCas)
     {
-        try {
-            var fs = CasUtil.selectSingle(aCas, getType(aCas, CASMetadata.class));
-            return Optional.ofNullable(
-                    FSUtil.getFeature(fs, CASMetadata._FeatName_projectName, String.class));
-        }
-        catch (IllegalArgumentException e) {
-            return Optional.empty();
-        }
+        return getCasMetadataFeature(aCas, CASMetadata._FeatName_projectName, String.class);
     }
 }

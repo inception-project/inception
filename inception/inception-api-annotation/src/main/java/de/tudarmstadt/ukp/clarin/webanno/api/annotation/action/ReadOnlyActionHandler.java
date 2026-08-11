@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
@@ -70,12 +69,6 @@ public class ReadOnlyActionHandler
     }
 
     @Override
-    public void actionSelect(AjaxRequestTarget aTarget, AnnotationFS aAnnoFs)
-    {
-        // Passive viewer - ignore
-    }
-
-    @Override
     public void actionSelect(AjaxRequestTarget aTarget, VID aVid)
     {
         // Passive viewer - ignore
@@ -83,24 +76,6 @@ public class ReadOnlyActionHandler
 
     @Override
     public void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
-    {
-        // Passive viewer - ignore
-    }
-
-    @Override
-    public void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
-    {
-        // Passive viewer - ignore
-    }
-
-    @Override
-    public void actionJump(AjaxRequestTarget aTarget, VID aVid)
-    {
-        // Passive viewer - ignore
-    }
-
-    @Override
-    public void actionJump(AjaxRequestTarget aTarget, AnnotationFS aFS)
     {
         // Passive viewer - ignore
     }
@@ -118,12 +93,6 @@ public class ReadOnlyActionHandler
     }
 
     // --- Mutating actions are not permitted ---------------------------------------------------
-
-    @Override
-    public void actionCreateOrUpdate(AjaxRequestTarget aTarget, CAS aCas) throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
 
     @Override
     public void actionDelete(AjaxRequestTarget aTarget) throws AnnotationException

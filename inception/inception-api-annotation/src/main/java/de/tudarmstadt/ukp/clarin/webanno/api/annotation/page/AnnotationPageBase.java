@@ -419,8 +419,13 @@ public abstract class AnnotationPageBase
         var evaluator = new ConstraintsEvaluator();
         var constraints = getModelObject().getConstraints();
 
+        var maybeLayerType = aAdapter.getAnnotationType(editorCas);
+        if (maybeLayerType.isEmpty()) {
+            return;
+        }
+
         // Check each feature structure of this layer
-        var layerType = aAdapter.getAnnotationType(editorCas).get();
+        var layerType = maybeLayerType.get();
         var annotationFsType = editorCas.getAnnotationType();
         try (var fses = editorCas.select(layerType)) {
             for (var fs : fses) {
@@ -428,6 +433,11 @@ public abstract class AnnotationPageBase
                     if (!f.isRequired()) {
                         continue;
                     }
+
+                    if (!aAdapter.isFeatureDeclared(fs, f)) {
+                        continue;
+                    }
+
                     if (evaluator.isHiddenConditionalFeature(constraints, fs, f)) {
                         continue;
                     }
@@ -521,6 +531,20 @@ public abstract class AnnotationPageBase
         if (notEditableReason != null) {
             throw new NotEditableException(notEditableReason);
         }
+    }
+
+    /**
+     * Discard the cached editability verdict so that the next {@link #isEditable()} or
+     * {@link #ensureIsEditable()} re-evaluates it.
+     * <p>
+     * Editability is resolved once per request and then cached until the models are detached. Call
+     * this after changing anything the verdict depends on - in particular after a source document
+     * state transition, since whether a curator may edit depends on the document having reached a
+     * curation state.
+     */
+    protected void clearIsEditableCache()
+    {
+        annotationNotEditableReason.detach();
     }
 
     public boolean isEditable()

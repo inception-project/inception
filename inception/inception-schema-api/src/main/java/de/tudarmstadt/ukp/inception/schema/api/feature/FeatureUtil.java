@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.cas.ArrayFS;
@@ -36,6 +37,58 @@ import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public class FeatureUtil
 {
+    /**
+     * Get the CAS feature corresponding to the given layer feature on the given type. The feature
+     * may be missing if the CAS has not been upgraded to the current version of the project type
+     * system.
+     *
+     * @param aType
+     *            the type.
+     * @param aFeature
+     *            the layer feature.
+     * @return the CAS feature or empty if the feature is not declared on the type.
+     */
+    public static Optional<Feature> getFeature(Type aType, AnnotationFeature aFeature)
+    {
+        return Optional.ofNullable(aType.getFeatureByBaseName(aFeature.getName()));
+    }
+
+    /**
+     * Get the CAS feature corresponding to the given layer feature on the type of the given feature
+     * structure. The feature may be missing if the CAS has not been upgraded to the current version
+     * of the project type system.
+     *
+     * @param aFS
+     *            the feature structure.
+     * @param aFeature
+     *            the layer feature.
+     * @return the CAS feature or empty if the feature is not declared on the type of the feature
+     *         structure.
+     */
+    public static Optional<Feature> getFeature(FeatureStructure aFS, AnnotationFeature aFeature)
+    {
+        return getFeature(aFS.getType(), aFeature);
+    }
+
+    /**
+     * Get the CAS feature corresponding to the given layer feature on the type of the given feature
+     * structure, failing if the feature is not declared.
+     *
+     * @param aFS
+     *            the feature structure.
+     * @param aFeature
+     *            the layer feature.
+     * @return the CAS feature.
+     * @throws IllegalArgumentException
+     *             if the feature is not declared on the type of the feature structure.
+     */
+    public static Feature getMandatoryFeature(FeatureStructure aFS, AnnotationFeature aFeature)
+    {
+        return getFeature(aFS, aFeature)
+                .orElseThrow(() -> new IllegalArgumentException("On [" + aFS.getType().getName()
+                        + "] the feature [" + aFeature.getName() + "] does not exist."));
+    }
+
     /**
      * Set a feature value.
      *
@@ -53,12 +106,7 @@ public class FeatureUtil
             return;
         }
 
-        var feature = aFS.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (feature == null) {
-            throw new IllegalArgumentException("On [" + aFS.getType().getName() + "] the feature ["
-                    + aFeature.getName() + "] does not exist.");
-        }
+        var feature = getMandatoryFeature(aFS, aFeature);
 
         switch (aFeature.getMultiValueMode()) {
         case NONE: {

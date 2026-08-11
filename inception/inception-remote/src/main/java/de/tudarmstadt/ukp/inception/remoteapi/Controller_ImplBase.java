@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.remoteapi;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.ERROR;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.forceOverwriteSofa;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.selectSentences;
@@ -60,6 +59,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.api.format.FormatSupport;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -94,6 +94,7 @@ public abstract class Controller_ImplBase
     public static final String PARAM_FILE = "file";
     public static final String PARAM_CONTENT = "content";
     public static final String PARAM_NAME = "name";
+    public static final String PARAM_SLUG = "slug";
     public static final String PARAM_TITLE = "title";
     public static final String PARAM_FORMAT = "format";
     public static final String PARAM_STATE = "state";
@@ -175,29 +176,75 @@ public abstract class Controller_ImplBase
         return user;
     }
 
-    protected Project getProject(long aProjectId)
-        throws ObjectNotFoundException, AccessForbiddenException
+    /**
+     * Look up a project by its numeric ID or by its URL slug without performing any access check.
+     */
+    private Project lookupProject(String aProjectId) throws ObjectNotFoundException
     {
-        // Get current user - this will throw an exception if the current user does not exit
-        var sessionOwner = getSessionOwner();
+        var projectId = toProjectId(aProjectId);
 
-        // Get project
-        Project project;
         try {
-            project = projectService.getProject(aProjectId);
+            if (projectId != null) {
+                return projectService.getProject(projectId.longValue());
+            }
+
+            return projectService.getProjectBySlug(aProjectId);
         }
         catch (NoResultException e) {
             throw new ObjectNotFoundException("Project [" + aProjectId + "] not found.");
         }
+    }
+
+    /**
+     * Look up a project either by its numeric ID or by its URL slug. Since a project slug can never
+     * start with a digit (cf. {@link Project#isValidProjectSlug}), a numeric identifier is
+     * unambiguously an ID and any other identifier is unambiguously a slug.
+     *
+     * @param aProjectId
+     *            the numeric project ID or the project slug.
+     * @return the project.
+     * @throws ObjectNotFoundException
+     *             if the project does not exist.
+     * @throws AccessForbiddenException
+     *             if the session owner may not access the project.
+     */
+    protected Project getProject(String aProjectId, PermissionLevel aRole,
+            PermissionLevel... aMoreRoles)
+        throws ObjectNotFoundException, AccessForbiddenException
+    {
+        return assertCanAccessProject(lookupProject(aProjectId), aProjectId, aRole, aMoreRoles);
+    }
+
+    /**
+     * @return the given identifier as a numeric project ID or {@code null} if it is not a
+     *         well-formed numeric ID and should hence be treated as a project slug.
+     */
+    private static Long toProjectId(String aProjectId)
+    {
+        try {
+            return Long.valueOf(aProjectId);
+        }
+        catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private Project assertCanAccessProject(Project aProject, String aProjectId,
+            PermissionLevel aRole, PermissionLevel... aMoreRoles)
+        throws ObjectNotFoundException, AccessForbiddenException
+    {
+
+        // Get current user - this will throw an exception if the current user does not exit
+        var sessionOwner = getSessionOwner();
 
         // Check for the access
         assertPermission(
-                "User [" + sessionOwner.getUsername() + "] is not allowed to access project ["
+                "User [" + sessionOwner.getUsername() + "] has insufficient privileges on project ["
                         + aProjectId + "]",
-                projectService.hasRole(sessionOwner, project, MANAGER)
+                projectService.hasRole(sessionOwner, aProject, aRole, aMoreRoles)
                         || userRepository.isAdministrator(sessionOwner));
 
-        return project;
+        return aProject;
     }
 
     protected SourceDocument getDocument(Project aProject, long aDocumentId)
@@ -239,12 +286,11 @@ public abstract class Controller_ImplBase
         }
     }
 
-    protected CAS createCompatibleCas(long aProjectId, long aDocumentId, MultipartFile aFile,
+    protected CAS createCompatibleCas(Project aProject, long aDocumentId, MultipartFile aFile,
             Optional<String> aFormatId)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
-        var project = getProject(aProjectId);
-        var document = getDocument(project, aDocumentId);
+        var document = getDocument(aProject, aDocumentId);
 
         // Check if the format is supported
         var format = aFormatId.orElse(FORMAT_DEFAULT);
@@ -317,14 +363,11 @@ public abstract class Controller_ImplBase
         return annotationCas;
     }
 
-    protected ResponseEntity<byte[]> readAnnotation(long aProjectId, long aDocumentId,
+    protected ResponseEntity<byte[]> readAnnotation(Project aProject, long aDocumentId,
             String aAnnotatorId, Mode aMode, Optional<String> aFormat)
         throws RemoteApiException, ClassNotFoundException, IOException, UIMAException
     {
-        // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var doc = getDocument(project, aDocumentId);
+        var doc = getDocument(aProject, aDocumentId);
 
         // Check format
         String formatId;

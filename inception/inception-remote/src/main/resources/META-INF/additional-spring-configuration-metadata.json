@@ -19,6 +19,16 @@
       "description": "Enables bulk prediction submission via the remote API task endpoints. Requires remote-api.tasks.enabled=true."
     },
     {
+      "name": "remote-api.legacy.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the deprecated WebAnno-era legacy remote API under /api/v1. Requires remote-api.enabled=true. The legacy API is not supported by pycaprio, does not support project slugs and will be removed in a future version - use the AERO API under /api/aero/v1 instead.",
+      "deprecation": {
+        "level": "warning",
+        "reason": "The legacy remote API is superseded by the AERO API and will be removed in a future version."
+      }
+    },
+    {
       "name": "webanno.remote-api.enable",
       "type": "java.lang.Boolean",
       "defaultValue": false,

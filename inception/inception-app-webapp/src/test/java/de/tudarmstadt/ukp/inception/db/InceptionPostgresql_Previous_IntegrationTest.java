@@ -27,17 +27,21 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.MariaDBContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+// PostgreSQL 17 - previous major (EOL 2029-11)
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionMariadb_11_6_IntegrationTest
+class InceptionPostgresql_Previous_IntegrationTest
 {
+    // static DockerImageName image = DockerImageName.parse("pgvector/pgvector:pg16")
+    // .asCompatibleSubstituteFor("postgres");
     @SuppressWarnings("resource")
-    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.6.2") //
-            .withDatabaseName("testdb") //
-            .withUsername("test") //
-            .withPassword("test");
+    static final PostgreSQLContainer<?> dbContainer = new PostgreSQLContainer<>(
+            "postgres:17.10-alpine") //
+                    .withDatabaseName("testdb") //
+                    .withUsername("test") //
+                    .withPassword("test");
 
     static @TempDir Path tempDir;
 

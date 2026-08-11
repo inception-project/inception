@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.feature.string.pivot;
 
+import static de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil.getFeature;
 import static org.apache.commons.lang3.StringUtils.trimToNull;
 
 import org.apache.uima.cas.FeatureStructure;
@@ -46,8 +47,10 @@ public class StringFeatureExtractor
     public String extract(ContextualizedFS<FeatureStructure> aAnn)
     {
         var ann = aAnn.fs();
-        var f = ann.getType().getFeatureByBaseName(feature.getName());
-        return trimToNull(ann.getFeatureValueAsString(f));
+        // The feature may be missing if the CAS has not been upgraded yet - treat it as no value
+        return getFeature(ann, feature) //
+                .map(f -> trimToNull(ann.getFeatureValueAsString(f))) //
+                .orElse(null);
     }
 
     @Override

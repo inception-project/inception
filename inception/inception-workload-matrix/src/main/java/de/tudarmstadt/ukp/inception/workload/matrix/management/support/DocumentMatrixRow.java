@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
@@ -32,6 +31,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
+import de.tudarmstadt.ukp.inception.workload.matrix.MatrixCurationReadiness;
 
 public class DocumentMatrixRow
     implements Serializable
@@ -83,43 +83,19 @@ public class DocumentMatrixRow
 
     public SourceDocumentState getState()
     {
-        long newCount = 0;
-        for (var username : annotators) {
-            AnnotationDocument annDoc = annotationDocuments.get(username);
-            if (annDoc == null || annDoc.getState() == NEW) {
-                newCount++;
-            }
-        }
+        var counts = countStates();
 
-        long[] counts = new long[3];
-        annotationDocuments.values().stream() //
-                .filter(annDoc -> annotators.contains(annDoc.getAnnotationSet())) //
-                .forEach(annDoc -> {
-                    switch (annDoc.getState()) {
-                    case IGNORE:
-                        counts[0]++;
-                        break;
-                    case IN_PROGRESS:
-                        counts[1]++;
-                        break;
-                    case FINISHED:
-                        counts[2]++;
-                        break;
-                    case NEW:
-                        // already handled above
-                        break;
-                    }
-                });
-
-        long ignoredCount = counts[0];
-        long inProgressCount = counts[1];
-        long finishedCount = counts[2];
-        long requiredCount = annotators.size() - ignoredCount;
+        var newCount = counts.newCount();
+        var ignoredCount = counts.ignoredCount();
+        var inProgressCount = counts.inProgressCount();
+        var finishedCount = counts.finishedCount();
+        var requiredCount = annotators.size() - ignoredCount;
 
         SourceDocumentState state = sourceDocument.getState();
 
         if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
-            if (finishedCount >= requiredCount) {
+            if (MatrixCurationReadiness.isReadyForCuration(finishedCount, ignoredCount,
+                    annotators.size())) {
                 state = ANNOTATION_FINISHED;
             }
             else if (newCount == requiredCount) {
@@ -131,6 +107,59 @@ public class DocumentMatrixRow
         }
 
         return state;
+    }
+
+    /**
+     * @return whether the document is ready for curation - see {@link MatrixCurationReadiness}.
+     *         Computed from the already-loaded annotation documents of this row, so no query.
+     */
+    public boolean isReadyForCuration()
+    {
+        var counts = countStates();
+
+        return MatrixCurationReadiness.isReadyForCuration(counts.finishedCount(),
+                counts.ignoredCount(), annotators.size());
+    }
+
+    /**
+     * Per-state annotator counts of a row. Annotators without an annotation document count as NEW.
+     */
+    private record StateCounts(long ignoredCount, long inProgressCount, long finishedCount,
+            long newCount)
+    {}
+
+    private StateCounts countStates()
+    {
+        long ignoredCount = 0;
+        long inProgressCount = 0;
+        long finishedCount = 0;
+        long newCount = 0;
+
+        for (var annotator : annotators) {
+            var annDoc = annotationDocuments.get(annotator);
+
+            if (annDoc == null) {
+                newCount++;
+                continue;
+            }
+
+            switch (annDoc.getState()) {
+            case IGNORE:
+                ignoredCount++;
+                break;
+            case IN_PROGRESS:
+                inProgressCount++;
+                break;
+            case FINISHED:
+                finishedCount++;
+                break;
+            case NEW:
+                newCount++;
+                break;
+            }
+        }
+
+        return new StateCounts(ignoredCount, inProgressCount, finishedCount, newCount);
     }
 
     public SourceDocumentState getCurationState()

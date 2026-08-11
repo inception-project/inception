@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueExcept
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditor;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureType;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
@@ -154,7 +155,7 @@ public class MultiValueConceptFeatureSupport
             return;
         }
 
-        var feature = fs.getType().getFeatureByBaseName(aFeature.getName());
+        var feature = FeatureUtil.getMandatoryFeature(fs, aFeature);
         var oldValues = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
 
         var mergedValues = new LinkedHashSet<String>();
@@ -373,6 +374,8 @@ public class MultiValueConceptFeatureSupport
             return;
         }
 
+        var feature = FeatureUtil.getMandatoryFeature(fs, aFeature);
+
         // Create a new array if size differs otherwise re-use existing one
         StringArrayFS array = FSUtil.getFeature(fs, aFeature.getName(), StringArrayFS.class);
         if (array == null || (array.size() != values.size())) {
@@ -382,7 +385,7 @@ public class MultiValueConceptFeatureSupport
         // Fill in links
         array.copyFromArray(values.toArray(new String[values.size()]), 0, 0, values.size());
 
-        fs.setFeatureValue(fs.getType().getFeatureByBaseName(aFeature.getName()), array);
+        fs.setFeatureValue(feature, array);
     }
 
     @Override
@@ -405,9 +408,7 @@ public class MultiValueConceptFeatureSupport
     @Override
     public List<String> renderFeatureValues(AnnotationFeature aFeature, FeatureStructure aFs)
     {
-        var labelFeature = aFs.getType().getFeatureByBaseName(aFeature.getName());
-
-        if (labelFeature == null) {
+        if (FeatureUtil.getFeature(aFs, aFeature).isEmpty()) {
             return emptyList();
         }
 

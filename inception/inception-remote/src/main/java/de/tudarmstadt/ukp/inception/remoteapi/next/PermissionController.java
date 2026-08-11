@@ -67,22 +67,14 @@ public class PermissionController
     public ResponseEntity<RResponse<List<RPermission>>> read( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId)
+            String aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to list project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var permissions = projectService.listProjectPermissions(project).stream() //
                 .map(RPermission::new) //
@@ -99,9 +91,10 @@ public class PermissionController
     public ResponseEntity<RResponse<List<RPermission>>> read( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_ANNOTATOR_ID) //
             @Schema(description = """
                     User to list the permissions for.
@@ -110,16 +103,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to list project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var subjectUser = getUser(aSubjectUser);
 
@@ -138,9 +122,10 @@ public class PermissionController
     public ResponseEntity<RResponse<List<RPermission>>> create( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_ANNOTATOR_ID) //
             @Schema(description = """
                     User to assign the permissions to.
@@ -155,16 +140,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to manage project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var subjectUser = getUser(aSubjectUser);
 
@@ -190,9 +166,10 @@ public class PermissionController
     public ResponseEntity<RResponse<List<RPermission>>> delete( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_ANNOTATOR_ID) //
             @Schema(description = """
                     User to assign the permissions to.
@@ -207,16 +184,7 @@ public class PermissionController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission(
-                "User [" + sessionOwner.getUsername()
-                        + "] is not allowed to manage project permissions",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var subjectUser = getUser(aSubjectUser);
 

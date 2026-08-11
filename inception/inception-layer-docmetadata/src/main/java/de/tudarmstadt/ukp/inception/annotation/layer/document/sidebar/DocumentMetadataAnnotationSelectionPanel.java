@@ -109,6 +109,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
@@ -651,9 +652,15 @@ public class DocumentMetadataAnnotationSelectionPanel
                 if (!feature.isEnabled()) {
                     continue;
                 }
+
+                if (!adapter.isFeatureDeclared(fs, feature)) {
+                    continue;
+                }
+
                 if (constraintsEvaluator.isHiddenConditionalFeature(constraints, fs, feature)) {
                     continue;
                 }
+
                 if (!adapter.isFeatureValueValid(feature, fs)) {
                     invalidFeatures.add(feature.getUiName());
                 }
@@ -896,10 +903,10 @@ public class DocumentMetadataAnnotationSelectionPanel
                 var sourceType = aAdapter.getAnnotationType(aSourceAnnotation.getCAS())
                         .orElseThrow(() -> new IllegalStateException(
                                 "Source CAS does not define the document metadata type"));
-                if (sourceType.getFeatureByBaseName(feature.getName()) == null) {
-                    throw new IllegalStateException("Source CAS type [" + sourceType.getName()
-                            + "] does not define a feature named [" + feature.getName() + "]");
-                }
+                FeatureUtil.getFeature(sourceType, feature)
+                        .orElseThrow(() -> new IllegalStateException("Source CAS type ["
+                                + sourceType.getName() + "] does not define a feature named ["
+                                + feature.getName() + "]"));
 
                 if (!aAdapter.getFeatureSupport(feature.getName())
                         .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {

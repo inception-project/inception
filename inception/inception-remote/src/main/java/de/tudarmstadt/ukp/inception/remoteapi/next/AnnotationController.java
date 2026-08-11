@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.remoteapi.next;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_COMPLETE;
 import static de.tudarmstadt.ukp.inception.remoteapi.AnnotationDocumentStateUtils.ANNOTATION_STATE_IN_PROGRESS;
@@ -72,9 +73,10 @@ public class AnnotationController
     public ResponseEntity<RResponse<RAnnotation>> updateState( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -97,7 +99,7 @@ public class AnnotationController
             String aState)
         throws Exception
     {
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
         var document = getDocument(project, aDocumentId);
 
         var anno = getAnnotation(document, aAnnotatorId, false);

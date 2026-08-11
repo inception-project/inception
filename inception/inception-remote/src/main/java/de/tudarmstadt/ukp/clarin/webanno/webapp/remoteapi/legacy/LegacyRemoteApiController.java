@@ -80,7 +80,12 @@ import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Expose some functions of WebAnno via a RESTful remote API.
+ *
+ * @deprecated The legacy remote API is deprecated and disabled by default. It will be removed in a
+ *             future version. Use the AERO remote API under
+ *             {@link de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase#API_BASE} instead.
  */
+@Deprecated
 @ConditionalOnExpression("false") // Auto-configured - avoid package scanning
 @Controller
 @RequestMapping(LegacyRemoteApiController.API_BASE)
@@ -131,7 +136,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "Create a new project")
+    @Operation(summary = "Create a new project", deprecated = true)
     @PostMapping(//
             value = ("/" + PROJECTS), //
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -241,7 +246,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "List all the projects for a given user with their roles")
+    @Operation(summary = "List all the projects managed by a given user with their roles", deprecated = true)
     @GetMapping(value = ("/" + PROJECTS))
     public ResponseEntity<String> projectList() throws Exception
     {
@@ -252,8 +257,10 @@ public class LegacyRemoteApiController
             return ResponseEntity.badRequest().body("User [" + username + "] not found.");
         }
 
-        // Get projects with permission
-        List<Project> accessibleProjects = projectRepository.listAccessibleProjects(user);
+        // Get the projects which the user manages - the remote API requires the manager role
+        // throughout, so projects in which the user is merely an annotator or curator are not
+        // reported here. Administrators see all projects.
+        List<Project> accessibleProjects = projectRepository.listManageableProjects(user);
 
         // Add permissions for each project into JSON array and store in JSON object
         JSONObject returnJSONObj = new JSONObject();
@@ -287,7 +294,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "Delete a project managed by the given user")
+    @Operation(summary = "Delete a project managed by the given user", deprecated = true)
     @DeleteMapping(value = ("/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}"))
     public ResponseEntity<String> projectDelete(@PathVariable(PARAM_PROJECT_ID) long aProjectId)
         throws Exception
@@ -335,7 +342,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if something went wrong
      */
-    @Operation(summary = "Show source documents in a project managed by the given user")
+    @Operation(summary = "Show source documents in a project managed by the given user", deprecated = true)
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS)
     public ResponseEntity<String> sourceDocumentList(
             @PathVariable(PARAM_PROJECT_ID) long aProjectId)
@@ -396,7 +403,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "Delete the source document in project managed by the given user")
+    @Operation(summary = "Delete the source document in project managed by the given user", deprecated = true)
     @DeleteMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
             + PARAM_DOCUMENT_ID + "}")
     public ResponseEntity<String> sourceDocumentDelete(
@@ -468,7 +475,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "Upload a source document into project managed by the given user")
+    @Operation(summary = "Upload a source document into project managed by the given user", deprecated = true)
     @PostMapping( //
             value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS, //
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -537,7 +544,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "List annotation documents for a source document in a projects managed by the given user")
+    @Operation(summary = "List annotation documents for a source document in a projects managed by the given user", deprecated = true)
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
             + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS)
     public ResponseEntity<String> annotationDocumentList(
@@ -623,7 +630,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "Download annotation document from a projects managed by the given user")
+    @Operation(summary = "Download annotation document from a projects managed by the given user", deprecated = true)
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + DOCUMENTS + "/{"
             + PARAM_DOCUMENT_ID + "}/" + ANNOTATIONS + "/{" + PARAM_USERNAME + "}")
     public void annotationDocumentRead(HttpServletResponse response,
@@ -760,7 +767,7 @@ public class LegacyRemoteApiController
      * @throws Exception
      *             if there was an error.
      */
-    @Operation(summary = "Download curated document from a projects managed by the given user")
+    @Operation(summary = "Download curated document from a projects managed by the given user", deprecated = true)
     @GetMapping(value = "/" + PROJECTS + "/{" + PARAM_PROJECT_ID + "}/" + CURATION + "/{"
             + PARAM_DOCUMENT_ID + "}")
     public void curationDocumentRead(HttpServletResponse response,

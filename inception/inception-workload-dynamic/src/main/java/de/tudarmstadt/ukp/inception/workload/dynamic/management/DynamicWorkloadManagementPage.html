@@ -29,6 +29,9 @@
   .k-floatwrap { height: fit-content; border: none; }
   .state-toggle { cursor: pointer; }
   .document-table .badge { font-size: 85% !important; }
+  /* Curation started although annotation is not complete - see WorkloadCssClasses. The matrix
+     workload management page renders the same marker scoped to its own table. */
+  .document-table .curation-not-ready::after { content: "⚠️" }
   
   .ddFilterForm, .ddUserForm {
    position: absolute;

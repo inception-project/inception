@@ -30,15 +30,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
         @Type(value = WebAnnotationTextQuoteSelector.class, name = "TextQuoteSelector") })
 public abstract class WebAnnotationSelector
 {
-    private String type;
-
-    public String getType()
-    {
-        return type;
-    }
-
-    public void setType(String aType)
-    {
-        type = aType;
-    }
+    // The "type" property is contributed by the Jackson type resolution mechanism (see the
+    // JsonTypeInfo/JsonSubTypes annotations above) - it must not be declared as a bean property
+    // here, otherwise Jackson rejects the class due to the conflicting property definitions.
 }

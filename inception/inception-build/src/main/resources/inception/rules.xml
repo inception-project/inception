@@ -63,5 +63,14 @@
         <ignoreVersion type="range">(2.3.0.1,)</ignoreVersion>
       </ignoreVersions>
     </rule>
+    <!--
+      Liquibase >= 5 has an incompatible non-OSS license and is additionally banned via the
+      maven-enforcer-plugin bannedDependencies rule in inception/pom.xml.
+    -->
+    <rule groupId="org.liquibase" artifactId="liquibase-core" comparisonMethod="maven">
+      <ignoreVersions>
+        <ignoreVersion type="range">[5.0.0,)</ignoreVersion>
+      </ignoreVersions>
+    </rule>
   </rules>
 </ruleset>

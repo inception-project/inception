@@ -169,7 +169,8 @@
           <div class="pb-2 flex-content flex-v-container">
             <div class="card flex-content">
               <div class="card-header border-bottom-0">
-                <span wicket:id="documentNamePanel"/> 
+                <span wicket:id="documentNamePanel"/>
+                <span wicket:id="documentStatusBadges"/>
                 <span wicket:id="numberOfPages" class="small text-muted float-end"/>
               </div>
               <div class="card-body flex-v-container" style="padding: 0px;">
@@ -183,7 +184,7 @@
       </div>
 
       <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container">
-        <wicket:container wicket:id="annotationDetailEditorPanel"/>
+        <div wicket:id="annotationDetailEditorPanel" class="flex-content flex-v-container"/>
       </div>
     </div>
   </wicket:extend>

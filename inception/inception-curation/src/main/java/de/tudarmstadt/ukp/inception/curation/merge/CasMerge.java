@@ -64,6 +64,7 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -626,6 +627,9 @@ public class CasMerge
     {
         // Cache the feature list instead of hammering the database
         var features = aContext.listSupportedFeatures(aAdapter.getLayer());
+        var sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS())
+                .orElseThrow(() -> new IllegalStateException("Source CAS does not define the type ["
+                        + aAdapter.getAnnotationTypeName() + "]"));
         try (var featureUpdateCtx = aAdapter.updateFeatureValues(aDocument, aUsername,
                 aTargetFS.getCAS(), getAddr(aTargetFS))) {
             for (var feature : features) {
@@ -633,13 +637,10 @@ public class CasMerge
                     continue;
                 }
 
-                var sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS()).get();
-                var sourceFeature = sourceFsType.getFeatureByBaseName(feature.getName());
-
-                if (sourceFeature == null) {
-                    throw new IllegalStateException("Source CAS type [" + sourceFsType.getName()
-                            + "] does not define a feature named [" + feature.getName() + "]");
-                }
+                FeatureUtil.getFeature(sourceFsType, feature)
+                        .orElseThrow(() -> new IllegalStateException("Source CAS type ["
+                                + sourceFsType.getName() + "] does not define a feature named ["
+                                + feature.getName() + "]"));
 
                 if (!aAdapter.getFeatureSupport(feature.getName())
                         .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {

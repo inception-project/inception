@@ -77,21 +77,14 @@ public class AeroKnowledgeBaseController
     public ResponseEntity<RResponse<List<RKnowledgeBase>>> list( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId)
+            String aProjectId)
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission("User [" + sessionOwner.getUsername()
-                + "] is not allowed to access knowledge bases in project [" + aProjectId + "]",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var kbs = knowledgeBaseService.getEnabledKnowledgeBases(project);
 
@@ -109,9 +102,10 @@ public class AeroKnowledgeBaseController
     public ResponseEntity<String> sparqlOne( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_KNOWLEDGE_BASE_ID) //
             @Schema(description = """
                     Knowledge base identifier.
@@ -125,15 +119,7 @@ public class AeroKnowledgeBaseController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission("User [" + sessionOwner.getUsername()
-                + "] is not allowed to access knowledge bases in project [" + aProjectId + "]",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var maybeKb = knowledgeBaseService.getKnowledgeBaseById(project, aKbId);
         if (!maybeKb.map(KnowledgeBase::isEnabled).orElse(false)) {
@@ -164,9 +150,10 @@ public class AeroKnowledgeBaseController
     public ResponseEntity<String> sparqlAll( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @RequestBody //
             @Schema(description = """
                     SPARQL query.
@@ -175,15 +162,7 @@ public class AeroKnowledgeBaseController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
-
-        var sessionOwner = getSessionOwner();
-
-        // Check for the access
-        assertPermission("User [" + sessionOwner.getUsername()
-                + "] is not allowed to access knowledge bases in project [" + aProjectId + "]",
-                projectService.hasRole(sessionOwner, project, MANAGER)
-                        || userRepository.isAdministrator(sessionOwner));
+        var project = getProject(aProjectId, MANAGER);
 
         var bindingNames = new HashSet<String>();
         var combined = new ArrayList<BindingSet>();

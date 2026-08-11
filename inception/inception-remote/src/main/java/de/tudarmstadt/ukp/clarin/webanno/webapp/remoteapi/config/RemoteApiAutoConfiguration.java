@@ -61,6 +61,9 @@ public class RemoteApiAutoConfiguration
             "(${remote-api.enabled:false} || ${webanno.remote-api.enable:false}) && !"
                     + SPEL_IS_ADMIN_ACCOUNT_RECOVERY_MODE;
 
+    static final String LEGACY_REMOTE_API_ENABLED_CONDITION = //
+            "(" + REMOTE_API_ENABLED_CONDITION + ") && ${remote-api.legacy.enabled:false}";
+
     @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
     @Bean
     public AeroProjectController aeroRemoteApiController()
@@ -120,7 +123,12 @@ public class RemoteApiAutoConfiguration
         return new AeroCurationController();
     }
 
-    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    /**
+     * @return the controller of the legacy remote API.
+     * @deprecated The legacy remote API will be removed in a future version.
+     */
+    @Deprecated
+    @ConditionalOnExpression(LEGACY_REMOTE_API_ENABLED_CONDITION)
     @Bean
     public LegacyRemoteApiController legacyRemoteApiController()
     {
@@ -155,7 +163,12 @@ public class RemoteApiAutoConfiguration
                 .build();
     }
 
-    @ConditionalOnExpression(REMOTE_API_ENABLED_CONDITION)
+    /**
+     * @return the OpenAPI group of the legacy remote API.
+     * @deprecated The legacy remote API will be removed in a future version.
+     */
+    @Deprecated
+    @ConditionalOnExpression(LEGACY_REMOTE_API_ENABLED_CONDITION)
     @Bean
     public GroupedOpenApi legacyRemoteApiDocket()
     {
@@ -163,8 +176,11 @@ public class RemoteApiAutoConfiguration
                 .pathsToMatch(LegacyRemoteApiController.API_BASE + "/**") //
                 .addOpenApiCustomizer(openApi -> { //
                     openApi.info(new Info() //
-                            .title("Legacy API") //
-                            .version("1"));
+                            .title("Legacy API (deprecated)") //
+                            .version("1") //
+                            .description(String.join(" ",
+                                    "The legacy WebAnno remote API is deprecated and will be",
+                                    "removed in a future version. Use the AERO API instead.")));
                 }) //
                 .build();
     }

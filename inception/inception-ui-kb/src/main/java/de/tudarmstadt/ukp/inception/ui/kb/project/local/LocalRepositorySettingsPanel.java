@@ -55,6 +55,7 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.BootstrapFileInputField;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.fileinput.FileInputConfig;
@@ -65,6 +66,7 @@ import de.tudarmstadt.ukp.inception.support.io.FileUploadDownloadHelper;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
+import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseStatisticsChangedEvent;
 import de.tudarmstadt.ukp.inception.ui.kb.project.KnowledgeBaseWrapper;
 
 public class LocalRepositorySettingsPanel
@@ -178,6 +180,12 @@ public class LocalRepositorySettingsPanel
                     kb.getProject().getId(), e);
         }
         aTarget.add(this);
+    }
+
+    @OnEvent
+    public void onKnowledgeBaseStatisticsChanged(KnowledgeBaseStatisticsChangedEvent aEvent)
+    {
+        aEvent.getTarget().add(this);
     }
 
     @SuppressWarnings("unchecked")

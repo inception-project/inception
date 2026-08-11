@@ -23,9 +23,15 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.OVERLAP_ONLY;
 import static de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode.STACKING_ONLY;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 
+import java.util.Optional;
+
 import org.apache.commons.lang3.StringUtils;
+import org.apache.uima.cas.CAS;
 import org.apache.uima.fit.factory.JCasFactory;
 import org.apache.uima.jcas.JCas;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,11 +41,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
+import de.tudarmstadt.ukp.inception.annotation.feature.string.StringFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanCrossSentenceBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanOverlapBehavior;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
@@ -113,6 +121,46 @@ public class SpanRendererTest
                 .usingRecursiveFieldByFieldElementComparator() //
                 .containsExactlyInAnyOrder(new VComment(ne, VCommentType.ERROR,
                         "Crossing sentence boundaries is not permitted."));
+    }
+
+    @Test
+    public void thatRenderToleratesFeatureMissingFromCas() throws Exception
+    {
+        // A feature that the project declares on the layer but which does not exist in the CAS -
+        // this happens when the CAS has not been upgraded to the current project type system, e.g.
+        // when opening a document read-only. See issue #6183.
+        var missingFeature = new AnnotationFeature(1l, neLayer, "comment", CAS.TYPE_NAME_STRING);
+        missingFeature.setRequired(true);
+
+        // Use the real feature support so that we exercise the actual feature value lookup which
+        // is what fails on a CAS that does not declare the feature
+        @SuppressWarnings({ "unchecked", "rawtypes" })
+        var asWild = (Optional) Optional.of(new StringFeatureSupport());
+        lenient().when(featureSupportRegistry.findExtension(any(AnnotationFeature.class)))
+                .thenReturn(asWild);
+
+        jcas.setDocumentText(StringUtils.repeat("a", 10));
+
+        new Sentence(jcas, 0, 10).addToIndexes();
+        var ne = new NamedEntity(jcas, 3, 8);
+        ne.addToIndexes();
+
+        var features = asList(missingFeature);
+
+        var adapter = new SpanAdapterImpl(layerSupportRegistry, featureSupportRegistry, null,
+                neLayer, () -> features, asList(), constraintsService);
+
+        var sut = new SpanRenderer(adapter, layerSupportRegistry, featureSupportRegistry, asList());
+
+        var request = RenderRequest.builder() //
+                .withCas(jcas.getCas()) //
+                .withWindow(0, jcas.getCas().getDocumentText().length()) //
+                .build();
+        var vdoc = new VDocument(jcas.getCas().getDocumentText());
+
+        assertThatNoException().isThrownBy(() -> sut.render(request, features, vdoc));
+
+        assertThat(vdoc.comments()).isEmpty();
     }
 
     @Test

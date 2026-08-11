@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.RecommendationTask_Impl
 import de.tudarmstadt.ukp.inception.scheduling.ProjectTask;
 import de.tudarmstadt.ukp.inception.scheduling.Task;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 public class TagSetExtractionTask
@@ -179,7 +180,12 @@ public class TagSetExtractionTask
             return;
         }
 
-        var uimaFeature = uimaType.getFeatureByBaseName(feature.getName());
+        var maybeUimaFeature = FeatureUtil.getFeature(uimaType, feature);
+        if (maybeUimaFeature.isEmpty()) {
+            return;
+        }
+
+        var uimaFeature = maybeUimaFeature.get();
         if (!supportedTypes.contains(uimaFeature.getRange().getName())) {
             return;
         }

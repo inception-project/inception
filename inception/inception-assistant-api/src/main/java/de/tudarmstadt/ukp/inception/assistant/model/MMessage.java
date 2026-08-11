@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.assistant.model;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXISTING_PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import tools.jackson.databind.annotation.JsonSerialize;
 
 @JsonSerialize
-@JsonTypeInfo(use = NAME, include = PROPERTY, property = MMessage.TYPE_FIELD)
+@JsonTypeInfo(use = NAME, include = EXISTING_PROPERTY, property = MMessage.TYPE_FIELD)
 @JsonSubTypes({ //
         @JsonSubTypes.Type(value = MTextMessage.class), //
         @JsonSubTypes.Type(value = MCallResponse.class), //

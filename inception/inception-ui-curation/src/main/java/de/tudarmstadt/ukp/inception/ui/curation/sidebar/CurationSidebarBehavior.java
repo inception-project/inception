@@ -94,10 +94,9 @@ public class CurationSidebarBehavior
     {
         var page = aEvent.getSource();
 
-        if (!(page instanceof AnnotationPage) && !(page instanceof CurationPage)) {
+        if (!(page instanceof CurationPage)) {
             LOG.trace(
-                    "Curation sidebar is not deployed on AnnotationPage or CurationPage but "
-                            + "rather [{}] - ignoring event [{}]",
+                    "Curation sidebar is not deployed on CurationPage but rather [{}] - ignoring event [{}]",
                     page.getClass(), aEvent.getClass());
             return;
         }

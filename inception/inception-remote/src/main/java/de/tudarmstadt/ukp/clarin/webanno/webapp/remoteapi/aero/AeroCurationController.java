@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RMessageLevel.INFO;
 import static de.tudarmstadt.ukp.inception.remoteapi.SourceDocumentStateUtils.parseSourceDocumentState;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
@@ -52,7 +54,7 @@ import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero.model.RResponse;
 import de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.config.RemoteApiAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.remoteapi.Controller_ImplBase;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -76,6 +78,7 @@ public class AeroCurationController
     private final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired CurationDocumentService curationService;
+    private @Autowired WorkloadManagementService workloadManagementService;
 
     @Operation(summary = "Create curation for a document in a project")
     @PostMapping(//
@@ -86,9 +89,10 @@ public class AeroCurationController
     public ResponseEntity<RResponse<RAnnotation>> create( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -121,10 +125,10 @@ public class AeroCurationController
             UriComponentsBuilder aUcb)
         throws Exception
     {
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
         var document = getDocument(project, aDocumentId);
 
-        var annotationCas = createCompatibleCas(aProjectId, aDocumentId, aFile, aFormat);
+        var annotationCas = createCompatibleCas(project, aDocumentId, aFile, aFormat);
 
         // If they are compatible, then we can store the new annotations
         curationService.writeCurationCas(annotationCas, document, false);
@@ -156,8 +160,7 @@ public class AeroCurationController
             documentService.createSourceDocument(document);
         }
 
-        var response = new RResponse<>(
-                new RAnnotation(WebAnnoConst.CURATION_USER, resultState, new Date()));
+        var response = new RResponse<>(new RAnnotation(CURATION_USER, resultState, new Date()));
         return ResponseEntity.created(
                 aUcb.path(API_BASE + "/" + PROJECTS + "/{pid}/" + DOCUMENTS + "/{did}/" + CURATION)
                         .buildAndExpand(project.getId(), document.getId()).toUri())
@@ -173,9 +176,10 @@ public class AeroCurationController
     public ResponseEntity<byte[]> read( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -195,8 +199,8 @@ public class AeroCurationController
             Optional<String> aFormat)
         throws Exception
     {
-        return readAnnotation(aProjectId, aDocumentId, WebAnnoConst.CURATION_USER, Mode.CURATION,
-                aFormat);
+        var project = getProject(aProjectId, MANAGER);
+        return readAnnotation(project, aDocumentId, CURATION_USER, Mode.CURATION, aFormat);
     }
 
     @Operation(summary = "Delete a user's annotations of one document from a project")
@@ -207,9 +211,10 @@ public class AeroCurationController
     public ResponseEntity<RResponse<Void>> delete( //
             @PathVariable(PARAM_PROJECT_ID) //
             @Schema(description = """
-                    Project identifier.
+                    Project identifier - either the numeric project ID or the project
+                    URL slug.
                     """) //
-            long aProjectId, //
+            String aProjectId, //
             @PathVariable(PARAM_DOCUMENT_ID) //
             @Schema(description = """
                     Document identifier.
@@ -218,18 +223,16 @@ public class AeroCurationController
         throws Exception
     {
         // Get project (this also ensures that it exists and that the current user can access it
-        var project = getProject(aProjectId);
+        var project = getProject(aProjectId, MANAGER);
 
         var doc = getDocument(project, aDocumentId);
         curationService.deleteCurationCas(doc);
 
-        // If we delete the curation, it cannot be any longer in-progress or finished. The best
-        // guess is that we set the state back to annotation-in-progress.
         switch (doc.getState()) {
         case CURATION_IN_PROGRESS: // Fall-through
         case CURATION_FINISHED:
-            doc.updateState(SourceDocumentState.ANNOTATION_IN_PROGRESS);
-            documentService.createSourceDocument(doc);
+            documentService.setSourceDocumentState(doc, SourceDocumentState.ANNOTATION_IN_PROGRESS);
+            workloadManagementService.getWorkloadManagerExtension(project).recalculate(doc);
             break;
         default:
             // Nothing to do

@@ -30,11 +30,12 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MariaDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+// MariaDB 11.4 - oldest supported LTS (EOL 2029-05)
 @Testcontainers(disabledWithoutDocker = true)
-class InceptionMariadb_11_7_IntegrationTest
+class InceptionMariadb_LTS_Oldest_IntegrationTest
 {
     @SuppressWarnings("resource")
-    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.7.2") //
+    static final MariaDBContainer<?> dbContainer = new MariaDBContainer<>("mariadb:11.4.12") //
             .withDatabaseName("testdb") //
             .withUsername("test") //
             .withPassword("test");

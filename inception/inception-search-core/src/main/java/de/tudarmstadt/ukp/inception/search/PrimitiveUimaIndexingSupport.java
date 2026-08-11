@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 
 /**
@@ -113,14 +114,9 @@ public class PrimitiveUimaIndexingSupport
         }
 
         if (TYPE_NAME_BOOLEAN.equals(aFeature.getType())) {
-            var booleanFeature = aAnnotation.getType().getFeatureByBaseName(aFeature.getName());
-            boolean value;
-            if (booleanFeature == null) {
-                value = false;
-            }
-            else {
-                value = aAnnotation.getBooleanValue(booleanFeature);
-            }
+            var value = FeatureUtil.getFeature(aAnnotation, aFeature) //
+                    .map(aAnnotation::getBooleanValue) //
+                    .orElse(false);
 
             var valuesMap = new HashSetValuedHashMap<String, String>();
             valuesMap.put(featureIndexName, value ? "true" : "false");
