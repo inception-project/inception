@@ -17,9 +17,9 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.clipboard_s;
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.play_circle_s;
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.stop_circle_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.clipboard_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.play_circle_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.stop_circle_s;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.panel.GenericPanel;

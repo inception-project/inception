@@ -53,7 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.ReadOnlyActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
@@ -173,7 +173,7 @@ public abstract class BratSuggestionVisualizer
         stateToggle.add(new SymbolLabel("state", annDoc.map(AnnotationDocument::getState)));
         add(stateToggle);
 
-        var commentSymbol = new Icon("commentSymbol", FontAwesome5IconType.comment_s);
+        var commentSymbol = new Icon("commentSymbol", FontAwesome7IconType.comment_s);
         commentSymbol.add(visibleWhen(
                 annDoc.map(AnnotationDocument::getAnnotatorComment).map(StringUtils::isNotBlank)));
         commentSymbol.add(

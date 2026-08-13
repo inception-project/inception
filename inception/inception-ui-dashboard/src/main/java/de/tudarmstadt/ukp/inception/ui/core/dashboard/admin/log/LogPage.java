@@ -44,7 +44,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.logging.RingBufferAppender;
@@ -129,12 +130,12 @@ public class LogPage
                 };
             }
 
-            private FontAwesome5IconType getLevelIcon(LogEvent aEvent)
+            private IconType getLevelIcon(LogEvent aEvent)
             {
                 var levelIcon = switch (aEvent.getLevel().getStandardLevel()) {
-                case ERROR -> FontAwesome5IconType.exclamation_triangle_s;
-                case WARN -> FontAwesome5IconType.exclamation_triangle_s;
-                default -> FontAwesome5IconType.info_circle_s;
+                case ERROR -> FontAwesome7IconType.exclamation_triangle_s;
+                case WARN -> FontAwesome7IconType.exclamation_triangle_s;
+                default -> FontAwesome7IconType.info_circle_s;
                 };
                 return levelIcon;
             }

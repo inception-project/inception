@@ -42,7 +42,7 @@ import org.apache.wicket.util.resource.IResourceStream;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
@@ -112,13 +112,13 @@ public class RecommenderInfoPanel
                 if (evaluatedRecommender.isPresent()) {
                     EvaluatedRecommender evalRec = evaluatedRecommender.get();
                     if (evalRec.isActive()) {
-                        state.add(new Icon("icon", FontAwesome5IconType.play_circle_s));
+                        state.add(new Icon("icon", FontAwesome7IconType.play_circle_s));
                         state.add(AttributeModifier.replace("title", "[Active]"));
                         state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
                         state.add(AttributeModifier.append("class", "text-bg-success bg-success"));
                     }
                     else {
-                        state.add(new Icon("icon", FontAwesome5IconType.stop_circle_s));
+                        state.add(new Icon("icon", FontAwesome7IconType.stop_circle_s));
                         state.add(AttributeModifier.replace("title", "[Inactive]"));
                         state.add(AttributeModifier.append("title", evalRec.getReasonForState()));
                         state.add(AttributeModifier.append("style", "; cursor: help"));
@@ -126,7 +126,7 @@ public class RecommenderInfoPanel
                     }
                 }
                 else {
-                    state.add(new Icon("icon", FontAwesome5IconType.hourglass_half_s));
+                    state.add(new Icon("icon", FontAwesome7IconType.hourglass_half_s));
                     state.add(AttributeModifier.replace("title", "Pending..."));
                     state.add(AttributeModifier.append("class", "text-bg-light bg-light"));
                 }

@@ -22,7 +22,7 @@ import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
@@ -45,7 +45,7 @@ public class ProjectKnowledgeBaseMenuItem
     @Override
     public Component getIcon(String aId)
     {
-        return new Icon(aId, FontAwesome5IconType.sitemap_s);
+        return new Icon(aId, FontAwesome7IconType.sitemap_s);
     }
 
     @Override

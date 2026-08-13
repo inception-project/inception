@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.inception.support.lambda.AjaxPayloadCallback;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
@@ -65,8 +65,8 @@ public class SearchHistoryPanel
                 aItem.setOutputMarkupId(true);
                 var item = aItem.getModelObject();
                 aItem.queue(new Icon("pinState",
-                        aItem.getModel().map(i -> i.pinned() ? FontAwesome5IconType.star_s
-                                : FontAwesome5IconType.star_r)));
+                        aItem.getModel().map(i -> i.pinned() ? FontAwesome7IconType.star_s
+                                : FontAwesome7IconType.star_r)));
                 aItem.queue(new LambdaAjaxLink("delete", _target -> actionDelete(_target, item)));
                 aItem.queue(new LambdaAjaxLink("pin", _target -> actionTogglePin(_target, aItem)));
                 aItem.queue(new Label("query", aItem.getModelObject().query()));
