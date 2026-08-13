@@ -49,7 +49,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
@@ -222,21 +222,21 @@ public class MatrixWorkflowActionBarItemGroup
         if (state.getUser().getUsername().equals(CURATION_USER)) {
             if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
                 // SourceDocumentState.CURATION_FINISHED.symbol()
-                return FontAwesome5IconType.clipboard_check_s.cssClassName();
+                return FontAwesome7IconType.clipboard_check_s.cssClassName();
             }
             else {
                 // SourceDocumentState.CURATION_IN_PROGRESS.symbol()
-                return FontAwesome5IconType.clipboard_s.cssClassName();
+                return FontAwesome7IconType.clipboard_s.cssClassName();
             }
         }
 
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
             // AnnotationDocumentState.FINISHED.symbol();
-            return FontAwesome5IconType.play_circle_r.cssClassName();
+            return FontAwesome7IconType.play_circle_r.cssClassName();
         }
         else {
             // AnnotationDocumentState.IN_PROGRESS.symbol();
-            return FontAwesome5IconType.check_circle_r.cssClassName();
+            return FontAwesome7IconType.check_circle_r.cssClassName();
         }
     }
 

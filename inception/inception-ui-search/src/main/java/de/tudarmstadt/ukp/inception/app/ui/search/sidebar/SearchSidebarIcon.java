@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
@@ -65,7 +65,7 @@ public class SearchSidebarIcon
 
         setOutputMarkupId(true);
 
-        queue(new Icon("icon", FontAwesome5IconType.search_s));
+        queue(new Icon("icon", FontAwesome7IconType.search_s));
     }
 
     @SuppressWarnings("unchecked")

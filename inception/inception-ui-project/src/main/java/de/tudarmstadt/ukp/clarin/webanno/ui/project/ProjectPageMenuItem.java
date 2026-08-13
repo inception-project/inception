@@ -22,7 +22,7 @@ import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.MenuItem;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -50,7 +50,7 @@ public class ProjectPageMenuItem
     @Override
     public Component getIcon(String aId)
     {
-        return new Icon(aId, FontAwesome5IconType.archive_s);
+        return new Icon(aId, FontAwesome7IconType.archive_s);
     }
 
     @Override

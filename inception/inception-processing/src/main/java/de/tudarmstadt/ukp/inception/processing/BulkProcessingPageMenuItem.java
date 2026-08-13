@@ -66,7 +66,7 @@ public class BulkProcessingPageMenuItem
     @Override
     public Component getIcon(String aId)
     {
-        // return new Icon(aId, FontAwesome5IconType.robot_s);
+        // return new Icon(aId, FontAwesome7IconType.robot_s);
         return new BulkProcessingSidebarIcon(aId);
     }
 

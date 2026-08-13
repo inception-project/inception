@@ -27,7 +27,7 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.UIState;
@@ -55,8 +55,8 @@ public class DarkModeMenuBarItem
 
         queue(new LambdaAjaxLink(CID_DARK_MODE_SWITCH, this::actionToggleDarkMode));
         queue(new Icon(CID_ICON, LoadableDetachableModel.of( //
-                () -> UIState.DEFAULT_THEME.equals(getTheme()) ? FontAwesome5IconType.sun_s
-                        : FontAwesome5IconType.moon_s)));
+                () -> UIState.DEFAULT_THEME.equals(getTheme()) ? FontAwesome7IconType.sun_s
+                        : FontAwesome7IconType.moon_s)));
 
         add(visibleWhen(user.isPresent()));
     }

@@ -28,7 +28,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
@@ -83,7 +83,7 @@ public class CurationPageMenuItem
     @Override
     public Component getIcon(String aId)
     {
-        return new Icon(aId, FontAwesome5IconType.clipboard_s);
+        return new Icon(aId, FontAwesome7IconType.clipboard_s);
     }
 
     @Override

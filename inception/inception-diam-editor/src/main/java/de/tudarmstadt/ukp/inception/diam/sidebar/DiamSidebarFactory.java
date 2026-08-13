@@ -26,7 +26,7 @@ import org.springframework.core.annotation.Order;
 import com.networknt.schema.Schema;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
@@ -78,7 +78,7 @@ public class DiamSidebarFactory
     @Override
     public org.apache.wicket.Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return new Icon(aId, FontAwesome5IconType.list_s);
+        return new Icon(aId, FontAwesome7IconType.list_s);
     }
 
     @Override

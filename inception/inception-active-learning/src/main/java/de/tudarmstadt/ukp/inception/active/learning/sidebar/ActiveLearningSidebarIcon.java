@@ -30,7 +30,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.active.learning.ActiveLearningService;
 import de.tudarmstadt.ukp.inception.active.learning.event.ActiveLearningSessionCompletedEvent;
@@ -51,7 +51,7 @@ public class ActiveLearningSidebarIcon
 
         setOutputMarkupId(true);
 
-        queue(new Icon("icon", FontAwesome5IconType.font_s));
+        queue(new Icon("icon", FontAwesome7IconType.font_s));
         queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
                 .add(new ClassAttributeModifier()
                 {
@@ -94,10 +94,10 @@ public class ActiveLearningSidebarIcon
     private IconType getStateIcon()
     {
         if (isSessionActive()) {
-            return FontAwesome5IconType.play_circle_s;
+            return FontAwesome7IconType.play_circle_s;
         }
 
-        return FontAwesome5IconType.stop_circle_s;
+        return FontAwesome7IconType.stop_circle_s;
     }
 
     @OnEvent

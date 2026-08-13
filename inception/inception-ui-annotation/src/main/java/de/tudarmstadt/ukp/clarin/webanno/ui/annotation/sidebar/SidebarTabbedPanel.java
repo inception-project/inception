@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_left_s;
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType.chevron_right_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_left_s;
+import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_right_s;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.wicket.event.Broadcast.BUBBLE;
 

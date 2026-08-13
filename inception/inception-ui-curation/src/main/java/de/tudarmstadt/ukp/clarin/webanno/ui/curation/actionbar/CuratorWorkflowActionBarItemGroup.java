@@ -41,7 +41,7 @@ import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -113,10 +113,10 @@ public class CuratorWorkflowActionBarItemGroup
         AnnotatorState state = page.getModelObject();
 
         if (curationDocumentService.isCurationFinished(state.getDocument())) {
-            return FontAwesome5IconType.clipboard_s.cssClassName();
+            return FontAwesome7IconType.clipboard_s.cssClassName();
         }
         else {
-            return FontAwesome5IconType.clipboard_check_s.cssClassName();
+            return FontAwesome7IconType.clipboard_check_s.cssClassName();
         }
     }
 

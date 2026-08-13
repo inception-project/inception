@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome6IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -68,7 +68,7 @@ public class InteractiveRecommenderSidebarFactory
     @Override
     public Component createIcon(String aId, IModel<AnnotatorState> aState)
     {
-        return new Icon(aId, FontAwesome6IconType.wand_magic_sparkles_s);
+        return new Icon(aId, FontAwesome7IconType.wand_magic_sparkles_s);
     }
 
     @Override

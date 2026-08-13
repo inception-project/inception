@@ -41,7 +41,8 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -60,9 +61,9 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 public class LayerVisibilitySidebar
     extends AnnotationSidebar_ImplBase
 {
-    private static final FontAwesome5IconType ICON_HIDDEN = FontAwesome5IconType.eye_slash_r;
-    private static final FontAwesome5IconType ICON_VISIBLE = FontAwesome5IconType.eye_r;
-    private static final FontAwesome5IconType ICON_PARTIALLY_VISIBLE = FontAwesome5IconType.low_vision_s;
+    private static final IconType ICON_HIDDEN = FontAwesome7IconType.eye_slash_r;
+    private static final IconType ICON_VISIBLE = FontAwesome7IconType.eye_r;
+    private static final IconType ICON_PARTIALLY_VISIBLE = FontAwesome7IconType.low_vision_s;
 
     private static final long serialVersionUID = 6127948490101336779L;
 

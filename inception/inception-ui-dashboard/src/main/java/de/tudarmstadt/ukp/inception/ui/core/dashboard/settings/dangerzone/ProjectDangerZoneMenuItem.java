@@ -22,7 +22,7 @@ import org.apache.wicket.Page;
 import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.inception.ui.core.dashboard.settings.ProjectSettingsMenuItemBase;
 import de.tudarmstadt.ukp.inception.ui.project.dangerzone.ProjectDangerZonePanelFactory;
 
@@ -39,7 +39,7 @@ public class ProjectDangerZoneMenuItem
     @Override
     public Component getIcon(String aId)
     {
-        return new Icon(aId, FontAwesome5IconType.skull_crossbones_s);
+        return new Icon(aId, FontAwesome7IconType.skull_crossbones_s);
     }
 
     @Override

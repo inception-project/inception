@@ -43,7 +43,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
@@ -80,8 +80,8 @@ public class ResultRowView
         boolean existsSourceDocument = documentService.existsSourceDocument(project.getObject(),
                 result.getDocumentId());
         queue(new Icon("icon",
-                LoadableDetachableModel.of(() -> existsSourceDocument ? FontAwesome5IconType.file_r
-                        : FontAwesome5IconType.file_download_s)));
+                LoadableDetachableModel.of(() -> existsSourceDocument ? FontAwesome7IconType.file_r
+                        : FontAwesome7IconType.file_download_s)));
 
         queue(new ListView<ExternalSearchHighlight>("highlights", result.getHighlights())
         {

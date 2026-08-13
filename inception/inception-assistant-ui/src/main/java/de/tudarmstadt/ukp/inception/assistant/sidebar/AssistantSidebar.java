@@ -28,7 +28,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome6IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
@@ -86,17 +86,17 @@ public class AssistantSidebar
         form.add(new LambdaAjaxLink("clear", this::actionClear));
 
         form.add(new IconToggleBox("watchMode") //
-                .setCheckedIcon(FontAwesome6IconType.eye_s) //
+                .setCheckedIcon(FontAwesome7IconType.eye_s) //
                 .setCheckedTitle(Model.of("Watching annotation actions and commenting")) //
-                .setUncheckedIcon(FontAwesome6IconType.eye_slash_s) //
+                .setUncheckedIcon(FontAwesome7IconType.eye_slash_s) //
                 .setUncheckedTitle(Model.of("Not watching annotation actions")) //
                 .add(new LambdaAjaxFormSubmittingBehavior(CHANGE_EVENT,
                         _target -> saveSidebarPrefs())));
 
         form.add(new IconToggleBox("debugMode") //
-                .setCheckedIcon(FontAwesome6IconType.bug_s) //
+                .setCheckedIcon(FontAwesome7IconType.bug_s) //
                 .setCheckedTitle(Model.of("Recording and showing internal messages")) //
-                .setUncheckedIcon(FontAwesome6IconType.bug_slash_s) //
+                .setUncheckedIcon(FontAwesome7IconType.bug_slash_s) //
                 .setUncheckedTitle(Model.of("Not recoording and showing internal messages")) //
                 .setModel(debugMode) //
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,

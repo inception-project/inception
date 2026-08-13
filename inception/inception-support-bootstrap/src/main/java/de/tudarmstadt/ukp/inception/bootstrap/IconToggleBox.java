@@ -34,14 +34,14 @@ import org.wicketstuff.event.annotation.AbstractAjaxAwareEvent;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkboxx.CheckBoxX;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.form.checkboxx.CheckBoxXConfig;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 
 public class IconToggleBox
     extends GenericPanel<Boolean>
 {
     private static final long serialVersionUID = 4721646397508723919L;
 
-    private IconType checked = FontAwesome5IconType.check_s;
+    private IconType checked = FontAwesome7IconType.check_s;
     private IconType unchecked = NoIcon.NO_ICON;
     private IModel<String> checkedTitle = Model.of();
     private IModel<String> uncheckedTitle = Model.of();

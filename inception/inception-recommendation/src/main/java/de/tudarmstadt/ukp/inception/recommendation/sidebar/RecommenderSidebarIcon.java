@@ -28,7 +28,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersResumedEvent;
@@ -49,7 +49,7 @@ public class RecommenderSidebarIcon
 
         setOutputMarkupId(true);
 
-        queue(new Icon("icon", FontAwesome5IconType.robot_s));
+        queue(new Icon("icon", FontAwesome7IconType.robot_s));
         queue(new Icon("badge", LoadableDetachableModel.of(this::getStateIcon))
                 .add(new ClassAttributeModifier()
                 {
@@ -92,10 +92,10 @@ public class RecommenderSidebarIcon
     private IconType getStateIcon()
     {
         if (isSessionActive()) {
-            return FontAwesome5IconType.play_circle_s;
+            return FontAwesome7IconType.play_circle_s;
         }
 
-        return FontAwesome5IconType.stop_circle_s;
+        return FontAwesome7IconType.stop_circle_s;
     }
 
     @OnEvent

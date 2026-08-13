@@ -42,7 +42,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
@@ -131,7 +131,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
 
     public String getStateClass()
     {
-        return FontAwesome5IconType.check_circle_r.cssClassName();
+        return FontAwesome7IconType.check_circle_r.cssClassName();
     }
 
     protected void actionRequestResetDocumentConfirmation(AjaxRequestTarget aTarget)

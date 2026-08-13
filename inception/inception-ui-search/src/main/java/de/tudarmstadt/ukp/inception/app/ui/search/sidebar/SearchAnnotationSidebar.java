@@ -80,7 +80,7 @@ import org.springframework.security.access.AccessDeniedException;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagingNavigator.Size;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
-import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome5IconType;
+import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -222,9 +222,9 @@ public class SearchAnnotationSidebar
         queue(mainContainer);
 
         queue(new IconToggleBox(MID_LIMITED_TO_CURRENT_DOCUMENT) //
-                .setCheckedIcon(FontAwesome5IconType.file_s)
+                .setCheckedIcon(FontAwesome7IconType.file_s)
                 .setCheckedTitle(Model.of("Search in current document"))
-                .setUncheckedIcon(FontAwesome5IconType.copy_s)
+                .setUncheckedIcon(FontAwesome7IconType.copy_s)
                 .setUncheckedTitle(Model.of("Search in all documents"))
                 .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
                 .add(visibleWhen(() -> workloadService
