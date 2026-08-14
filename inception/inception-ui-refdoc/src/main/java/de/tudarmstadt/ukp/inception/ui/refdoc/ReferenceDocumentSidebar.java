@@ -47,6 +47,7 @@ import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -55,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.ReadOnlyActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.DefaultPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
@@ -70,16 +70,16 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import jakarta.persistence.NoResultException;
 
@@ -113,7 +113,7 @@ public class ReferenceDocumentSidebar
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean PreferencesService preferencesService;
 
-    private final AnnotatorStateImpl state;
+    private final IModel<AnnotatorState> stateModel;
     private final ReadOnlyActionHandler actionHandler;
     private final WebMarkupContainer editorContainer;
     private final DocumentNamePanel documentNamePanel;
@@ -146,7 +146,8 @@ public class ReferenceDocumentSidebar
         var project = getModelObject().getProject();
 
         // Independent state so paging/selection in the sidebar never affects the main editor.
-        state = new AnnotatorStateImpl();
+        var state = new AnnotatorStateImpl();
+        stateModel = Model.of(state);
         state.setUser(sessionOwner);
         // No document is shown yet - use the no-op paging strategy so the position label renders
         // empty until a reference document is loaded (mirrors AnnotationPageBase2).
@@ -174,14 +175,13 @@ public class ReferenceDocumentSidebar
         // Document name/project info line, same component the main editor uses in its header. The
         // sidebar is read-only, so editability comes from our own action handler rather than the
         // (editable) enclosing page.
-        documentNamePanel = new DocumentNamePanel("documentNamePanel",
-                Model.of((AnnotatorState) state), actionHandler::isEditable);
+        documentNamePanel = new DocumentNamePanel("documentNamePanel", stateModel,
+                actionHandler::isEditable);
         add(documentNamePanel);
 
         // Position info line ("N-M / K sentences [doc x / y]"); the concrete label is produced by
         // the current paging strategy, so it is recreated whenever a document is (re)loaded.
-        add(state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES,
-                Model.of((AnnotatorState) state)));
+        add(state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, stateModel));
 
         // The action bar (open/navigate/paging controls) can be collapsed via the toggle in the
         // card header, mirroring the main editor. Its children live inside this container so a
@@ -205,7 +205,8 @@ public class ReferenceDocumentSidebar
         // open dialog offers. Only meaningful once a reference document is loaded.
         documentNavigation = new WebMarkupContainer("documentNavigation");
         documentNavigation.setOutputMarkupPlaceholderTag(true);
-        documentNavigation.add(visibleWhen(() -> state.getDocument() != null));
+        documentNavigation
+                .add(visibleWhen(stateModel.map(AnnotatorState::getDocument).isPresent()));
         documentNavigation
                 .add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument));
         documentNavigation
@@ -219,7 +220,7 @@ public class ReferenceDocumentSidebar
         // explains why the toggle cannot be used.
         scrollSyncGroup = new WebMarkupContainer("scrollSyncGroup");
         scrollSyncGroup.setOutputMarkupPlaceholderTag(true);
-        scrollSyncGroup.add(visibleWhen(() -> state.getDocument() != null));
+        scrollSyncGroup.add(visibleWhen(stateModel.map(AnnotatorState::getDocument).isPresent()));
         scrollSyncGroup.add(AttributeModifier.replace("title",
                 LambdaModel.of(() -> isScrollSyncPossible()
                         ? "Synchronize scrolling with the main editor"
@@ -233,12 +234,12 @@ public class ReferenceDocumentSidebar
         scrollSyncToggle.add(enabledWhen(this::isScrollSyncPossible));
         scrollSyncGroup.add(scrollSyncToggle);
 
-        openDialog = new OpenDocumentDialog("openDialog", Model.of((AnnotatorState) state),
+        openDialog = new OpenDocumentDialog("openDialog", stateModel,
                 getAnnotationPage()::listAccessibleDocuments, this::actionLoadDocument);
         add(openDialog);
 
         pagingNavigator = new DefaultPagingNavigator("pagingNavigator", this);
-        pagingNavigator.add(visibleWhen(() -> state.getDocument() != null));
+        pagingNavigator.add(visibleWhen(stateModel.map(AnnotatorState::getDocument).isPresent()));
         actionBar.add(pagingNavigator);
 
         editorContainer = new WebMarkupContainer("editorContainer");
@@ -251,6 +252,8 @@ public class ReferenceDocumentSidebar
     protected void onInitialize()
     {
         super.onInitialize();
+
+        var state = stateModel.getObject();
 
         // Default to the document currently open in the main editor so the sidebar shows useful
         // content immediately instead of an empty viewer. The user can still switch to any other
@@ -275,6 +278,7 @@ public class ReferenceDocumentSidebar
     {
         actionBarCollapsed = !actionBarCollapsed;
 
+        var state = stateModel.getObject();
         var project = state.getProject();
         if (project != null) {
             var sessionOwner = userRepository.getCurrentUser();
@@ -292,6 +296,7 @@ public class ReferenceDocumentSidebar
     {
         scrollSyncEnabled = !scrollSyncEnabled;
 
+        var state = stateModel.getObject();
         var project = state.getProject();
         if (project != null) {
             var sessionOwner = userRepository.getCurrentUser();
@@ -339,6 +344,7 @@ public class ReferenceDocumentSidebar
 
     private boolean isScrollSyncPossible()
     {
+        var state = stateModel.getObject();
         if (state.getDocument() == null) {
             return false;
         }
@@ -391,6 +397,7 @@ public class ReferenceDocumentSidebar
     private void actionShowAdjacentDocument(AjaxRequestTarget aTarget, int aDirection,
             String aWhich)
     {
+        var state = stateModel.getObject();
         var documents = listReferenceDocuments();
         var prefs = preferencesService.loadTraitsForUserAndProject(
                 KEY_ANNOTATION_NAVIGATION_USER_PREFS, userRepository.getCurrentUser(),
@@ -426,6 +433,7 @@ public class ReferenceDocumentSidebar
 
     private boolean isTerminal(SourceDocument aDocument)
     {
+        var state = stateModel.getObject();
         var dataOwner = state.getUser();
         try {
             return documentService.getAnnotationDocument(aDocument, dataOwner).getState()
@@ -442,6 +450,7 @@ public class ReferenceDocumentSidebar
      */
     private List<SourceDocument> listReferenceDocuments()
     {
+        var state = stateModel.getObject();
         var project = state.getProject();
         var user = state.getUser();
         if (project == null || user == null) {
@@ -458,7 +467,7 @@ public class ReferenceDocumentSidebar
      * by the open dialog once the user has picked a document (the dialog has already set it on our
      * state model). The editor type is resolved automatically from the document format.
      */
-    private void actionLoadDocument(AjaxRequestTarget aTarget)
+    public void actionLoadDocument(AjaxRequestTarget aTarget)
     {
         try {
             loadDocumentIntoEditor();
@@ -487,6 +496,7 @@ public class ReferenceDocumentSidebar
      */
     private void loadDocumentIntoEditor() throws IOException
     {
+        var state = stateModel.getObject();
         var document = state.getDocument();
 
         Component newEditor;
@@ -504,8 +514,7 @@ public class ReferenceDocumentSidebar
 
             casProvider = () -> readReferenceCas(document);
 
-            editor = factory.create(MID_EDITOR, Model.of((AnnotatorState) state), actionHandler,
-                    casProvider);
+            editor = factory.create(MID_EDITOR, stateModel, actionHandler, casProvider);
 
             // Let the editor configure the paging strategy, then page the document
             factory.initState(state);
@@ -522,7 +531,7 @@ public class ReferenceDocumentSidebar
 
         // The position label is bound to the (possibly new) paging strategy, so recreate it.
         var positionLabel = state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES,
-                Model.of((AnnotatorState) state));
+                stateModel);
         addOrReplace(positionLabel);
     }
 
@@ -540,9 +549,9 @@ public class ReferenceDocumentSidebar
     // --- DiamContext: the sidebar hosts its own editor/toolbar --------------------------------
 
     @Override
-    public AnnotatorState getAnnotatorState()
+    public IModel<AnnotatorState> getStateModel()
     {
-        return state;
+        return stateModel;
     }
 
     @Override
@@ -591,6 +600,7 @@ public class ReferenceDocumentSidebar
         }
 
         var mainState = getModelObject();
+        var state = stateModel.getObject();
 
         // If not showing the same document, we cannot sync by character offset - bail out
         if (!Objects.equals(mainState.getDocument(), state.getDocument())) {

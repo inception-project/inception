@@ -47,7 +47,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAnnotationRequ
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.io.xml.dkprocore.XmlNodeUtils;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 

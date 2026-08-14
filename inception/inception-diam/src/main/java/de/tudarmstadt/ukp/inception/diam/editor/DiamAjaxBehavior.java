@@ -31,8 +31,8 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerExtensionPoint;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.http.ServerTimingWatch;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 

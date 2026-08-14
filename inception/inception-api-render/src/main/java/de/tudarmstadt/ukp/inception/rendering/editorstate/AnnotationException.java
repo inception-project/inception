@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.schema.api.adapter;
+package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import de.tudarmstadt.ukp.inception.support.wicket.CommonException;
 

@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 
 public interface FeatureValueUpdateContext
     extends AutoCloseable

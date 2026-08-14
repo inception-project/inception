@@ -33,7 +33,6 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.behavior.AbstractAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -46,7 +45,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
-import org.apache.wicket.request.handler.TextRequestHandler;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +62,7 @@ import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
@@ -74,18 +73,18 @@ import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.LazyDetailsHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaStringResourceBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.SymbolLabel;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 
@@ -109,8 +108,8 @@ public abstract class BratSuggestionVisualizer
     private final ModalDialog modalDialog;
     private final BootstrapModalDialog confirmationDialog;
     private final AbstractDefaultAjaxBehavior controller;
-    private final AbstractAjaxBehavior collProvider;
-    private final AbstractAjaxBehavior docProvider;
+    private final LambdaStringResourceBehavior collProvider;
+    private final LambdaStringResourceBehavior docProvider;
 
     private final int position;
 
@@ -124,30 +123,10 @@ public abstract class BratSuggestionVisualizer
         vis.setOutputMarkupId(true);
 
         // Provides collection-level information like type definitions, styles, etc.
-        collProvider = new AbstractAjaxBehavior()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onRequest()
-            {
-                getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                        new TextRequestHandler("application/json", "UTF-8", getCollectionData()));
-            }
-        };
+        collProvider = new LambdaStringResourceBehavior(this::getCollectionData);
 
         // Provides the actual document contents
-        docProvider = new AbstractAjaxBehavior()
-        {
-            private static final long serialVersionUID = 1L;
-
-            @Override
-            public void onRequest()
-            {
-                getRequestCycle().scheduleRequestHandlerAfterCurrent(
-                        new TextRequestHandler("application/json", "UTF-8", getDocumentData()));
-            }
-        };
+        docProvider = new LambdaStringResourceBehavior(this::getDocumentData);
 
         modalDialog = new BootstrapModalDialog("modalDialog");
         queue(modalDialog);
@@ -251,6 +230,12 @@ public abstract class BratSuggestionVisualizer
         return (IModel<AnnotatorSegmentState>) getDefaultModel();
     }
 
+    @Override
+    public IModel<AnnotatorState> getStateModel()
+    {
+        return getModel().map(AnnotatorSegmentState::getAnnotatorState);
+    }
+
     public AnnotatorSegmentState getModelObject()
     {
         return (AnnotatorSegmentState) getDefaultModelObject();
@@ -262,12 +247,6 @@ public abstract class BratSuggestionVisualizer
 
     private final AnnotationActionHandler actionHandler = new ReadOnlyActionHandler(
             this::getEditorCas);
-
-    @Override
-    public AnnotatorState getAnnotatorState()
-    {
-        return getModelObject().getAnnotatorState();
-    }
 
     @Override
     public CAS getEditorCas() throws IOException
@@ -432,7 +411,7 @@ public abstract class BratSuggestionVisualizer
                 final var paramId = BratRequestUtils.getVidFromRequest(request);
 
                 var context = aBehavior.getContext();
-                var state = context.getAnnotatorState();
+                var state = context.getViewState();
                 var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
                         context::getEditorCas, state.getDocument(), getModelObject().getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());

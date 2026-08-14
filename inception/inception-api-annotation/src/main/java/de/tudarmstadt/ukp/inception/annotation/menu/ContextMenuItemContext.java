@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.menu;
 
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 /**

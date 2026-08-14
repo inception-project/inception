@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.inception.recommendation.sidebar;
 import java.util.Set;
 
 import org.apache.wicket.ClassAttributeModifier;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
@@ -33,17 +33,17 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersResumedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersSuspendedEvent;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 
 public class RecommenderSidebarIcon
-    extends Panel
+    extends GenericPanel<AnnotatorViewState>
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean UserDao userService;
 
-    public RecommenderSidebarIcon(String aId, IModel<AnnotatorState> aState)
+    public RecommenderSidebarIcon(String aId, IModel<AnnotatorViewState> aState)
     {
         super(aId, aState);
 
@@ -70,17 +70,6 @@ public class RecommenderSidebarIcon
                         return aClasses;
                     }
                 }));
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
-    {
-        return (IModel<AnnotatorState>) getDefaultModel();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
     }
 
     private boolean isSessionActive()

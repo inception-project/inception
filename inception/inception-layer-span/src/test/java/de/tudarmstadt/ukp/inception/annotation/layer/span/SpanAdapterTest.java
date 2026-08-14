@@ -52,7 +52,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanCrossSentenceB
 import de.tudarmstadt.ukp.inception.annotation.layer.behavior.SpanOverlapBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerBehavior;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;

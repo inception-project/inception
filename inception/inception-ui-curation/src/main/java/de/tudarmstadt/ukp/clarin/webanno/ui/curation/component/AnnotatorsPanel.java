@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.Anno
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_INCOMPLETE;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.REJECTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CHAIN_TYPE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -51,9 +50,7 @@ import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
@@ -71,7 +68,9 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSe
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.AnnotationStateColoringStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.merge.AlreadyMergedException;
 import de.tudarmstadt.ukp.inception.curation.merge.CasMerge;
@@ -79,14 +78,13 @@ import de.tudarmstadt.ukp.inception.curation.merge.CasMergeOperationResult;
 import de.tudarmstadt.ukp.inception.curation.merge.MergeConflictException;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
-import de.tudarmstadt.ukp.inception.support.WebAnnoConst;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -139,9 +137,9 @@ public class AnnotatorsPanel
             @Override
             protected void populateItem(ListItem<AnnotatorSegmentState> aItem)
             {
-                final AnnotatorSegmentState annotatorSegment = aItem.getModelObject();
-                BratSuggestionVisualizer curationVisualizer = new BratSuggestionVisualizer(
-                        "annotationViewer", new Model<>(annotatorSegment), aItem.getIndex())
+                final var annotatorSegment = aItem.getModelObject();
+                var curationVisualizer = new BratSuggestionVisualizer("annotationViewer",
+                        new Model<>(annotatorSegment), aItem.getIndex())
                 {
                     private static final long serialVersionUID = -1205541428144070566L;
 
@@ -172,19 +170,19 @@ public class AnnotatorsPanel
             return;
         }
 
-        IRequestParameters request = getRequest().getPostParameters();
-        StringValue action = request.getParameterValue(PARAM_ACTION);
+        var request = getRequest().getPostParameters();
+        var action = request.getParameterValue(PARAM_ACTION);
 
         if (!action.isEmpty()) {
-            String type = removePrefix(request.getParameterValue(PARAM_TYPE).toString());
-            AnnotationLayer layer = schemaService.getLayer(TypeUtil.getLayerId(type));
-            VID sourceVid = VID.parse(request.getParameterValue(PARAM_ID).toString());
+            var type = removePrefix(request.getParameterValue(PARAM_TYPE).toString());
+            var layer = schemaService.getLayer(TypeUtil.getLayerId(type));
+            var sourceVid = VID.parse(request.getParameterValue(PARAM_ID).toString());
 
-            CAS targetCas = readEditorCas(aSegment.getAnnotatorState());
-            CAS sourceCas = readAnnotatorCas(aSegment);
-            AnnotatorState sourceState = aSegment.getAnnotatorState();
+            var targetCas = readEditorCas(aSegment.getAnnotatorState());
+            var sourceCas = readAnnotatorCas(aSegment);
+            var sourceState = aSegment.getAnnotatorState();
 
-            if (CHAIN_TYPE.equals(layer.getType())) {
+            if (ChainLayerSupport.TYPE.equals(layer.getType())) {
                 error("Coreference annotations are not supported in curation");
                 aTarget.addChildren(getPage(), IFeedback.class);
                 return;
@@ -206,7 +204,7 @@ public class AnnotatorsPanel
             }
 
             // check if clicked on a span
-            CasMerge casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
+            var casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
             if (ACTION_SELECT_SPAN_FOR_MERGE.equals(action.toString())) {
                 mergeSpan(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
                         sourceState.getUser().getUsername(), layer);
@@ -265,7 +263,7 @@ public class AnnotatorsPanel
                 CasMergeOperationResult result;
 
                 switch (aLayer.getType()) {
-                case WebAnnoConst.SPAN_TYPE:
+                case SpanLayerSupport.TYPE:
                     result = mergeSpan(casMerge, targetCas, sourceCas, new VID(ann),
                             sourceState.getDocument(), sourceState.getUser().getUsername(), aLayer);
                     break;
@@ -410,7 +408,7 @@ public class AnnotatorsPanel
         Map<String, Map<VID, AnnotationState>> annoStates = calculateAnnotationStates(aState,
                 casses);
 
-        List<AnnotatorSegmentState> segments = new ArrayList<>();
+        var segments = new ArrayList<AnnotatorSegmentState>();
         for (String username : casses.keySet().stream().sorted().collect(toList())) {
             if (username.equals(CURATION_USER)) {
                 continue;
@@ -424,7 +422,7 @@ public class AnnotatorsPanel
                     "No annotation states for user [" + username + "]");
 
             // Create curation view for the current user
-            AnnotatorSegmentState seg = new AnnotatorSegmentState();
+            var seg = new AnnotatorSegmentState();
             seg.setUser(userService.get(username));
             seg.setAnnotatorState(aState);
             renderSegment(aTarget, seg, cas, annotationStates);
@@ -554,8 +552,8 @@ public class AnnotatorsPanel
             Map<String, Map<VID, AnnotationState>> aAnnotationStatesForAllUsers,
             Collection<ConfigurationSet> aConfigurationSets, ConfigurationSetType aSetType)
     {
-        for (ConfigurationSet configurationSet : aConfigurationSets) {
-            for (String user : configurationSet.getCasGroupIds()) {
+        for (var configurationSet : aConfigurationSets) {
+            for (var user : configurationSet.getCasGroupIds()) {
                 if (CURATION_USER.equals(user)) {
                     continue;
                 }
@@ -637,8 +635,8 @@ public class AnnotatorsPanel
         try {
             // Load document freshly from DB so we get the latest state. The document state
             // in the annotator state might be stale.
-            SourceDocument doc = aRepository.getSourceDocument(
-                    aState.getDocument().getProject().getId(), aState.getDocument().getId());
+            var doc = aRepository.getSourceDocument(aState.getDocument().getProject().getId(),
+                    aState.getDocument().getId());
             return doc.getState() == CURATION_FINISHED;
         }
         catch (Exception e) {

@@ -25,11 +25,11 @@ import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
-import org.apache.wicket.Page;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
@@ -53,7 +53,7 @@ public interface PagingStrategy
 
     Component createPositionLabel(String aId, IModel<AnnotatorState> aModel);
 
-    Component createPageNavigator(String aId, Page aPage);
+    Component createPageNavigator(String aId, DiamContext aEditorContext);
 
     default void moveToOffset(AnnotatorViewState aState, CAS aCas, int aOffset, FocusPosition aPos)
     {

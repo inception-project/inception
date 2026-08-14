@@ -52,16 +52,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.editor.view.DocumentViewExtensionPoint;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.externaleditor.command.CommandQueue;
 import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsCommand;
@@ -72,7 +69,10 @@ import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavas
 import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
@@ -134,6 +134,12 @@ public abstract class ExternalAnnotationEditorBase
         LOG.trace("[{}][{}] {}", getMarkupId(), vis.getMarkupId(), getClass().getSimpleName());
     }
 
+    @Override
+    public IModel<AnnotatorState> getStateModel()
+    {
+        return getModel();
+    }
+
     protected AnnotationEditorFactory getFactory()
     {
         return annotationEditorRegistry.getEditorFactory(editorFactoryId);
@@ -175,12 +181,6 @@ public abstract class ExternalAnnotationEditorBase
         // state, CAS and action handler - not the hosting page's. This lets an embedded editor
         // (e.g. a read-only reference document in a sidebar) operate on its own document.
         return new DiamAjaxBehavior(this, contextMenu);
-    }
-
-    @Override
-    public AnnotatorState getAnnotatorState()
-    {
-        return getModelObject();
     }
 
     @Override

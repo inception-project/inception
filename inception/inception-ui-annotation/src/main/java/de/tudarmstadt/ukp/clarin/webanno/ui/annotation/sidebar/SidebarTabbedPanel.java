@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class SidebarTabbedPanel<T extends SidebarTab>
@@ -152,7 +153,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected Component newTitle(String aTitleId, IModel<?> aTitleModel, int aIndex)
     {
         var tab = getTabs().get(aIndex);
-        var icon = tab.getIcon("icon", state);
+        var icon = tab.getIcon("icon", state.map(AnnotatorViewState.class::cast));
         icon.add(new AttributeModifier("title", aTitleModel));
         return icon;
     }

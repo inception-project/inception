@@ -19,7 +19,7 @@ package de.tudarmstadt.ukp.inception.diam.editor;
 
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 
 /**
  * The dispatch context for a DIAM AJAX request: the {@link Request} together with the

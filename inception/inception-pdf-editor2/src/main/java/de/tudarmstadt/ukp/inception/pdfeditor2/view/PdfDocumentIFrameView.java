@@ -50,7 +50,7 @@ import de.tudarmstadt.ukp.inception.io.pdf.visual.VisualPDFTextStripper;
 import de.tudarmstadt.ukp.inception.io.pdf.visual.model.VModel;
 import de.tudarmstadt.ukp.inception.pdfeditor2.PdfAnnotationEditor;
 import de.tudarmstadt.ukp.inception.pdfeditor2.view.pdfjs.PdfJsViewerPage;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 

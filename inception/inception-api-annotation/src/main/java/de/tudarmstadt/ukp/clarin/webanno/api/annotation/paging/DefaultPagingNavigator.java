@@ -19,7 +19,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 
 import static wicket.contrib.input.events.EventType.click;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.form.Form;
@@ -33,8 +32,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -112,47 +111,43 @@ public class DefaultPagingNavigator
 
     private boolean contentFitsFullyIntoVisibleWindow()
     {
-        AnnotatorState state = context.getAnnotatorState();
+        var state = context.getViewState();
         return state.getUnitCount() <= state.getPreferences().getWindowSize();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return context.getAnnotatorState();
     }
 
     protected void actionShowPreviousPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = context.getEditorCas();
-        getModelObject().moveToPreviousPage(cas, defaultFocusPosition);
+        var cas = context.getEditorCas();
+        context.getViewState().moveToPreviousPage(cas, defaultFocusPosition);
         context.actionRefreshDocument(aTarget);
     }
 
     protected void actionShowNextPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = context.getEditorCas();
-        getModelObject().moveToNextPage(cas, defaultFocusPosition);
+        var cas = context.getEditorCas();
+        context.getViewState().moveToNextPage(cas, defaultFocusPosition);
         context.actionRefreshDocument(aTarget);
     }
 
     protected void actionShowFirstPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = context.getEditorCas();
-        getModelObject().moveToFirstPage(cas, defaultFocusPosition);
+        var cas = context.getEditorCas();
+        context.getViewState().moveToFirstPage(cas, defaultFocusPosition);
         context.actionRefreshDocument(aTarget);
     }
 
     protected void actionShowLastPage(AjaxRequestTarget aTarget) throws Exception
     {
-        CAS cas = context.getEditorCas();
-        getModelObject().moveToLastPage(cas, defaultFocusPosition);
+        var cas = context.getEditorCas();
+        context.getViewState().moveToLastPage(cas, defaultFocusPosition);
         context.actionRefreshDocument(aTarget);
     }
 
     private void actionGotoPage(AjaxRequestTarget aTarget, Form<?> aForm) throws Exception
     {
-        CAS cas = context.getEditorCas();
-        getModelObject().moveToUnit(cas, gotoPageTextField.getModelObject(), defaultFocusPosition);
+        var cas = context.getEditorCas();
+        context.getViewState().moveToUnit(cas, gotoPageTextField.getModelObject(),
+                defaultFocusPosition);
         context.actionRefreshDocument(aTarget);
     }
 
@@ -173,7 +168,7 @@ public class DefaultPagingNavigator
     public void onAnnotatorViewStateChangedEvent(AnnotatorViewportChangedEvent aEvent)
     {
         // Only react to viewport changes in the editor this navigator belongs to (#6146).
-        if (!aEvent.isFor(getModelObject())) {
+        if (!aEvent.isFor(context.getAnnotatorState())) {
             return;
         }
 

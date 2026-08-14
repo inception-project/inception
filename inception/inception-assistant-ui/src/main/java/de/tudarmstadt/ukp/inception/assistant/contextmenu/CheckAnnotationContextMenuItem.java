@@ -57,17 +57,17 @@ public class CheckAnnotationContextMenuItem
     @Override
     public boolean accepts(ContextMenuItemContext aCtx)
     {
-        var state = aCtx.context().getAnnotatorState();
+        var ctx = aCtx.context();
 
         try {
-            var cas = aCtx.context().getEditorCas();
+            var cas = ctx.getEditorCas();
             var ann = selectAnnotationByAddr(cas, aCtx.vid().getId());
             if (ann == null) {
                 return false;
             }
 
             return SpanLayerSupport.TYPE
-                    .equals(schemaService.findLayer(state.getProject(), ann).getType());
+                    .equals(schemaService.findLayer(ctx.getProject(), ann).getType());
         }
         catch (IOException e) {
             return false;
@@ -99,7 +99,7 @@ public class CheckAnnotationContextMenuItem
 
         // The annotation being checked belongs to the editor the menu was opened in.
         var sessionOwner = userService.getCurrentUser();
-        var state = aCtx.context().getAnnotatorState();
+        var state = aCtx.context().getViewState();
         schedulingService.enqueue(CheckAnnotationTask.builder() //
                 .withTrigger("Context menu") //
                 .withSessionOwner(sessionOwner) //
