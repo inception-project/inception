@@ -22,7 +22,6 @@ import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAw
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent.Side.LEFT;
@@ -998,30 +997,10 @@ public abstract class AnnotationPageBase2
         }
     }
 
-    public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aUser)
+    public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aDataOwner)
     {
-        var allDocuments = new ArrayList<AnnotationDocument>();
-        var docs = documentService.listAllDocuments(aProject, AnnotationSet.forUser(aUser));
-
         var sessionOwner = userRepository.getCurrentUser();
-        for (var e : docs.entrySet()) {
-            var sd = e.getKey();
-            var ad = e.getValue();
-            if (ad != null) {
-                // if current user is opening her own docs, don't let her see locked ones
-                var userIsSelected = aUser.equals(sessionOwner);
-                if (userIsSelected && ad.getState() == IGNORE) {
-                    continue;
-                }
-            }
-            else {
-                ad = new AnnotationDocument(sessionOwner.getUsername(), sd);
-            }
-
-            allDocuments.add(ad);
-        }
-
-        return allDocuments;
+        return documentService.listAccessibleDocuments(aProject, aDataOwner, sessionOwner);
     }
 
     @Override

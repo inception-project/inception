@@ -419,8 +419,8 @@ public abstract class AnnotationDetailEditorPanel
 
         var adapter = annotationService
                 .getAdapter(annotationService.findLayer(state.getProject(), annoFs));
-
         state.setSelection(adapter.select(aVid, annoFs));
+
         actionSelect(aTarget);
     }
 
@@ -443,7 +443,6 @@ public abstract class AnnotationDetailEditorPanel
         editorPage.actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
     }
 
-    @Deprecated
     private void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
         throws IOException, AnnotationException
     {
