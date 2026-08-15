@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.support.test.websocket;
 
+import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -45,6 +46,7 @@ import org.apache.commons.lang3.function.FailableConsumer;
 import org.apache.commons.lang3.function.FailableRunnable;
 import org.assertj.core.api.Assertions;
 import org.awaitility.Awaitility;
+import org.awaitility.core.ConditionTimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.messaging.Message;
@@ -70,8 +72,10 @@ public class WebSocketStompTestClient
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
+    private static final Duration DEFAULT_MESSAGE_TIMEOUT = Duration.ofSeconds(30);
+
     private final Duration connectTimeout = Duration.ofSeconds(60);
-    private final Duration messageTimeout = Duration.ofHours(10);
+    private Duration messageTimeout = DEFAULT_MESSAGE_TIMEOUT;
 
     private final String username;
     private final String password;
@@ -209,7 +213,8 @@ public class WebSocketStompTestClient
     }
 
     /**
-     * Subscribes to a topic. Requires expected messages to be queued before.
+     * Subscribes to a topic and <b>waits</b> for the queued expectations to be satisfied. Requires
+     * expected messages to be queued before.
      * 
      * @param aTopic
      *            topic to subscribe to
@@ -219,15 +224,7 @@ public class WebSocketStompTestClient
      */
     public Subscription subscribe(String aTopic, Map<String, String> aHeaders)
     {
-        var headers = new StompHeaders();
-        headers.setDestination(aTopic);
-
-        if (aHeaders != null) {
-            headers.setAll(aHeaders);
-        }
-
-        var handler = new CapturingFrameHandler<>(Message.class, received);
-        var sub = session.subscribe(headers, handler);
+        var sub = subscribeWithoutWaiting(aTopic, aHeaders);
 
         waitForMessages();
 
@@ -236,6 +233,30 @@ public class WebSocketStompTestClient
         LOG.trace("Subscription to [{}] successful", aTopic);
 
         return sub;
+    }
+
+    /**
+     * Subscribes to a topic without waiting for any expectation to be satisfied. Use this when the
+     * subscription itself is what is under test - most notably when the server is expected to
+     * reject it - and then assert separately, e.g. via {@link #assertExpectations()}.
+     *
+     * @param aTopic
+     *            topic to subscribe to
+     * @param aHeaders
+     *            extra headers
+     * @return subscription.
+     */
+    public Subscription subscribeWithoutWaiting(String aTopic, Map<String, String> aHeaders)
+    {
+        var headers = new StompHeaders();
+        headers.setDestination(aTopic);
+
+        if (aHeaders != null) {
+            headers.setAll(aHeaders);
+        }
+
+        var handler = new CapturingFrameHandler<>(Message.class, received);
+        return session.subscribe(headers, handler);
     }
 
     public void perform(FailableRunnable<Exception> aTask) throws Exception
@@ -259,11 +280,42 @@ public class WebSocketStompTestClient
         handleExpectations();
     }
 
+    /**
+     * Raise (or lower) the time to wait for expected messages. Use when debugging interactively -
+     * the default is deliberately short so that a message which never arrives fails fast instead of
+     * hanging. See {@link #DEFAULT_MESSAGE_TIMEOUT}.
+     *
+     * @param aTimeout
+     *            how long to wait.
+     * @return this client, for chaining.
+     */
+    public WebSocketStompTestClient withMessageTimeout(Duration aTimeout)
+    {
+        messageTimeout = aTimeout;
+        return this;
+    }
+
     private void waitForMessages()
     {
-        await("all expected messages received") //
-                .atMost(messageTimeout) //
-                .until(() -> received.size() >= expectations.size());
+        try {
+            await("all expected messages received") //
+                    .atMost(messageTimeout) //
+                    .until(() -> received.size() >= expectations.size());
+        }
+        catch (ConditionTimeoutException e) {
+            // Awaitility's own message says only that a condition was not met. Report what was
+            // actually outstanding - without this, a missing message is near-undiagnosable.
+            throw new AssertionError(
+                    format("Timed out after %s waiting for messages: expected %d, received %d.%n"
+                            + "Outstanding expectations: %s%nReceived so far: %s%n"
+                            + "Note that a message may be missing because the server never sent it "
+                            + "(check the server log for errors) or because the subscription never "
+                            + "reached the server - remember that @SubscribeMapping handlers are "
+                            + "invoked by subscribing to /app<topic>, not /topic<topic>.",
+                            messageTimeout, expectations.size(), received.size(), expectations,
+                            received),
+                    e);
+        }
 
         await("extra time") //
                 .pollDelay(Duration.ofSeconds(1)) //

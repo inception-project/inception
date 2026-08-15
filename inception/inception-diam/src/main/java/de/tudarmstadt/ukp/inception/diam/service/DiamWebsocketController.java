@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.diam.service;
 
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.toJsonString;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
@@ -102,6 +103,9 @@ public class DiamWebsocketController
     public static final String PARAM_FROM = "from";
     public static final String PARAM_TO = "to";
     public static final String PARAM_FORMAT = "format";
+    public static final String PARAM_SESSION_OWNER = "sessionOwner";
+
+    public static final String TOPIC_ELEMENT_SESSION_OWNER = "/as/";
 
     public static final PropertyPlaceholderHelper PLACEHOLDER_RESOLVER = new PropertyPlaceholderHelper(
             "{", "}", null, '\\', false);
@@ -111,7 +115,8 @@ public class DiamWebsocketController
             + TOPIC_ELEMENT_USER + "{" + PARAM_USER + "}";
 
     public static final String DOCUMENT_VIEWPORT_TOPIC_TEMPLATE = //
-            DOCUMENT_BASE_TOPIC_TEMPLATE + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO + "}";
+            DOCUMENT_BASE_TOPIC_TEMPLATE + TOPIC_ELEMENT_SESSION_OWNER + "{" + PARAM_SESSION_OWNER
+                    + "}" + "/from/{" + PARAM_FROM + "}/to/{" + PARAM_TO + "}";
 
     // public static final String ANNOTATION_COMMAND_DELETE_TOPIC_TEMPLATE = //
     // DOCUMENT_BASE_TOPIC_TEMPLATE + "/delete";
@@ -226,10 +231,17 @@ public class DiamWebsocketController
             @DestinationVariable(PARAM_PROJECT) long aProjectId,
             @DestinationVariable(PARAM_DOCUMENT) long aDocumentId,
             @DestinationVariable(PARAM_USER) String aDataOwner,
+            @DestinationVariable(PARAM_SESSION_OWNER) String aSessionOwner,
             @DestinationVariable(PARAM_FROM) int aViewportBegin,
             @DestinationVariable(PARAM_TO) int aViewportEnd)
         throws IOException
     {
+        // The PARAM_SESSION_OWNER only exists to disambiguate the topics. It is checked for
+        // consistency with the principal but otherwise not used.
+        var sessionOwner = aPrincipal.getName();
+        assertPermission("User [" + sessionOwner + "] cannot subscribe to a viewport of user ["
+                + aSessionOwner + "]", sessionOwner.equals(aSessionOwner));
+
         var project = getProject(aProjectId);
 
         try (var session = CasStorageSession.open()) {
@@ -249,6 +261,7 @@ public class DiamWebsocketController
                     .withProjectId(aProjectId) //
                     .withDocumentId(aDocumentId) //
                     .withDataOwner(aDataOwner) //
+                    .withSessionOwner(sessionOwner) //
                     .withRange(aViewportBegin, aViewportEnd) //
                     .withFormat(format) //
                     .enabledExtensions(enabledExtensions) //
@@ -275,15 +288,26 @@ public class DiamWebsocketController
     private JsonNode render(Project aProject, ViewportDefinition aVpd) throws IOException
     {
         var doc = documentService.getSourceDocument(aProject.getId(), aVpd.getDocumentId());
-        var sessionOwner = userRepository.getCurrentUsername();
-        var dataOwner = userRepository.getUserOrCurationUser(aVpd.getUser());
+        var sessionOwnerName = aVpd.getSessionOwner();
+        if (sessionOwnerName == null) {
+            throw new IllegalStateException(
+                    "Viewport [" + aVpd + "] has no session owner - it was not created through "
+                            + "the subscribe handler and cannot be rendered.");
+        }
+
+        var sessionOwner = userRepository.get(sessionOwnerName);
+        if (sessionOwner == null) {
+            throw new IllegalStateException("Session owner [" + sessionOwnerName + "] of viewport ["
+                    + aVpd + "] no longer exists.");
+        }
+        var dataOwner = userRepository.getUserOrCurationUser(aVpd.getDataOwner());
 
         var constraints = constraintsService.getMergedConstraints(aProject);
 
-        var cas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(aVpd.getUser()));
+        var cas = documentService.readAnnotationCas(doc, annotationSetFor(aVpd.getDataOwner()));
 
-        var prefs = userPreferencesService.loadPreferences(doc.getProject(), sessionOwner,
-                Mode.ANNOTATION);
+        var prefs = userPreferencesService.loadPreferences(doc.getProject(),
+                sessionOwner.getUsername(), Mode.ANNOTATION);
 
         var layers = schemaService.listSupportedLayers(aProject).stream()
                 .filter(AnnotationLayer::isEnabled) //
@@ -293,7 +317,7 @@ public class DiamWebsocketController
         var allLayers = schemaService.listAnnotationLayer(aProject);
 
         var request = RenderRequest.builder() //
-                .withSessionOwner(userRepository.getCurrentUser()) //
+                .withSessionOwner(sessionOwner) //
                 .withDocument(doc, dataOwner) //
                 .withConstraints(constraints) //
                 .withWindow(aVpd.getBegin(), aVpd.getEnd()) //
@@ -314,6 +338,15 @@ public class DiamWebsocketController
                         "Unsupported format [" + aVpd.getFormat() + "]"));
 
         return JSONUtil.getObjectMapper().valueToTree(serializer.render(vdoc, request));
+    }
+
+    private AnnotationSet annotationSetFor(String aDataOwner)
+    {
+        if (CURATION_USER.equals(aDataOwner)) {
+            return AnnotationSet.CURATION_SET;
+        }
+
+        return AnnotationSet.forUser(aDataOwner);
     }
 
     private ViewportState initState(ViewportDefinition aVpd)
@@ -347,9 +380,11 @@ public class DiamWebsocketController
             return;
         }
 
-        // MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+        var previousRepositoryPath = MDC.get(KEY_REPOSITORY_PATH);
 
         try (var session = CasStorageSession.openNested()) {
+            MDC.put(KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+
             var project = projectService.getProject(vpd.getProjectId());
             var newJson = render(project, vpd);
 
@@ -374,12 +409,16 @@ public class DiamWebsocketController
                     new MViewportUpdate(aUpdateBegin, aUpdateEnd, diff), sha.getMessageHeaders());
         }
         catch (Exception ex) {
-            LOG.error("Unable to render update", ex);
+            LOG.error("Unable to render update for document {} - {}", aDoc, vpd, ex);
         }
-
-        // finally {
-        // MDC.remove(KEY_REPOSITORY_PATH);
-        // }
+        finally {
+            if (previousRepositoryPath != null) {
+                MDC.put(KEY_REPOSITORY_PATH, previousRepositoryPath);
+            }
+            else {
+                MDC.remove(KEY_REPOSITORY_PATH);
+            }
+        }
     }
 
     private Project getProject(long aProjectId) throws AccessDeniedException
