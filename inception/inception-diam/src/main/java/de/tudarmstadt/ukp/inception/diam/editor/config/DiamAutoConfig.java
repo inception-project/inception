@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.config;
 
+import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.PARAM_SESSION_OWNER;
+import static de.tudarmstadt.ukp.inception.diam.service.DiamWebsocketController.TOPIC_ELEMENT_SESSION_OWNER;
 import static de.tudarmstadt.ukp.inception.websocket.config.MessageExpressionAuthorizationManager.expression;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.inception.websocket.config.WebSocketConstants.PARAM_PROJECT;
@@ -225,9 +227,24 @@ public class DiamAutoConfig
         return (aBuilder, aMAH) -> {
             LOG.debug("Configuring websocket security for annotation editor controller");
 
-            final var annotationEditorTopic = TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
+            final var annotationEditorBaseTopic = TOPIC_ELEMENT_PROJECT + "{" + PARAM_PROJECT + "}"
                     + TOPIC_ELEMENT_DOCUMENT + "{" + PARAM_DOCUMENT + "}" + TOPIC_ELEMENT_USER + "{"
-                    + PARAM_USER + "}/**";
+                    + PARAM_USER + "}";
+
+            final var annotationEditorTopic = annotationEditorBaseTopic + "/**";
+
+            final var viewportTopic = annotationEditorBaseTopic + TOPIC_ELEMENT_SESSION_OWNER + "{"
+                    + PARAM_SESSION_OWNER + "}/**";
+
+            final var canViewAsSelf = "@documentAccess.canViewAnnotationDocument(#" + PARAM_PROJECT
+                    + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ") and #" + PARAM_SESSION_OWNER
+                    + " == authentication.name";
+
+            aBuilder.simpSubscribeDestMatchers("/app" + viewportTopic)
+                    .access(expression(aMAH, canViewAsSelf));
+
+            aBuilder.simpSubscribeDestMatchers("/topic" + viewportTopic)
+                    .access(expression(aMAH, canViewAsSelf));
 
             aBuilder.simpSubscribeDestMatchers("/app" + annotationEditorTopic)
                     .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
@@ -236,14 +253,6 @@ public class DiamAutoConfig
             aBuilder.simpSubscribeDestMatchers("/topic" + annotationEditorTopic)
                     .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
                             + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
-
-            // aBuilder.simpSubscribeDestMatchers("/user/queue" + annotationEditorTopic)
-            // .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
-            // + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
-
-            // aBuilder.simpMessageDestMatchers(annotationEditorTopic)
-            // .access(expression(aMAH, "@documentAccess.canEditAnnotationDocument(#"
-            // + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
         };
     }
 }

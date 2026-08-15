@@ -33,6 +33,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
 import de.tudarmstadt.ukp.inception.diam.model.compactv2.CompactSerializerV2Impl;
@@ -51,6 +52,7 @@ public class DiamAnnotationBrowser
     private @SpringBean ServletContext servletContext;
     private @SpringBean PreferencesService userPrefService;
     private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
+    private @SpringBean UserDao userService;
 
     private final String userPreferencesKey;
     private final ContextMenu contextMenu;
@@ -80,7 +82,9 @@ public class DiamAnnotationBrowser
 
         var state = findParent(AnnotationPageBase.class).getModelObject();
 
-        if (state.getDocument() == null) {
+        var sessionOwner = userService.getCurrentUsername();
+
+        if (state.getDocument() == null || sessionOwner == null) {
             setDefaultModel(null);
             return;
         }
@@ -88,6 +92,7 @@ public class DiamAnnotationBrowser
         var viewport = ViewportDefinition.builder() //
                 .withDocument(state.getDocument()) //
                 .withDataOwner(state.getUser().getUsername()) //
+                .withSessionOwner(sessionOwner) //
                 .withFormat(CompactSerializerV2Impl.ID) //
                 .build();
 

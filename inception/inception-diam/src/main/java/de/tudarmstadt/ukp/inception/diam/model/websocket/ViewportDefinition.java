@@ -45,6 +45,7 @@ public class ViewportDefinition
     private final long projectId;
     private final long documentId;
     private final String dataOwner;
+    private final String sessionOwner;
 
     private final int begin;
     private final int end;
@@ -57,6 +58,7 @@ public class ViewportDefinition
         projectId = builder.projectId;
         documentId = builder.documentId;
         dataOwner = builder.dataOwner;
+        sessionOwner = builder.sessionOwner;
         begin = builder.begin;
         end = builder.end;
         format = builder.format;
@@ -84,9 +86,19 @@ public class ViewportDefinition
         return documentId;
     }
 
-    public String getUser()
+    public String getDataOwner()
     {
         return dataOwner;
+    }
+
+    /**
+     * @return the user who subscribed to this viewport, captured at subscribe time where the STOMP
+     *         principal is reliable. Renders triggered by a CAS write must use this rather than
+     *         looking the session owner up from the calling thread.
+     */
+    public String getSessionOwner()
+    {
+        return sessionOwner;
     }
 
     public int getBegin()
@@ -115,6 +127,7 @@ public class ViewportDefinition
         properties.setProperty(WebSocketConstants.PARAM_PROJECT, String.valueOf(projectId));
         properties.setProperty(WebSocketConstants.PARAM_DOCUMENT, String.valueOf(documentId));
         properties.setProperty(WebSocketConstants.PARAM_USER, dataOwner);
+        properties.setProperty(DiamWebsocketController.PARAM_SESSION_OWNER, sessionOwner);
         properties.setProperty(DiamWebsocketController.PARAM_FROM, String.valueOf(begin));
         properties.setProperty(DiamWebsocketController.PARAM_TO, String.valueOf(end));
         return DiamWebsocketController.PLACEHOLDER_RESOLVER.replacePlaceholders(
@@ -131,6 +144,7 @@ public class ViewportDefinition
         return new EqualsBuilder() //
                 .append(documentId, castOther.documentId) //
                 .append(dataOwner, castOther.dataOwner) //
+                .append(sessionOwner, castOther.sessionOwner) //
                 .append(begin, castOther.begin) //
                 .append(end, castOther.end) //
                 .append(format, castOther.format) //
@@ -144,6 +158,7 @@ public class ViewportDefinition
         return new HashCodeBuilder() //
                 .append(documentId) //
                 .append(dataOwner) //
+                .append(sessionOwner) //
                 .append(begin) //
                 .append(end) //
                 .append(format) //
@@ -157,6 +172,7 @@ public class ViewportDefinition
         return new ToStringBuilder(this, NO_CLASS_NAME_STYLE) //
                 .append("documentId", documentId) //
                 .append("user", dataOwner) //
+                .append("sessionOwner", sessionOwner) //
                 .append("begin", begin) //
                 .append("end", end) //
                 .append("format", format) //
@@ -174,6 +190,7 @@ public class ViewportDefinition
         private long projectId;
         private long documentId;
         private String dataOwner;
+        private String sessionOwner;
         private int begin = 0;
         private int end = Integer.MAX_VALUE;
         private String format;
@@ -212,6 +229,12 @@ public class ViewportDefinition
         public Builder withDataOwner(String aDataOwner)
         {
             dataOwner = aDataOwner;
+            return this;
+        }
+
+        public Builder withSessionOwner(String aSessionOwner)
+        {
+            sessionOwner = aSessionOwner;
             return this;
         }
 
@@ -263,6 +286,10 @@ public class ViewportDefinition
             if (dataOwner == null) {
                 throw new IllegalStateException(
                         "Cannot build ViewportDefinition: dataOwner must not be null");
+            }
+            if (sessionOwner == null) {
+                throw new IllegalStateException(
+                        "Cannot build ViewportDefinition: sessionOwner must not be null");
             }
             if (format == null) {
                 throw new IllegalStateException(
