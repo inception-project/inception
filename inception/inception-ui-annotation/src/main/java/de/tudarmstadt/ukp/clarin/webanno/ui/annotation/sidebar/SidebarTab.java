@@ -22,7 +22,7 @@ import org.apache.wicket.extensions.markup.html.tabs.AbstractTab;
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 public abstract class SidebarTab
@@ -43,7 +43,7 @@ public abstract class SidebarTab
         return factoryId;
     }
 
-    public Component getIcon(String aId, IModel<AnnotatorState> aState)
+    public Component getIcon(String aId, IModel<AnnotatorViewState> aState)
     {
         try {
             // We need to get the methods and services directly in here so

@@ -54,10 +54,10 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapte
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationCreatedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.event.RelationDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.behavior.RelationLayerBehavior;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;

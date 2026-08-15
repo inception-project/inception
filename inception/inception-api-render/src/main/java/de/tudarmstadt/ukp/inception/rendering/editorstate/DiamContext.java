@@ -15,17 +15,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.inception.diam.model;
+package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 /**
  * Editor-scoped context through which DIAM AJAX request handlers resolve the annotator state, the
@@ -48,7 +47,27 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
  */
 public interface DiamContext
 {
-    AnnotatorState getAnnotatorState();
+    default Project getProject()
+    {
+        return getAnnotatorState().getProject();
+    }
+
+    default AnnotatorState getAnnotatorState()
+    {
+        return getStateModel().getObject();
+    }
+
+    default AnnotatorViewState getViewState()
+    {
+        return getAnnotatorState();
+    }
+
+    default AnnotationSelectionState getSelectionState()
+    {
+        return getAnnotatorState();
+    }
+
+    IModel<AnnotatorState> getStateModel();
 
     CAS getEditorCas() throws IOException;
 

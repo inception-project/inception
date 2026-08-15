@@ -28,11 +28,10 @@ import java.util.regex.Pattern;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.Component;
-import org.apache.wicket.Page;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class LineOrientedPagingStrategy
@@ -91,8 +90,8 @@ public class LineOrientedPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
+    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditorContext)
     {
-        return new DefaultPagingNavigator(aId, (DiamContext) aPage);
+        return new DefaultPagingNavigator(aId, aEditorContext);
     }
 }

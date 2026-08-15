@@ -27,12 +27,11 @@ import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.fit.util.CasUtil;
 import org.apache.uima.fit.util.FSUtil;
 import org.apache.wicket.Component;
-import org.apache.wicket.Page;
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
@@ -89,8 +88,8 @@ public class SentenceOrientedPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, Page aPage)
+    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditorContext)
     {
-        return new DefaultPagingNavigator(aId, (DiamContext) aPage);
+        return new DefaultPagingNavigator(aId, aEditorContext);
     }
 }

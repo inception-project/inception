@@ -57,7 +57,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -366,14 +365,6 @@ public class AnnotatorStateImpl
         if (document != null) {
             document = aDocumentService.getSourceDocument(document.getProject().getId(),
                     document.getId());
-        }
-    }
-
-    @Override
-    public void refreshProject(ProjectService aProjectService)
-    {
-        if (project != null) {
-            project = aProjectService.getProject(project.getId());
         }
     }
 

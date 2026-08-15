@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.api;
 
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 
 /**
  * Thrown if there is a problem during CAS diff computation.

@@ -769,6 +769,9 @@ public interface DocumentService
      */
     List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument document);
 
+    List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aDataOwner,
+            User aSessionOwner);
+
     /**
      * List all the {@link AnnotationDocument annotation documents} in a given project, regardless
      * of whether their owner still holds a permission in the project or whether their user account

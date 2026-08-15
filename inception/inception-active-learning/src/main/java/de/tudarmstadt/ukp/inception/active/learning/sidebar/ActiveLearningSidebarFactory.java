@@ -27,9 +27,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.active.learning.config.ActiveLearningAutoConfiguration;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 
 /**
  * <p>
@@ -62,7 +63,7 @@ public class ActiveLearningSidebarFactory
     }
 
     @Override
-    public Component createIcon(String aId, IModel<AnnotatorState> aState)
+    public Component createIcon(String aId, IModel<AnnotatorViewState> aState)
     {
         return new ActiveLearningSidebarIcon(aId, aState);
     }

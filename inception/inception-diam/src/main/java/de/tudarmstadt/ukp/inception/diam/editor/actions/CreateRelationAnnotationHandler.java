@@ -39,12 +39,12 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.CreateRelation
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
 import de.tudarmstadt.ukp.inception.support.lambda.MenuCategoryHeader;
@@ -123,9 +123,8 @@ public class CreateRelationAnnotationHandler
         }
 
         var cas = aContext.getEditorCas();
-        var state = aContext.getAnnotatorState();
         var originFs = selectAnnotationByAddr(cas, originSpan.getId());
-        var originLayer = schemaService.findLayer(state.getProject(), originFs);
+        var originLayer = schemaService.findLayer(aContext.getProject(), originFs);
         var originAdapter = schemaService.getAdapter(originLayer);
 
         if (originAdapter instanceof ChainAdapter chainAdapter) {
@@ -150,7 +149,7 @@ public class CreateRelationAnnotationHandler
                     "Cannot create links between chain elements on different layers");
         }
 
-        var state = aContext.getAnnotatorState();
+        var state = aContext.getViewState();
         var request = new CreateRelationAnnotationRequest(state.getDocument(),
                 state.getUser().getUsername(), cas, originFs, targetFs);
 
@@ -161,13 +160,14 @@ public class CreateRelationAnnotationHandler
                 state.getUser().getUsername(), ann)) {
             for (var feature : chainAdapter.listFeatures()) {
                 if (feature.isRemember()) {
-                    var value = state.getRememberedArcFeatures().get(feature);
+                    var value = aContext.getAnnotatorState().getRememberedArcFeatures()
+                            .get(feature);
                     ctx.setFeatureValue(feature, value);
                 }
             }
         }
 
-        commitAnnotation(aTarget, aContext, state, selection);
+        commitAnnotation(aTarget, aContext, selection);
 
     }
 
@@ -247,6 +247,6 @@ public class CreateRelationAnnotationHandler
             }
         }
 
-        commitAnnotation(aTarget, aContext, state, selection);
+        commitAnnotation(aTarget, aContext, selection);
     }
 }

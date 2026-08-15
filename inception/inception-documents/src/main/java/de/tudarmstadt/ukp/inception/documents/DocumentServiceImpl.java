@@ -41,12 +41,12 @@ import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.FILESYS
 import static de.tudarmstadt.ukp.clarin.webanno.security.ValidationUtils.RELAXED_SHELL_SPECIAL_CHARACTERS;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.addOrUpdateCasMetadata;
 import static de.tudarmstadt.ukp.inception.project.api.ProjectService.withProjectLogger;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -1607,6 +1607,34 @@ public class DocumentServiceImpl
         }
 
         return map;
+    }
+
+    @Override
+    @Transactional
+    public List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aDataOwner,
+            User aSessionOwner)
+    {
+        var accessibleDocuments = new ArrayList<AnnotationDocument>();
+        var docs = listAllDocuments(aProject, AnnotationSet.forUser(aDataOwner));
+
+        for (var e : docs.entrySet()) {
+            var sd = e.getKey();
+            var ad = e.getValue();
+            if (ad != null) {
+                // if current user is opening her own docs, don't let her see locked ones
+                var userIsSelected = aDataOwner.equals(aSessionOwner);
+                if (userIsSelected && ad.getState() == IGNORE) {
+                    continue;
+                }
+            }
+            else {
+                ad = new AnnotationDocument(aSessionOwner.getUsername(), sd);
+            }
+
+            accessibleDocuments.add(ad);
+        }
+
+        return accessibleDocuments;
     }
 
     @Override

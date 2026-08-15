@@ -30,18 +30,18 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class CurationSidebarIcon
-    extends GenericPanel<AnnotatorState>
+    extends GenericPanel<AnnotatorViewState>
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
     private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean UserDao userService;
 
-    public CurationSidebarIcon(String aId, IModel<AnnotatorState> aState)
+    public CurationSidebarIcon(String aId, IModel<AnnotatorViewState> aState)
     {
         super(aId, aState);
 

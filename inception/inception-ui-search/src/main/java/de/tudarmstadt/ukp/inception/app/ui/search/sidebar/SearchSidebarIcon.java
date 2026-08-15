@@ -26,7 +26,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -39,7 +39,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.SearchOptions;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
@@ -49,7 +49,7 @@ import de.tudarmstadt.ukp.inception.search.SearchResult;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 
 public class SearchSidebarIcon
-    extends Panel
+    extends GenericPanel<AnnotatorViewState>
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
@@ -59,24 +59,13 @@ public class SearchSidebarIcon
     private @SpringBean UserDao userService;
     private @SpringBean PreferencesService preferencesService;
 
-    public SearchSidebarIcon(String aId, IModel<AnnotatorState> aState)
+    public SearchSidebarIcon(String aId, IModel<AnnotatorViewState> aState)
     {
         super(aId, aState);
 
         setOutputMarkupId(true);
 
         queue(new Icon("icon", FontAwesome7IconType.search_s));
-    }
-
-    @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
-    {
-        return (IModel<AnnotatorState>) getDefaultModel();
-    }
-
-    public AnnotatorState getModelObject()
-    {
-        return (AnnotatorState) getDefaultModelObject();
     }
 
     @OnEvent

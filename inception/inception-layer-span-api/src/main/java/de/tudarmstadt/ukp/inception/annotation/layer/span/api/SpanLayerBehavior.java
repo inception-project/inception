@@ -22,9 +22,9 @@ import java.util.Map;
 import org.apache.uima.cas.text.AnnotationFS;
 
 import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehavior;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupport;
 

@@ -50,12 +50,12 @@ import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandlerBase;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.externaleditor.ExternalAnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.externaleditor.command.EditorCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.LoadAnnotationsCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.command.QueuedEditorCommandsMetaDataKey;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import jakarta.servlet.ServletContext;
 
@@ -89,6 +89,12 @@ public class BratAnnotationEditor
         add(visibleWhen(getModel().map(AnnotatorState::getProject).isPresent()));
 
         diffRenderSupport = new DifferentialRenderingSupport(metrics);
+    }
+
+    @Override
+    public IModel<AnnotatorState> getStateModel()
+    {
+        return getModel();
     }
 
     @Override

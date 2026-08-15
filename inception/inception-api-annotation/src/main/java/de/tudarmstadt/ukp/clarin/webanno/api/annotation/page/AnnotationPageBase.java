@@ -22,12 +22,15 @@ import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CEN
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
 import static java.lang.String.format;
+import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -48,8 +51,6 @@ import org.apache.wicket.util.string.StringValueConversionException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
-import org.wicketstuff.urlfragment.UrlFragment;
-import org.wicketstuff.urlfragment.UrlParametersReceivingBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
@@ -61,20 +62,21 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
-import de.tudarmstadt.ukp.inception.editor.action.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.inception.support.wicket.UrlFragmentBehavior;
 import jakarta.persistence.NoResultException;
 
 public abstract class AnnotationPageBase
@@ -103,6 +105,8 @@ public abstract class AnnotationPageBase
     private LoadableDetachableModel<String> annotationNotEditableReason = LoadableDetachableModel
             .of(this::loadAnnotationNotEditableReason);
 
+    private UrlFragmentBehavior urlFragmentBehavior;
+
     protected AnnotationPageBase(PageParameters aParameters)
     {
         super(aParameters);
@@ -117,26 +121,31 @@ public abstract class AnnotationPageBase
         // happily switch between documents using AJAX without having to worry about links with
         // a document ID potentially sending us back to a specific document.
         if (!documentParameter.isEmpty()) {
-            var requestCycle = getRequestCycle();
-
-            var fragmentParams = new ArrayList<String>();
-            fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
-            params.remove(PAGE_PARAM_DOCUMENT);
-
-            if (!userParameter.isEmpty()) {
-                fragmentParams
-                        .add(format("%s=%s", PAGE_PARAM_DATA_OWNER, userParameter.toString()));
-                params.remove(PAGE_PARAM_DATA_OWNER);
-            }
-
-            var url = Url.parse(requestCycle.urlFor(this.getClass(), params));
-            var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url) + "#!"
-                    + fragmentParams.stream().collect(joining("&"));
-            LOG.trace(
-                    "Pushing parameter for document [{}] and user [{}] into fragment: {} (URL redirect)",
-                    documentParameter, userParameter, finalUrl);
-            throw new RedirectToUrlException(finalUrl.toString());
+            pushParametersIntoUrl(params, documentParameter, userParameter);
         }
+    }
+
+    private void pushParametersIntoUrl(PageParameters params, StringValue documentParameter,
+            StringValue userParameter)
+    {
+        var requestCycle = getRequestCycle();
+
+        var fragmentParams = new ArrayList<String>();
+        fragmentParams.add(format("%s=%s", PAGE_PARAM_DOCUMENT, documentParameter.toString()));
+        params.remove(PAGE_PARAM_DOCUMENT);
+
+        if (!userParameter.isEmpty()) {
+            fragmentParams.add(format("%s=%s", PAGE_PARAM_DATA_OWNER, userParameter.toString()));
+            params.remove(PAGE_PARAM_DATA_OWNER);
+        }
+
+        var url = Url.parse(requestCycle.urlFor(this.getClass(), params));
+        var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url) + "#!"
+                + fragmentParams.stream().collect(joining("&"));
+        LOG.trace(
+                "Pushing parameter for document [{}] and user [{}] into fragment: {} (URL redirect)",
+                documentParameter, userParameter, finalUrl);
+        throw new RedirectToUrlException(finalUrl.toString());
     }
 
     public void setModel(IModel<AnnotatorState> aModel)
@@ -150,6 +159,12 @@ public abstract class AnnotationPageBase
         return (IModel<AnnotatorState>) getDefaultModel();
     }
 
+    @Override
+    public IModel<AnnotatorState> getStateModel()
+    {
+        return getModel();
+    }
+
     public void setModelObject(AnnotatorState aModel)
     {
         setDefaultModelObject(aModel);
@@ -158,12 +173,6 @@ public abstract class AnnotationPageBase
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
-    }
-
-    @Override
-    public AnnotatorState getAnnotatorState()
-    {
-        return getModelObject();
     }
 
     @Override
@@ -209,34 +218,39 @@ public abstract class AnnotationPageBase
         backToProjectPage();
     }
 
-    protected UrlParametersReceivingBehavior createUrlFragmentBehavior()
+    /**
+     * Create the behavior which keeps the URL fragment and the page state in sync. Subclasses need
+     * to add it to the page themselves - it is remembered here so that {@link #updateUrlFragment}
+     * can address it.
+     *
+     * @return the behavior. It has not been added to the page yet.
+     */
+    protected UrlFragmentBehavior createUrlFragmentBehavior()
     {
-        return new UrlParametersReceivingBehavior()
-        {
-            private static final long serialVersionUID = -3860933016636718816L;
+        urlFragmentBehavior = new UrlFragmentBehavior(this::getUrlFragmentParameters,
+                this::onUrlFragmentParameterArrival);
+        return urlFragmentBehavior;
+    }
 
-            @Override
-            protected void onParameterArrival(IRequestParameters aRequestParameters,
-                    AjaxRequestTarget aTarget)
-            {
-                var document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
-                var focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
-                var user = aRequestParameters.getParameterValue(PAGE_PARAM_DATA_OWNER);
+    private void onUrlFragmentParameterArrival(IRequestParameters aRequestParameters,
+            AjaxRequestTarget aTarget)
+    {
+        var document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
+        var focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
+        var user = aRequestParameters.getParameterValue(PAGE_PARAM_DATA_OWNER);
 
-                if (document.isEmpty() && focus.isEmpty()) {
-                    return;
-                }
+        if (document.isEmpty() && focus.isEmpty()) {
+            return;
+        }
 
-                LOG.trace("URL fragment update: {}@{} focus {}", user, document, focus);
+        LOG.trace("URL fragment update: {}@{} focus {}", user, document, focus);
 
-                var previousDoc = getModelObject().getDocument();
-                var aPreviousUser = getModelObject().getUser();
+        var previousDoc = getModelObject().getDocument();
+        var aPreviousUser = getModelObject().getUser();
 
-                handleParameters(document, focus, user);
+        handleParameters(document, focus, user);
 
-                updateDocumentView(aTarget, previousDoc, aPreviousUser, focus);
-            }
-        };
+        updateDocumentView(aTarget, previousDoc, aPreviousUser, focus);
     }
 
     protected abstract void handleParameters(StringValue aDocumentParameter,
@@ -259,20 +273,46 @@ public abstract class AnnotationPageBase
     protected abstract void updateDocumentView(AjaxRequestTarget aTarget,
             SourceDocument aPreviousDocument, User aPreviousUser, StringValue aFocusParameter);
 
+    /**
+     * @return the parameters that the URL fragment should carry for the current state. Parameters
+     *         mapped to {@code null} are removed from the URL fragment.
+     */
+    protected Map<String, Object> getUrlFragmentParameters()
+    {
+        var state = getModelObject();
+
+        if (state.getDocument() == null) {
+            return emptyMap();
+        }
+
+        var parameters = new LinkedHashMap<String, Object>();
+
+        parameters.put(PAGE_PARAM_DOCUMENT, state.getDocument().getId());
+
+        parameters.put(PAGE_PARAM_FOCUS,
+                state.getFocusUnitIndex() > 0 ? state.getFocusUnitIndex() : null);
+
+        // REC: We currently do not want that one can switch to the CURATION_USER directly via
+        // the URL without having to activate sidebar curation mode as well, so we do not handle
+        // the CURATION_USER here.
+        var dataOwner = state.getUser().getUsername();
+        parameters.put(PAGE_PARAM_DATA_OWNER,
+                Set.of(userRepository.getCurrentUsername(), CURATION_USER).contains(dataOwner)
+                        ? null
+                        : dataOwner);
+
+        return parameters;
+    }
+
     protected void updateUrlFragment(AjaxRequestTarget aTarget)
     {
-        // No AJAX request - nothing to do
-        if (aTarget == null) {
+        // Not every page keeps the URL fragment in sync - cf. createUrlFragmentBehavior()
+        if (urlFragmentBehavior == null) {
             return;
         }
 
         // Update URL for current document
-        try {
-            aTarget.registerRespondListener(new UrlFragmentUpdateListener());
-        }
-        catch (Exception e) {
-            LOG.debug("Unable to request URL fragment update anymore", e);
-        }
+        urlFragmentBehavior.update(aTarget);
     }
 
     /**
@@ -317,7 +357,12 @@ public abstract class AnnotationPageBase
      *            the position in the document to scroll to
      * @throws IOException
      *             if there was a problem retrieving the CAS
+     * @deprecated Use
+     *             {@link DiamContext#actionShowSelectedDocument(AjaxRequestTarget, SourceDocument, int, int)}
+     *             instead
      */
+    @Deprecated
+    @Override
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
             int aBegin, int aEnd)
         throws IOException
@@ -329,7 +374,7 @@ public abstract class AnnotationPageBase
             int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
         throws IOException
     {
-        boolean switched = actionShowDocument(aTarget, aDocument);
+        var switched = actionShowDocument(aTarget, aDocument);
 
         var state = getModelObject();
 
@@ -337,7 +382,7 @@ public abstract class AnnotationPageBase
         var range = rangeClippedToDocument(cas, aBegin, aEnd);
 
         // Always include the target range as a ping range
-        List<VRange> pingRanges = new ArrayList<>();
+        var pingRanges = new ArrayList<VRange>();
         pingRanges.add(new VRange(range.getBegin(), range.getEnd()));
 
         // Add any additional ping ranges if provided
@@ -370,8 +415,6 @@ public abstract class AnnotationPageBase
 
     public abstract List<SourceDocument> getListOfDocs();
 
-    public abstract CAS getEditorCas() throws IOException;
-
     public abstract AnnotationActionHandler getAnnotationActionHandler();
 
     public abstract Optional<ContextMenuLookup> getContextMenuLookup();
@@ -396,6 +439,7 @@ public abstract class AnnotationPageBase
      * @param aTarget
      *            the AJAX request target
      */
+    @Override
     public abstract void actionRefreshDocument(AjaxRequestTarget aTarget);
 
     /**
@@ -578,105 +622,4 @@ public abstract class AnnotationPageBase
     }
 
     public abstract IModel<List<DecoratedObject<Project>>> getAllowedProjects();
-
-    /**
-     * This is a special AJAX target response listener which implements hashCode and equals. It uses
-     * the markup ID of its host component to identify itself. This enables us to add multiple
-     * instances of this listener to an AJAX response without *actually* adding multiple instances
-     * since the AJAX response internally keeps track of the listeners using a set.
-     */
-    private class UrlFragmentUpdateListener
-        implements AjaxRequestTarget.ITargetRespondListener
-    {
-        // These are page state variables used by the UrlFragmentUpdateListener to determine whether
-        // an update of the URL parameters is necessary at all
-        private Long urlFragmentLastDocumentId;
-        private int urlFragmentLastFocusUnitIndex;
-
-        @Override
-        public void onTargetRespond(AjaxRequestTarget aTarget)
-        {
-            var state = getModelObject();
-
-            if (state.getDocument() == null) {
-                return;
-            }
-
-            var currentDocumentId = state.getDocument().getId();
-            var currentFocusUnitIndex = state.getFocusUnitIndex();
-
-            // Check if the relevant parameters have actually changed since the URL parameters were
-            // last set - if this is not the case, then let's not set the parameters because that
-            // triggers another AJAX request telling us that the parameters were updated (stupid,
-            // right?)
-            if (Objects.equals(urlFragmentLastDocumentId, currentDocumentId)
-                    && urlFragmentLastFocusUnitIndex == currentFocusUnitIndex) {
-                return;
-            }
-
-            urlFragmentLastDocumentId = currentDocumentId;
-            urlFragmentLastFocusUnitIndex = currentFocusUnitIndex;
-
-            var fragment = new UrlFragment(aTarget);
-
-            fragment.putParameter(PAGE_PARAM_DOCUMENT, currentDocumentId);
-
-            if (state.getFocusUnitIndex() > 0) {
-                fragment.putParameter(PAGE_PARAM_FOCUS, currentFocusUnitIndex);
-            }
-            else {
-                fragment.removeParameter(PAGE_PARAM_FOCUS);
-            }
-
-            // REC: We currently do not want that one can switch to the CURATION_USER directly via
-            // the URL without having to activate sidebar curation mode as well, so we do not handle
-            // the CURATION_USER here.
-            if (Set.of(userRepository.getCurrentUsername(), CURATION_USER)
-                    .contains(state.getUser().getUsername())) {
-                fragment.removeParameter(PAGE_PARAM_DATA_OWNER);
-            }
-            else {
-                fragment.putParameter(PAGE_PARAM_DATA_OWNER, state.getUser().getUsername());
-            }
-
-            // If we do not manually set editedFragment to false, then changing the URL
-            // manually or using the back/forward buttons in the browser only works every
-            // second time. Might be a bug in wicketstuff urlfragment... not sure.
-            aTarget.appendJavaScript(
-                    "try{if(window.UrlUtil){window.UrlUtil.editedFragment = false;}}catch(e){}");
-        }
-
-        private AnnotationPageBase getOuterType()
-        {
-            return AnnotationPageBase.this;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + getOuterType().hashCode();
-            return result;
-        }
-
-        @Override
-        public boolean equals(Object obj)
-        {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            UrlFragmentUpdateListener other = (UrlFragmentUpdateListener) obj;
-            if (!getOuterType().equals(other.getOuterType())) {
-                return false;
-            }
-            return true;
-        }
-    }
 }

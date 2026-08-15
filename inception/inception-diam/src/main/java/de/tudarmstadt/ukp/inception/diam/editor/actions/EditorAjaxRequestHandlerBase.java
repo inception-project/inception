@@ -30,12 +30,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.diam.model.DiamContext;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.AnnotationException;
 
 public abstract class EditorAjaxRequestHandlerBase
     implements EditorAjaxRequestHandler
@@ -86,10 +85,10 @@ public abstract class EditorAjaxRequestHandlerBase
      * context's action handler.
      */
     protected void commitAnnotation(AjaxRequestTarget aTarget, DiamContext aContext,
-            AnnotatorState aState, Selection aSelection)
+            Selection aSelection)
         throws IOException, AnnotationException
     {
-        aState.setSelection(aSelection);
+        aContext.getSelectionState().setSelection(aSelection);
         aContext.getActionHandler().actionSelect(aTarget);
         aContext.getActionHandler().writeEditorCas();
     }

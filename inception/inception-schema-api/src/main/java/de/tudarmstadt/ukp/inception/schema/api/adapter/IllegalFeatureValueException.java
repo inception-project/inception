@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.schema.api.adapter;
 
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+
 public class IllegalFeatureValueException
     extends AnnotationException
 {

@@ -25,6 +25,8 @@ import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.Panel;
+import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
@@ -39,6 +41,8 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import jakarta.persistence.NoResultException;
 
@@ -55,6 +59,8 @@ public class DocumentNavigator
     private @SpringBean PreferencesService preferencesService;
 
     private AnnotationPageBase page;
+    private DiamContext context;
+    private IModel<AnnotatorState> state;
 
     private final ExportDocumentDialog exportDialog;
 
@@ -63,6 +69,7 @@ public class DocumentNavigator
         super(aId);
 
         page = aPage;
+        state = LambdaModel.of(aPage::getAnnotatorState);
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(
@@ -82,7 +89,7 @@ public class DocumentNavigator
 
         add(new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
 
-        add(exportDialog = new ExportDocumentDialog("exportDialog", page.getModel()));
+        add(exportDialog = new ExportDocumentDialog("exportDialog", state));
         add(new LambdaAjaxLink("showExportDialog", exportDialog::show)
                 .add(visibleWhen(this::isExportable)));
     }
@@ -90,7 +97,7 @@ public class DocumentNavigator
     private boolean isExportable()
     {
         return documentAccess.canExportAnnotationDocument(userService.getCurrentUser(),
-                page.getModelObject().getProject());
+                state.getObject().getProject());
     }
 
     /**
@@ -102,14 +109,13 @@ public class DocumentNavigator
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         var sessionOwner = userService.getCurrentUser();
-        var state = page.getModelObject();
         var aDocuments = page.getListOfDocs();
 
         var prefs = preferencesService.loadTraitsForUserAndProject(
-                KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, state.getProject());
+                KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, state.getObject().getProject());
 
         // Index of the current source document in the list
-        var currentDocumentIndex = aDocuments.indexOf(state.getDocument());
+        var currentDocumentIndex = aDocuments.indexOf(state.getObject().getDocument());
 
         while (true) {
             // If the first document
@@ -129,7 +135,7 @@ public class DocumentNavigator
             var newDocument = aDocuments.get(currentDocumentIndex);
 
             if (!prefs.isFinishedDocumentsSkippedByNavigation() || !isTerminal(newDocument)) {
-                state.setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
+                state.getObject().setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
                 page.actionLoadDocument(aTarget);
                 break;
             }
@@ -145,14 +151,13 @@ public class DocumentNavigator
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         var sessionOwner = userService.getCurrentUser();
-        var state = page.getModelObject();
         var aDocuments = page.getListOfDocs();
 
         var prefs = preferencesService.loadTraitsForUserAndProject(
-                KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, state.getProject());
+                KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, state.getObject().getProject());
 
         // Index of the current source document in the list
-        var currentDocumentIndex = aDocuments.indexOf(state.getDocument());
+        var currentDocumentIndex = aDocuments.indexOf(state.getObject().getDocument());
 
         while (true) {
             // If the last document
@@ -171,7 +176,7 @@ public class DocumentNavigator
 
             var newDocument = aDocuments.get(currentDocumentIndex);
             if (!prefs.isFinishedDocumentsSkippedByNavigation() || !isTerminal(newDocument)) {
-                state.setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
+                state.getObject().setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
                 page.actionLoadDocument(aTarget);
                 break;
             }
@@ -180,8 +185,7 @@ public class DocumentNavigator
 
     private boolean isTerminal(SourceDocument aDocument)
     {
-        var state = page.getModelObject();
-        var dataOwner = state.getUser();
+        var dataOwner = state.getObject().getUser();
         try {
             var annDoc = documentService.getAnnotationDocument(aDocument, dataOwner);
             return annDoc.getState().isTerminal();
@@ -193,7 +197,7 @@ public class DocumentNavigator
 
     public void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
-        page.getModelObject().clearSelection();
+        state.getObject().clearSelection();
         page.getFooterItems().getObject().stream()
                 .filter(component -> component instanceof OpenDocumentDialog)
                 .map(component -> (OpenDocumentDialog) component).findFirst()
