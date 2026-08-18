@@ -55,27 +55,27 @@ examples of how the parameters can be configured below:
 | Default
 | Example
 
-| inception.entity-linking.cacheSize
+| knowledge-base.entity-linking.cache-size
 | Cache size
 | 1024
 | -
 
-| inception.entity-linking.candidateQueryLimit
+| knowledge-base.entity-linking.candidate-query-limit
 | Candidate Retrieval Limit
 | 2500
 | -
 
-| inception.entity-linking.mentionContextSize
+| knowledge-base.entity-linking.mention-context-size
 | Mention Context Size
 | 5
 | -
 
-| inception.entity-linking.candidateDisplayLimit
+| knowledge-base.entity-linking.candidate-display-limit
 | Candidate Display Limit
 | 100
 | -
 
-| inception.entity-linking.signatureQueryLimit
+| knowledge-base.entity-linking.signature-query-limit
 | Semantic Signature Query Limit
 | 2147483647
 | -
