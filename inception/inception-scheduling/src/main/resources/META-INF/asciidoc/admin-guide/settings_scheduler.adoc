@@ -39,12 +39,12 @@ an example of how the parameter can be configured below:
 | Default
 | Example
 
-| inception.scheduler.numberOfThreads
+| inception.scheduling.number-of-threads
 | Number of threads that run tasks
 | 4
 | 8
 
-| inception.scheduler.queueSize
+| inception.scheduling.queue-size
 | Maximum number of tasks waiting for execution
 | 100
 | 200

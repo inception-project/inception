@@ -28,7 +28,7 @@ This section describes the global settings related to the external document repo
 | Example
 
 
-| external-search.enable
+| external-search.enabled
 | Enable/disable document repository support
 | true
 | false
