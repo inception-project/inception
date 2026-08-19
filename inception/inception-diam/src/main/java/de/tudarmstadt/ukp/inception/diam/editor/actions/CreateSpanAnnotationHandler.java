@@ -76,6 +76,7 @@ public class CreateSpanAnnotationHandler
         try {
             var context = aBehavior.getContext();
             context.getActionHandler().ensureIsEditable();
+            context.activate(aTarget);
 
             var state = context.getAnnotatorState();
             var layer = state.getDefaultAnnotationLayer();

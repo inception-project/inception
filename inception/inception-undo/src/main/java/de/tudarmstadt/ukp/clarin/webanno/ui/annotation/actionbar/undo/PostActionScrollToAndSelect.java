@@ -50,7 +50,8 @@ public class PostActionScrollToAndSelect
     {
         try {
             AnnotationPageBase page = aContextComponent.findParent(AnnotationPageBase.class);
-            page.getAnnotationActionHandler().actionSelectAndJump(aTarget, vid);
+            // FIXME: Undo is currently only supported in the main editor
+            page.actionActivateAndSelect(aTarget, vid);
         }
         catch (AnnotationException | IOException e) {
             handleException(LOG, aContextComponent, aTarget, e);

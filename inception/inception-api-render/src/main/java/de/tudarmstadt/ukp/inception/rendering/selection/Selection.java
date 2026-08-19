@@ -20,9 +20,12 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
+import static java.util.Collections.emptyList;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.uima.cas.CAS;
@@ -31,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 /**
@@ -111,7 +114,7 @@ public class Selection
     {
         if (aVid.isSet()) {
             try {
-                ICasUtil.selectAnnotationByAddr(aOriginFs.getCAS(), aVid.getId());
+                selectAnnotationByAddr(aOriginFs.getCAS(), aVid.getId());
             }
             catch (Exception e) {
                 LOG.error("While selecting an arc the VID does not point to a valid annotation", e);
@@ -147,7 +150,7 @@ public class Selection
     {
         if (aVid.isSet()) {
             try {
-                ICasUtil.selectAnnotationByAddr(aCAS, aVid.getId());
+                selectAnnotationByAddr(aCAS, aVid.getId());
             }
             catch (Exception e) {
                 LOG.error("While selecting a span the VID does not point to a valid annotation", e);
@@ -197,6 +200,23 @@ public class Selection
         }
 
         return targetSpanId;
+    }
+
+    public List<VRange> pingRanges(CAS aCas)
+    {
+        if (isArc()) {
+            var originFs = selectAnnotationByAddr(aCas, getOrigin());
+            var targetFs = selectAnnotationByAddr(aCas, getTarget());
+            return List.of( //
+                    new VRange(originFs.getBegin(), originFs.getEnd()),
+                    new VRange(targetFs.getBegin(), targetFs.getEnd()));
+        }
+
+        if (isSpan()) {
+            return List.of(new VRange(getBegin(), getEnd()));
+        }
+
+        return emptyList();
     }
 
     public int getBegin()

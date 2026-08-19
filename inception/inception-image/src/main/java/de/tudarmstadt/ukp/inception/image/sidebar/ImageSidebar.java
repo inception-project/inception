@@ -28,9 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.uima.fit.util.FSUtil;
-import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.image.ExternalImage;
@@ -48,14 +45,13 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
-import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -181,27 +177,14 @@ public class ImageSidebar
             var fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
             var layer = annotationService.findLayer(state.getProject(), fs);
-            if (SpanLayerSupport.TYPE.equals(layer.getType())) {
-                state.setSelection(Selection.span(aHandle.getVid(), cas, aHandle.getBegin(),
-                        aHandle.getEnd()));
-            }
-            else if (RelationLayerSupport.TYPE.equals(layer.getType())) {
-                var adapter = (RelationAdapter) annotationService.getAdapter(layer);
-                var originFS = FSUtil.getFeature(fs, adapter.getSourceFeatureName(),
-                        AnnotationFS.class);
-                var targetFS = FSUtil.getFeature(fs, adapter.getTargetFeatureName(),
-                        AnnotationFS.class);
-                state.setSelection(Selection.arc(aHandle.getVid(), originFS, targetFS));
-            }
-            else {
+            if (!SpanLayerSupport.TYPE.equals(layer.getType())
+                    && !RelationLayerSupport.TYPE.equals(layer.getType())) {
                 return;
             }
 
-            getAnnotationPage().actionShowSelectedDocument(aTarget, aHandle.getDocument(),
-                    aHandle.getBegin(), aHandle.getEnd());
-            aTarget.add((Component) getActionHandler());
+            getAnnotationPage().actionActivateAndSelect(aTarget, aHandle.getVid());
         }
-        catch (IOException e) {
+        catch (IOException | AnnotationException e) {
             error("Unable to select annotation: " + e.getMessage());
             LOG.error("Unable to select annotation", e);
         }

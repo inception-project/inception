@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
@@ -27,7 +29,6 @@ import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 /**
  * <p>
@@ -78,17 +79,19 @@ public class SelectAnnotationHandler
             var cas = context.getEditorCas();
             var state = context.getAnnotatorState();
 
-            var fs = ICasUtil.selectAnnotationByAddr(cas, vid.getId());
+            var fs = selectAnnotationByAddr(cas, vid.getId());
 
             var adapter = schemaService.findAdapter(state.getProject(), fs);
             state.setSelection(adapter.select(vid, fs));
+
+            context.activate(aTarget);
 
             if (requestParameters.getParameterValue(PARAM_SCROLL_TO).toBoolean(false)) {
                 context.getActionHandler().actionSelectAndJump(aTarget,
                         state.getSelection().getAnnotation());
             }
             else {
-                context.getActionHandler().actionSelect(aTarget);
+                context.getActionHandler().actionLoadSelectedAnnotationDetails(aTarget);
             }
 
             return new DefaultAjaxResponse(getAction(aRequest));

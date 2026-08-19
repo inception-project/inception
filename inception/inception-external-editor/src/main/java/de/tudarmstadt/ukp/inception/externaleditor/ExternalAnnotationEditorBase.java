@@ -67,6 +67,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
@@ -201,6 +202,15 @@ public abstract class ExternalAnnotationEditorBase
         // navigation (passive), so navigation stays local instead of driving the main editor's
         // page.
         getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
+    }
+
+    @Override
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd,
+                aAdditionalPingRanges);
     }
 
     @Override

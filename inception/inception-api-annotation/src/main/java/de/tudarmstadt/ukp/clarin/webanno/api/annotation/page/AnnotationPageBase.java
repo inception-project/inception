@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocu
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.joining;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -36,6 +37,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.uima.cas.CAS;
+import org.apache.wicket.Component;
+import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.model.IModel;
@@ -66,10 +69,12 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.ActiveEditorContextHolder;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -81,7 +86,7 @@ import jakarta.persistence.NoResultException;
 
 public abstract class AnnotationPageBase
     extends ProjectPageBase
-    implements DiamContext
+    implements DiamContext, ActiveEditorContextHolder
 {
     private static final long serialVersionUID = -1133219266479577443L;
 
@@ -106,6 +111,8 @@ public abstract class AnnotationPageBase
             .of(this::loadAnnotationNotEditableReason);
 
     private UrlFragmentBehavior urlFragmentBehavior;
+
+    private DiamContext activeContext;
 
     protected AnnotationPageBase(PageParameters aParameters)
     {
@@ -163,6 +170,53 @@ public abstract class AnnotationPageBase
     public IModel<AnnotatorState> getStateModel()
     {
         return getModel();
+    }
+
+    @Override
+    public DiamContext getActiveContext()
+    {
+        return activeContext != null ? activeContext : this;
+    }
+
+    protected void dropActiveContextIfNotDisplayed(AjaxRequestTarget aTarget)
+    {
+        if (isActiveContextDisplayed()) {
+            return;
+        }
+
+        setActiveContext(aTarget, this);
+    }
+
+    private boolean isActiveContextDisplayed()
+    {
+        if (!(activeContext instanceof Component component)) {
+            // The page itself, or a context not backed by a component - nothing to check.
+            return true;
+        }
+
+        return component.findParent(Page.class) != null && component.isVisibleInHierarchy();
+    }
+
+    @Override
+    public void activate(AjaxRequestTarget aTarget)
+    {
+        // The page is both the holder and a context, so activating it is just clearing any
+        // secondary context.
+        setActiveContext(aTarget, this);
+    }
+
+    @Override
+    public void setActiveContext(AjaxRequestTarget aTarget, DiamContext aContext)
+    {
+        var newContext = aContext == this ? null : aContext;
+
+        if (newContext == activeContext) {
+            return;
+        }
+
+        activeContext = newContext;
+
+        send(this, BREADTH, new ActiveEditorChangedEvent(getActiveContext(), aTarget));
     }
 
     public void setModelObject(AnnotatorState aModel)
@@ -385,9 +439,13 @@ public abstract class AnnotationPageBase
         var pingRanges = new ArrayList<VRange>();
         pingRanges.add(new VRange(range.getBegin(), range.getEnd()));
 
-        // Add any additional ping ranges if provided
-        if (aAdditionalPingRanges != null && !aAdditionalPingRanges.isEmpty()) {
-            pingRanges.addAll(aAdditionalPingRanges);
+        // Add any additional ping ranges if provided. Clip them like the target range: after a
+        // document switch they were resolved against the previously displayed document's CAS.
+        if (aAdditionalPingRanges != null) {
+            for (var pingRange : aAdditionalPingRanges) {
+                var clipped = rangeClippedToDocument(cas, pingRange.getBegin(), pingRange.getEnd());
+                pingRanges.add(new VRange(clipped.getBegin(), clipped.getEnd()));
+            }
         }
 
         state.getPagingStrategy().moveToOffset(state, cas, aBegin, pingRanges, CENTERED);
@@ -490,9 +548,10 @@ public abstract class AnnotationPageBase
                         continue;
                     }
 
-                    // Jump to invalid annotation if possible
+                    // Jump to invalid annotation if possible.
+                    // FIXME: Should support arbitary editors
                     if (editorCas.getTypeSystem().subsumes(annotationFsType, layerType)) {
-                        getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
+                        actionActivateAndSelect(aTarget, VID.of(fs));
                     }
 
                     // Inform the user
@@ -529,7 +588,8 @@ public abstract class AnnotationPageBase
                 var message = messages.get(0).getLeft();
                 var fs = messages.get(0).getRight();
 
-                getAnnotationActionHandler().actionSelectAndJump(aTarget, VID.of(fs));
+                // As above: aCas is this page's editor CAS, so select through the page context.
+                actionActivateAndSelect(aTarget, VID.of(fs));
 
                 // Inform the user
                 throw new ValidationException("Annotation with ID [" + VID.of(fs) + "] on layer ["
@@ -611,6 +671,16 @@ public abstract class AnnotationPageBase
     {
         var state = getModelObject();
         return documentService.isAnnotationFinished(state.getDocument(), state.getUser());
+    }
+
+    @Override
+    protected void onBeforeRender()
+    {
+        // If the active context is not visible, clear it. In onBeforeRender no AjaxTarget is
+        // available (page re-render), so we pass null here.
+        dropActiveContextIfNotDisplayed(null);
+
+        super.onBeforeRender();
     }
 
     @Override

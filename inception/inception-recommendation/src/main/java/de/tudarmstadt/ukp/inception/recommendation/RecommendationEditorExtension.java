@@ -203,9 +203,9 @@ public class RecommendationEditorExtension
 
         page.writeEditorCas(aCas);
 
-        // Set selection to the accepted annotation and select it and load it into the detail editor
+        // FIXME: Should support accepting recommendations on arbitrary editors
         aState.setSelection(adapter.select(VID.of(annotation), annotation));
-        page.getAnnotationActionHandler().actionSelect(aTarget);
+        page.actionActivateAndLoadSelectionDetails(aTarget);
 
         // Send a UI event that the suggestion has been accepted
         page.send(page, BREADTH, new AjaxRecommendationAcceptedEvent(aTarget, aState, aVID));

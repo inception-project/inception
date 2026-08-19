@@ -67,6 +67,7 @@ public class ScrollToHandler
     {
         try {
             var context = aBehavior.getContext();
+            // Do not activate context
 
             var requestParameters = aRequest.getRequestParameters();
 

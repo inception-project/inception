@@ -39,6 +39,8 @@ import org.springframework.context.annotation.Lazy;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
+import de.tudarmstadt.ukp.inception.diam.editing.AnnotationEditingService;
+import de.tudarmstadt.ukp.inception.diam.editing.AnnotationEditingServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateRelationAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.CreateSpanAnnotationHandler;
 import de.tudarmstadt.ukp.inception.diam.editor.actions.DeleteAnnotationHandler;
@@ -254,5 +256,12 @@ public class DiamAutoConfig
                     .access(expression(aMAH, "@documentAccess.canViewAnnotationDocument(#"
                             + PARAM_PROJECT + ", #" + PARAM_DOCUMENT + ", #" + PARAM_USER + ")"));
         };
+    }
+
+    @Bean
+    public AnnotationEditingService annotationEditingService(
+            AnnotationSchemaService aAnnotationService)
+    {
+        return new AnnotationEditingServiceImpl(aAnnotationService);
     }
 }

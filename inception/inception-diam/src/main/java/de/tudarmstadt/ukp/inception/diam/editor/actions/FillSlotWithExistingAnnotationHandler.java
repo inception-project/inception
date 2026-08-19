@@ -51,12 +51,12 @@ public class FillSlotWithExistingAnnotationHandler
         try {
             var context = aBehavior.getContext();
             context.getActionHandler().ensureIsEditable();
+            context.activate(aTarget);
 
-            var cas = context.getEditorCas();
             var slotFillerId = getVid(aRequest);
             // When filling a slot, the current selection is *NOT* changed. The Span annotation
             // which owns the slot that is being filled remains selected!
-            context.getActionHandler().actionFillSlot(aTarget, cas, slotFillerId);
+            context.getActionHandler().actionFillSlot(aTarget, slotFillerId);
 
             return new DefaultAjaxResponse(getAction(aRequest));
         }

@@ -27,6 +27,7 @@ import static org.apache.wicket.markup.head.JavaScriptHeaderItem.forReference;
 import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
+import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
@@ -52,7 +53,6 @@ import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.ReadOnlyActionHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
@@ -82,6 +82,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaStringResourceBehavior;
@@ -241,13 +242,6 @@ public abstract class BratSuggestionVisualizer
         return (AnnotatorSegmentState) getDefaultModelObject();
     }
 
-    // The visualizer acts as the read-only DIAM context for its priority handlers: state and CAS
-    // are resolved per-segment (the annotator's own document), and its action handler rejects any
-    // mutation (editability is a property of the action handler).
-
-    private final AnnotationActionHandler actionHandler = new ReadOnlyActionHandler(
-            this::getEditorCas);
-
     @Override
     public CAS getEditorCas() throws IOException
     {
@@ -259,17 +253,15 @@ public abstract class BratSuggestionVisualizer
     @Override
     public AnnotationActionHandler getActionHandler()
     {
-        return actionHandler;
+        throw new UnsupportedOperationException(
+                "This editor is a passive viewer and has no action handler.");
     }
 
     @Override
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
-        throws IOException, AnnotationException
+            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
     {
-        // Passive read-only view: the action handler ignores navigation, so this does not scroll
-        // and never drives the main editor.
-        getActionHandler().actionJump(aTarget, aBegin, aEnd);
+        // Selection of annotations is not supported
     }
 
     @Override

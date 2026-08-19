@@ -18,17 +18,19 @@
 package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 
 public interface AnnotationActionHandler
 {
     /**
-     * Load the annotation pointed to in {@link AnnotatorState#getSelection()} in the detail panel.
+     * Load the {@link AnnotatorState#getSelection() selected annotation} into the detail panel.
      * 
      * @param aTarget
      *            the AJAX target
@@ -37,7 +39,8 @@ public interface AnnotationActionHandler
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    void actionSelect(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
+    void actionLoadSelectedAnnotationDetails(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException;
 
     void actionSelect(AjaxRequestTarget aTarget, VID aVid) throws IOException, AnnotationException;
 
@@ -46,6 +49,32 @@ public interface AnnotationActionHandler
 
     void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
         throws IOException, AnnotationException;
+
+    /**
+     * Scroll to the given location, additionally pinging the given ranges.
+     * <p>
+     * The default discards the ping ranges - they are a scrolling nicety, so an editor that cannot
+     * honor them still scrolls correctly. Implementors that can honor them override this.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aBegin
+     *            the offset to scroll to
+     * @param aEnd
+     *            the corresponding end offset
+     * @param aAdditionalPingRanges
+     *            additional ranges that should ideally be visible. May be {@code null} or empty.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    default void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        actionJump(aTarget, aBegin, aEnd);
+    }
 
     /**
      * Navigate to the given document at the given offsets.
@@ -75,7 +104,32 @@ public interface AnnotationActionHandler
             int aBegin, int aEnd)
         throws IOException, AnnotationException
     {
-        actionJump(aTarget, aBegin, aEnd);
+        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, null);
+    }
+
+    /**
+     * Navigate to the given document at the given offsets, additionally pinging the given ranges.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aDocument
+     *            the document to show
+     * @param aBegin
+     *            the offset to scroll to
+     * @param aEnd
+     *            the corresponding end offset
+     * @param aAdditionalPingRanges
+     *            additional ranges that should ideally be visible. May be {@code null} or empty.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        actionJump(aTarget, aBegin, aEnd, aAdditionalPingRanges);
     }
 
     /**
@@ -113,29 +167,10 @@ public interface AnnotationActionHandler
     void actionReverse(AjaxRequestTarget aTarget) throws IOException, AnnotationException;
 
     /**
-     * @deprecated Use either of the other two {@link #actionFillSlot} variants instead.
-     */
-    @SuppressWarnings("javadoc")
-    @Deprecated
-    default void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
-            int aSlotFillerEnd, VID aExistingSlotFillerId)
-        throws IOException, AnnotationException
-    {
-        if (aExistingSlotFillerId.isNotSet()) {
-            actionFillSlot(aTarget, aCas, aSlotFillerBegin, aSlotFillerEnd);
-        }
-        else {
-            actionFillSlot(aTarget, aCas, aExistingSlotFillerId);
-        }
-    }
-
-    /**
      * Fill the currently armed slot with the given annotation.
      * 
      * @param aTarget
      *            the AJAX request target.
-     * @param aCas
-     *            the CAS in which the slot is going to be filled.
      * @param aSlotFillerBegin
      *            the begin of the span selected by the user to create a new annotation or the begin
      *            of the span of the selected existing annotation.
@@ -146,8 +181,7 @@ public interface AnnotationActionHandler
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, int aSlotFillerBegin,
-            int aSlotFillerEnd)
+    void actionFillSlot(AjaxRequestTarget aTarget, int aSlotFillerBegin, int aSlotFillerEnd)
         throws IOException, AnnotationException;
 
     /**
@@ -155,8 +189,6 @@ public interface AnnotationActionHandler
      * 
      * @param aTarget
      *            the AJAX request target.
-     * @param aCas
-     *            the CAS in which the slot is going to be filled.
      * @param aExistingSlotFillerId
      *            ID of the existing span annotation to be filled into the armed slot
      * @throws IOException
@@ -164,7 +196,7 @@ public interface AnnotationActionHandler
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    void actionFillSlot(AjaxRequestTarget aTarget, CAS aCas, VID aExistingSlotFillerId)
+    void actionFillSlot(AjaxRequestTarget aTarget, VID aExistingSlotFillerId)
         throws IOException, AnnotationException;
 
     CAS getEditorCas() throws IOException;

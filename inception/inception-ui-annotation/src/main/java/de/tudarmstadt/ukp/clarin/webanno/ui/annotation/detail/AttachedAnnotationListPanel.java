@@ -81,18 +81,15 @@ public class AttachedAnnotationListPanel
     private final AnnotationPageBase page;
     private final WebMarkupContainer noAttachedAnnotationsInfo;
     private final WebMarkupContainer attachedAnnotationsContainer;
-    private final AnnotationActionHandler actionHandler;
-
     private final IModel<List<AttachedAnnotationInfo>> annotations;
 
     public AttachedAnnotationListPanel(String aId, AnnotationPageBase aPage,
-            AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aModel)
+            IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
 
         page = aPage;
         annotations = LoadableDetachableModel.of(this::getRelationInfo);
-        actionHandler = aActionHandler;
 
         noAttachedAnnotationsInfo = new WebMarkupContainer("noAttachedAnnotationsInfo");
         noAttachedAnnotationsInfo.setOutputMarkupPlaceholderTag(true);
@@ -122,6 +119,11 @@ public class AttachedAnnotationListPanel
         return (AnnotatorState) getDefaultModelObject();
     }
 
+    private AnnotationActionHandler actionHandler()
+    {
+        return page.getActiveContext().getActionHandler();
+    }
+
     private List<AttachedAnnotationInfo> getRelationInfo()
     {
         Selection selection = getModelObject().getSelection();
@@ -132,7 +134,7 @@ public class AttachedAnnotationListPanel
 
         CAS cas;
         try {
-            cas = page.getEditorCas();
+            cas = page.getActiveContext().getEditorCas();
         }
         catch (IOException e) {
             // If we have trouble accessing the CAS, we probably never get here anyway...
@@ -276,12 +278,12 @@ public class AttachedAnnotationListPanel
             aItem.add(new Label("endpoint", info.endpointText));
 
             aItem.add(new LambdaAjaxLink("jumpToEndpoint",
-                    _target -> actionHandler.actionSelectAndJump(_target, info.endPointVid))
+                    _target -> actionHandler().actionSelectAndJump(_target, info.endPointVid))
                             .setAlwaysEnabled(true) // avoid disabling in read-only mode
             );
 
             LambdaAjaxLink selectRelation = new LambdaAjaxLink("selectRelation",
-                    _target -> actionHandler.actionSelect(_target, info.relationVid));
+                    _target -> actionHandler().actionSelect(_target, info.relationVid));
             // avoid disabling in read-only mode
             selectRelation.setAlwaysEnabled(info.relationVid != null);
             selectRelation

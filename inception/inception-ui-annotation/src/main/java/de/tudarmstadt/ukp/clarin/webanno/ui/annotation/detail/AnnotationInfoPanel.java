@@ -47,14 +47,14 @@ public class AnnotationInfoPanel
     private final WebMarkupContainer noAnnotationWarning;
     private final WebMarkupContainer annotationInfo;
 
-    private final AnnotationDetailEditorPanel actionHandler;
+    private final AnnotationDetailEditorPanel owner;
 
     public AnnotationInfoPanel(String aId, IModel<AnnotatorState> aModel,
             AnnotationDetailEditorPanel aOwner)
     {
         super(aId, aModel);
 
-        actionHandler = aOwner;
+        owner = aOwner;
 
         setOutputMarkupPlaceholderTag(true);
 
@@ -73,7 +73,7 @@ public class AnnotationInfoPanel
         annotationInfo.setOutputMarkupPlaceholderTag(true);
         annotationInfo.add(visibleWhen(this::isAnnotationSelected));
         annotationInfo.add(createSelectedAnnotationTypeLabel());
-        annotationInfo.add(new AnnotationTextPanel("annotationText", actionHandler, aModel));
+        annotationInfo.add(new AnnotationTextPanel("annotationText", owner, aModel));
         annotationInfo.add(createSelectedAnnotationLayerLabel());
         add(annotationInfo);
     }
@@ -106,7 +106,7 @@ public class AnnotationInfoPanel
         Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
             try {
                 var editorPanel = findParent(AnnotationDetailEditorPanel.class);
-                return String.valueOf(selectFsByAddr(editorPanel.getEditorCas(),
+                return String.valueOf(selectFsByAddr(editorPanel.activeEditorCas(),
                         getModelObject().getSelection().getAnnotation().getId())).trim();
             }
             catch (Exception e) {

@@ -894,7 +894,7 @@ public class ActiveLearningSidebar
             // highlight because the selection highlight from the right sidebar and the one from
             // the AL sidebar have the same color!
             state.clearSelection();
-            aTarget.add((Component) getActionHandler());
+            getAnnotationPage().getDetailEditor().refresh(aTarget);
 
             getAnnotationPage().actionShowSelectedDocument(aTarget, sourceDocument,
                     suggestion.getBegin(), suggestion.getEnd());
@@ -1166,7 +1166,8 @@ public class ActiveLearningSidebar
         if (anno.isPresent()) {
             state.setSelection(Selection.span(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
                     aRecord.getOffsetEnd()));
-            getActionHandler().actionDelete(aTarget);
+            // FIXME: Should support active learning in arbitrary editors
+            getAnnotationPage().actionActivateAndDelete(aTarget);
         }
     }
 

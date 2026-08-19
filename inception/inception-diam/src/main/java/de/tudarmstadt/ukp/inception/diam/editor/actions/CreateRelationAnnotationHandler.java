@@ -114,6 +114,7 @@ public class CreateRelationAnnotationHandler
         throws NotEditableException, IOException, AnnotationException, IllegalPlacementException
     {
         aContext.getActionHandler().ensureIsEditable();
+        aContext.activate(aTarget);
 
         if (originSpan.isSynthetic() || targetSpan.isSynthetic()) {
             var page = getPage();
@@ -246,6 +247,8 @@ public class CreateRelationAnnotationHandler
                 }
             }
         }
+
+        aContext.activate(aTarget);
 
         commitAnnotation(aTarget, aContext, selection);
     }

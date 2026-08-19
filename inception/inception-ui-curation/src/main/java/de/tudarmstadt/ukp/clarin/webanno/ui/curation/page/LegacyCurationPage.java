@@ -34,6 +34,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -44,6 +45,7 @@ import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -83,6 +85,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.DetailPanelHostingPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
@@ -104,7 +107,10 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
@@ -121,6 +127,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         + "}")
 public class LegacyCurationPage
     extends AnnotationPageBase
+    implements DetailPanelHostingPage
 {
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
 
@@ -250,7 +257,7 @@ public class LegacyCurationPage
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        var editor = factory.create(aId, getModel(), detailEditor, this::getEditorCas);
+        var editor = factory.create(aId, getModel(), this, this::getEditorCas);
         editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         editor.setOutputMarkupPlaceholderTag(true);
 
@@ -310,22 +317,7 @@ public class LegacyCurationPage
 
     private AnnotationDetailEditorPanel createDetailEditor(String aId)
     {
-        var panel = new AnnotationDetailEditorPanel(aId, this, getModel())
-        {
-            private static final long serialVersionUID = 2857345299480098279L;
-
-            @Override
-            public CAS getEditorCas() throws IOException
-            {
-                return LegacyCurationPage.this.getEditorCas();
-            }
-
-            @Override
-            public void writeEditorCas() throws IOException, AnnotationException
-            {
-                LegacyCurationPage.this.writeEditorCas(getEditorCas());
-            }
-        };
+        var panel = new AnnotationDetailEditorPanel(aId, this, getModel());
         panel.add(enabledWhen(() -> getModelObject() != null //
                 && getModelObject().getDocument() != null
                 && !documentService
@@ -489,9 +481,34 @@ public class LegacyCurationPage
     }
 
     @Override
+    public void writeEditorCas() throws IOException, AnnotationException
+    {
+        writeEditorCas(getEditorCas());
+    }
+
+    @Override
     public AnnotationActionHandler getAnnotationActionHandler()
     {
+        return this;
+    }
+
+    @Override
+    public AnnotationDetailEditorPanel getDetailEditor()
+    {
         return detailEditor;
+    }
+
+    @Override
+    public Selection selectionFor(VID aVid, AnnotationFS aAnnotation)
+    {
+        return annotationService.findAdapter(getProject(), aAnnotation).select(aVid, aAnnotation);
+    }
+
+    @Override
+    public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+        throws AnnotationException
+    {
+        actionShowDocument(aTarget, aDocument);
     }
 
     @Override
@@ -544,7 +561,8 @@ public class LegacyCurationPage
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
 
             curationUnits.setObject(buildUnitOverview(state));
-            detailEditor.reset(aTarget);
+
+            send(this, BREADTH, new EditorContentReplacedEvent(state, aTarget));
 
             annotatorsPanel.init(aTarget, getModelObject());
 
