@@ -34,6 +34,7 @@ import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CEN
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -43,6 +44,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
@@ -80,8 +82,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.DetailPanelHostingPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarStateChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarTabSelectedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BeforeDocumentOpenedEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
@@ -102,7 +106,10 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.kendo.AjaxSplitterBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -111,6 +118,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
 
 public abstract class AnnotationPageBase2
     extends AnnotationPageBase
+    implements DetailPanelHostingPage
 {
     private static final long serialVersionUID = 1378872465851908515L;
 
@@ -369,9 +377,21 @@ public abstract class AnnotationPageBase2
 
         var target = aEvent.getTarget();
 
+        dropActiveContextIfNotDisplayed(target);
+
         splitterBehavior.destroy(target);
         target.add(leftSidebar);
         splitterBehavior.reconfigure(target, getSplitterPanesJson());
+    }
+
+    @OnEvent
+    public void onSidebarTabSelected(SidebarTabSelectedEvent aEvent)
+    {
+        if (aEvent.getSide() != LEFT) {
+            return;
+        }
+
+        dropActiveContextIfNotDisplayed(aEvent.getTarget());
     }
 
     @Override
@@ -389,22 +409,7 @@ public abstract class AnnotationPageBase2
 
     private AnnotationDetailEditorPanel createDetailEditor()
     {
-        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel())
-        {
-            private static final long serialVersionUID = 2857345299480098279L;
-
-            @Override
-            public CAS getEditorCas() throws IOException
-            {
-                return AnnotationPageBase2.this.getEditorCas();
-            }
-
-            @Override
-            public void writeEditorCas() throws IOException, AnnotationException
-            {
-                AnnotationPageBase2.this.writeEditorCas(getEditorCas());
-            }
-        };
+        return new AnnotationDetailEditorPanel("annotationDetailEditorPanel", this, getModel());
     }
 
     /**
@@ -534,7 +539,7 @@ public abstract class AnnotationPageBase2
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        annotationEditor = factory.create(aId, getModel(), detailEditor, this::getEditorCas);
+        annotationEditor = factory.create(aId, getModel(), this, this::getEditorCas);
         annotationEditor.setOutputMarkupPlaceholderTag(true);
 
         centerArea.addOrReplace(annotationEditor);
@@ -561,7 +566,7 @@ public abstract class AnnotationPageBase2
 
     private SidebarPanel createLeftSidebar(String aId)
     {
-        return new SidebarPanel(aId, detailEditor, () -> getEditorCas(), AnnotationPageBase2.this);
+        return new SidebarPanel(aId, this, () -> getEditorCas(), AnnotationPageBase2.this);
     }
 
     private WebMarkupContainer createRightSidebar(String aId)
@@ -626,6 +631,12 @@ public abstract class AnnotationPageBase2
         bumpAnnotationCasTimestamp(state);
     }
 
+    @Override
+    public void writeEditorCas() throws IOException, AnnotationException
+    {
+        writeEditorCas(getEditorCas());
+    }
+
     public void bumpAnnotationCasTimestamp(AnnotatorState aState) throws IOException
     {
         documentService
@@ -637,7 +648,26 @@ public abstract class AnnotationPageBase2
     @Override
     public AnnotationActionHandler getAnnotationActionHandler()
     {
+        return this;
+    }
+
+    @Override
+    public AnnotationDetailEditorPanel getDetailEditor()
+    {
         return detailEditor;
+    }
+
+    @Override
+    public Selection selectionFor(VID aVid, AnnotationFS aAnnotation)
+    {
+        return annotationService.findAdapter(getProject(), aAnnotation).select(aVid, aAnnotation);
+    }
+
+    @Override
+    public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+        throws AnnotationException
+    {
+        actionShowDocument(aTarget, aDocument);
     }
 
     @Override
@@ -746,9 +776,10 @@ public abstract class AnnotationPageBase2
             // component has been created because only then the paging strategy is known
             moveToFocus(aFocus, sessionOwnerName, state, editorCas, dataOwnerName);
 
-            // Reset the editor (we reload the page content below, so in order not to schedule
-            // a double-update, we pass null here)
-            detailEditor.reset(null);
+            // Tell anything bound to this editor that its content has been replaced, so it can
+            // drop selections and feature values resolved against the previous CAS. We reload the
+            // page content below, so in order not to schedule a double-update, we pass null here.
+            send(this, BREADTH, new EditorContentReplacedEvent(state, null));
 
             if (aTarget != null) {
                 // Update URL for current document

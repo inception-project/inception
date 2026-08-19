@@ -37,6 +37,11 @@ public class CachingReuseStrategy
 
     private final Map<IModel<?>, Item<?>> modelToItem = Generics.newHashMap();
 
+    public void clear()
+    {
+        modelToItem.clear();
+    }
+
     @Override
     public <T> Iterator<Item<T>> getItems(final IItemFactory<T> factory,
             final Iterator<IModel<T>> newModels, Iterator<Item<T>> existingItems)

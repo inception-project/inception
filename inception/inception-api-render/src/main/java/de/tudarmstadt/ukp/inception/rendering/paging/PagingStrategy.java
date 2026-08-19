@@ -32,7 +32,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 
 public interface PagingStrategy
     extends Serializable
@@ -172,21 +171,8 @@ public interface PagingStrategy
     default void moveToSelection(AnnotatorViewState aState, CAS aCas)
     {
         var selection = aState.getSelection();
-        List<VRange> pingRanges;
 
-        if (selection.isArc()) {
-            // For arcs, ping both endpoints
-            var originFs = ICasUtil.selectAnnotationByAddr(aCas, selection.getOrigin());
-            var targetFs = ICasUtil.selectAnnotationByAddr(aCas, selection.getTarget());
-            pingRanges = List.of(new VRange(originFs.getBegin(), originFs.getEnd()),
-                    new VRange(targetFs.getBegin(), targetFs.getEnd()));
-        }
-        else {
-            // For spans, ping the selected range
-            pingRanges = List.of(new VRange(selection.getBegin(), selection.getEnd()));
-        }
-
-        moveToOffset(aState, aCas, selection.getBegin(), pingRanges, CENTERED);
+        moveToOffset(aState, aCas, selection.getBegin(), selection.pingRanges(aCas), CENTERED);
     }
 
     default void moveForward(AnnotatorViewState aState, CAS aCas)

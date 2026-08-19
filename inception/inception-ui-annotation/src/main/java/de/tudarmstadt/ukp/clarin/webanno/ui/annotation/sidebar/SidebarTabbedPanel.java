@@ -81,6 +81,10 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     {
         expanded = !expanded;
         saveSidebarState();
+
+        // Hide immediately so that listeners of SidebarStateChangedEvent can check visibility
+        get("panel").setVisible(expanded);
+
         send(this, BUBBLE, new SidebarStateChangedEvent(aTarget, SidebarStateChangedEvent.Side.LEFT,
                 !expanded));
     }
@@ -101,6 +105,7 @@ public class SidebarTabbedPanel<T extends SidebarTab>
     protected void onAjaxUpdate(Optional<AjaxRequestTarget> aTarget)
     {
         super.onAjaxUpdate(aTarget);
+
         if (!expanded) {
             expanded = true;
             saveSidebarState();
@@ -113,6 +118,10 @@ public class SidebarTabbedPanel<T extends SidebarTab>
                 send(this, BUBBLE, new SidebarStateChangedEvent(_target,
                         SidebarStateChangedEvent.Side.LEFT, false));
             });
+        }
+        else {
+            aTarget.ifPresent(_target -> send(this, BUBBLE,
+                    new SidebarTabSelectedEvent(_target, SidebarStateChangedEvent.Side.LEFT)));
         }
     }
 

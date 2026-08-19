@@ -89,7 +89,7 @@ public abstract class EditorAjaxRequestHandlerBase
         throws IOException, AnnotationException
     {
         aContext.getSelectionState().setSelection(aSelection);
-        aContext.getActionHandler().actionSelect(aTarget);
+        aContext.getActionHandler().actionLoadSelectedAnnotationDetails(aTarget);
         aContext.getActionHandler().writeEditorCas();
     }
 

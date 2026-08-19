@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarState.KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -39,6 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
+import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -56,7 +58,8 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.ReadOnlyActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.DocumentEditorActionHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.DefaultPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
@@ -75,30 +78,24 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import jakarta.persistence.NoResultException;
 
 /**
  * A sidebar that opens an arbitrary document from the current project in a read-only annotation
  * editor. The editor is auto-selected based on the document's format ("AUTO" mode).
- * <p>
- * The viewer is fully passive - it uses its own {@link AnnotatorState} so that paging/selection in
- * the sidebar never affects the main editor, and a {@link ReadOnlyActionHandler} so that clicks and
- * mutating actions are absorbed.
- * <p>
- * The sidebar acts as the {@link DiamContext} for its own toolbar: the reused
- * {@link OpenDocumentDialog} and {@link DefaultPagingNavigator} resolve the annotator state, editor
- * CAS and refresh action through this sidebar instead of the main editor's page, so opening or
- * paging a reference document stays local to the sidebar.
  */
 public class ReferenceDocumentSidebar
     extends AnnotationSidebar_ImplBase
-    implements DiamContext
+    implements DocumentEditorActionHandler
 {
     private static final long serialVersionUID = 1L;
 
@@ -112,9 +109,9 @@ public class ReferenceDocumentSidebar
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean PreferencesService preferencesService;
+    private @SpringBean AnnotationSchemaService annotationSchemaService;
 
     private final IModel<AnnotatorState> stateModel;
-    private final ReadOnlyActionHandler actionHandler;
     private final WebMarkupContainer editorContainer;
     private final DocumentNamePanel documentNamePanel;
     private final WebMarkupContainer actionBar;
@@ -170,13 +167,11 @@ public class ReferenceDocumentSidebar
             scrollSyncEnabled = sidebarState.isScrollSyncEnabled();
         }
 
-        actionHandler = new ReadOnlyActionHandler(this::getEditorCas);
-
         // Document name/project info line, same component the main editor uses in its header. The
         // sidebar is read-only, so editability comes from our own action handler rather than the
         // (editable) enclosing page.
         documentNamePanel = new DocumentNamePanel("documentNamePanel", stateModel,
-                actionHandler::isEditable);
+                this::isEditable);
         add(documentNamePanel);
 
         // Position info line ("N-M / K sentences [doc x / y]"); the concrete label is produced by
@@ -462,6 +457,21 @@ public class ReferenceDocumentSidebar
                 .collect(toList());
     }
 
+    @Override
+    public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+        throws AnnotationException
+    {
+        var documents = listReferenceDocuments();
+        if (!documents.contains(aDocument)) {
+            throw new AnnotationException(
+                    "Document [" + aDocument.getName() + "] cannot be shown in this sidebar.");
+        }
+
+        // Keep the full list on the state so the position label stays "[doc i / n]"-consistent.
+        stateModel.getObject().setDocument(aDocument, documents);
+        actionLoadDocument(aTarget);
+    }
+
     /**
      * Load the document currently set on our {@link #state} into a fresh read-only editor. Invoked
      * by the open dialog once the user has picked a document (the dialog has already set it on our
@@ -471,6 +481,9 @@ public class ReferenceDocumentSidebar
     {
         try {
             loadDocumentIntoEditor();
+
+            send(getPage(), BREADTH,
+                    new EditorContentReplacedEvent(stateModel.getObject(), aTarget));
 
             aTarget.add(editorContainer);
             aTarget.add(documentNamePanel);
@@ -514,7 +527,7 @@ public class ReferenceDocumentSidebar
 
             casProvider = () -> readReferenceCas(document);
 
-            editor = factory.create(MID_EDITOR, stateModel, actionHandler, casProvider);
+            editor = factory.create(MID_EDITOR, stateModel, this, casProvider);
 
             // Let the editor configure the paging strategy, then page the document
             factory.initState(state);
@@ -546,7 +559,53 @@ public class ReferenceDocumentSidebar
                 SHARED_READ_ONLY_ACCESS);
     }
 
-    // --- DiamContext: the sidebar hosts its own editor/toolbar --------------------------------
+    @Override
+    public void actionLoadSelectedAnnotationDetails(AjaxRequestTarget aTarget)
+    {
+        // Activating the editor loads its selected annotation in the ADEP
+        activate(aTarget);
+
+        // Re-render document so selection highlight shows
+        actionRefreshDocument(aTarget);
+    }
+
+    @Override
+    public void ensureIsEditable() throws AnnotationException
+    {
+        throw new NotEditableException("This editor is read-only.");
+    }
+
+    @Override
+    public void actionDelete(AjaxRequestTarget aTarget) throws AnnotationException
+    {
+        throw new NotEditableException("This editor is read-only.");
+    }
+
+    @Override
+    public void actionReverse(AjaxRequestTarget aTarget) throws AnnotationException
+    {
+        throw new NotEditableException("This editor is read-only.");
+    }
+
+    @Override
+    public void actionFillSlot(AjaxRequestTarget aTarget, int aSlotFillerBegin, int aSlotFillerEnd)
+        throws AnnotationException
+    {
+        throw new NotEditableException("This editor is read-only.");
+    }
+
+    @Override
+    public void actionFillSlot(AjaxRequestTarget aTarget, VID aExistingSlotFillerId)
+        throws AnnotationException
+    {
+        throw new NotEditableException("This editor is read-only.");
+    }
+
+    @Override
+    public void writeEditorCas() throws AnnotationException
+    {
+        throw new NotEditableException("This editor is read-only.");
+    }
 
     @Override
     public IModel<AnnotatorState> getStateModel()
@@ -566,17 +625,14 @@ public class ReferenceDocumentSidebar
     @Override
     public AnnotationActionHandler getActionHandler()
     {
-        return actionHandler;
+        return this;
     }
 
     @Override
-    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
-        throws IOException, AnnotationException
+    public Selection selectionFor(VID aVid, AnnotationFS aAnnotation)
     {
-        // A self-contained viewer scrolls within its own document and does not switch documents;
-        // the read-only action handler ignores navigation, so this stays local.
-        getActionHandler().actionJump(aTarget, aBegin, aEnd);
+        return annotationSchemaService.findAdapter(getProject(), aAnnotation).select(aVid,
+                aAnnotation);
     }
 
     @Override

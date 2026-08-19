@@ -71,12 +71,14 @@ public class MoveSpanAnnotationHandler
             var context = aBehavior.getContext();
 
             context.getActionHandler().ensureIsEditable();
+            context.activate(aTarget);
 
             var cas = context.getEditorCas();
             var vid = getVid(aRequest);
             var state = context.getAnnotatorState();
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
             moveSpan(context, aTarget, cas, vid, range);
+
             context.getActionHandler().writeEditorCas();
             return new DefaultAjaxResponse(getAction(aRequest));
         }

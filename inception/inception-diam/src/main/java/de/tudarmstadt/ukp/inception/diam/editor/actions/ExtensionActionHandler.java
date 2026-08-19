@@ -64,6 +64,7 @@ public class ExtensionActionHandler
         try {
             var context = aBehavior.getContext();
             context.getActionHandler().ensureIsEditable();
+            context.activate(aTarget);
 
             var action = getAction(aRequest);
             var paramId = getVid(aRequest);
