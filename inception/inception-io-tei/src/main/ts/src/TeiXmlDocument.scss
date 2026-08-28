@@ -61,6 +61,45 @@ TEI {
         display: block;
     }
 
+    list {
+        display: block;
+        margin-left: 1em;
+        list-style-type: none;
+    }
+
+    list > head {
+        font-size: 1em;
+    }
+
+    list > item {
+        display: list-item;
+        list-style-type: disc;
+        margin-left: 1em;
+    }
+
+    list > label,
+    list > headLabel,
+    list > headItem {
+        display: block;
+        font-weight: bold;
+    }
+
+    desc {
+        display: block;
+    }
+
+    salute,
+    signed,
+    dateline,
+    trailer,
+    docTitle,
+    docAuthor,
+    docDate,
+    docEdition,
+    imprimatur {
+        display: block;
+    }
+
     sp {
         margin-top: 1em;
         margin-left: 1em;
