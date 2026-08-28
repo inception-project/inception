@@ -376,7 +376,6 @@ export class ViewportTracker {
     private initiateAction(): void {
         clearTimeout(this.redrawTimeoutId);
         this.redrawTimeoutId = setTimeout(() => {
-            this._currentRange = this.calculateWindowRange();
             console.debug('Invoking ViewportTracker callback with range', this._currentRange);
             this.callback(this._currentRange);
         }, this.debounceDelay);
