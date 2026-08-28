@@ -25,10 +25,12 @@ import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
+const dev = Boolean(argv.live || argv.once)
+
 const packagePath = 'de/tudarmstadt/ukp/inception/recommendation/footer'
 
 let outbase = `../../../target/js/${packagePath}`
-if (argv.live) {
+if (dev) {
   outbase = `../../../target/classes/${packagePath}`
 }
 
@@ -39,20 +41,20 @@ const defaults = {
   format: 'esm',
   plugins: [
     esbuildSvelte({
-      compilerOptions: { dev: argv.live },
+      compilerOptions: { dev: dev },
       preprocess: sveltePreprocess()
     })
   ],
   bundle: true,
-  sourcemap: argv.live,
-  minify: !argv.live,
+  sourcemap: dev,
+  minify: !dev,
   target: 'es2020',
   loader: { '.ts': 'ts' },
   logLevel: 'info'
 }
 
 fs.mkdirsSync(`${outbase}`)
-if (!argv.live) {
+if (!dev) {
   fs.emptyDirSync(outbase)
 }
 
