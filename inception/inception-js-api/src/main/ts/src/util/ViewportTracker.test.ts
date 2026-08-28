@@ -94,6 +94,44 @@ describe('ViewportTracker (pause/resume)', () => {
         tracker.disconnect();
     });
 
+    it('does not narrow the range when elements are removed during the debounce window', () => {
+        const container = document.createElement('div');
+        const near = document.createElement('div');
+        near.style.display = 'block';
+        near.textContent = 'near';
+        const far = document.createElement('div');
+        far.style.display = 'block';
+        far.textContent = 'far away content';
+        container.appendChild(near);
+        container.appendChild(far);
+        document.body.appendChild(container);
+
+        const cb = vi.fn();
+        const tracker = new ViewportTracker(container, cb);
+        const obs = MockIntersectionObserver.lastInstance;
+        expect(obs).toBeTruthy();
+
+        // Both elements become visible - this addition schedules the debounced callback.
+        obs!.simulate([
+            { isIntersecting: true, target: near },
+            { isIntersecting: true, target: far },
+        ]);
+
+        // Copy: the accessor returns the live array by reference.
+        const rangeAtScheduleTime: [number, number] = [...tracker.currentRange];
+
+        // The far element scrolls out again before the debounce elapses. Removals must not
+        // recompute the range.
+        obs!.simulate([{ isIntersecting: false, target: far }]);
+
+        vi.advanceTimersByTime(300);
+
+        expect(cb).toHaveBeenCalledTimes(1);
+        expect(cb).toHaveBeenCalledWith(rangeAtScheduleTime);
+
+        tracker.disconnect();
+    });
+
     it('suppresses callbacks while paused and resumes after resume', () => {
         const container = document.createElement('div');
         const child = document.createElement('div');
