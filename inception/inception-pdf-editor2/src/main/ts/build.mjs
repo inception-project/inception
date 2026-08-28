@@ -25,10 +25,12 @@ import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
+const dev = Boolean(argv.live || argv.once)
+
 const packagePath = 'de/tudarmstadt/ukp/inception/pdfeditor2/resources/'
 
 let outbase = `../../../target/js/${packagePath}`
-if (argv.live) {
+if (dev) {
   outbase = `../../../target/classes/${packagePath}`
 }
 
@@ -39,7 +41,7 @@ const defaults = {
   format: 'iife',
   bundle: true,
   sourcemap: true,
-  minify: !argv.live,
+  minify: !dev,
   target: 'es2020',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
@@ -51,7 +53,7 @@ const defaults = {
   plugins: [
     sassPlugin(),
     esbuildSvelte({
-      compilerOptions: { dev: argv.live },
+      compilerOptions: { dev: dev },
       preprocess: sveltePreprocess(),
       filterWarnings: (warning) => {
         // Ignore warnings about unused CSS selectors in Svelte components which appear as we import
@@ -66,7 +68,7 @@ const defaults = {
 }
 
 fs.mkdirsSync(`${outbase}`)
-if (!argv.live) {
+if (!dev) {
   fs.emptyDirSync(outbase)
 }
 fs.copySync('pdfjs-web', `${outbase}`)

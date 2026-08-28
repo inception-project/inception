@@ -25,10 +25,12 @@ import fs from 'fs-extra'
 
 const argv = yargs(hideBin(process.argv)).argv
 
+const dev = Boolean(argv.live || argv.once)
+
 const packagePath = 'de/tudarmstadt/ukp/inception/apacheannotatoreditor/resources'
 
 let outbase = `../../../target/js/${packagePath}`
-if (argv.live) {
+if (dev) {
   outbase = `../../../target/classes/${packagePath}`
 }
 
@@ -38,7 +40,7 @@ const defaults = {
   globalName: 'ApacheAnnotatorEditor',
   bundle: true,
   sourcemap: true,
-  minify: !argv.live,
+  minify: !dev,
   target: 'es2020',
   loader: { '.ts': 'ts' },
   logLevel: 'info',
@@ -51,7 +53,7 @@ const defaults = {
     sassPlugin(),
     esbuildSvelte({
       compilerOptions: { 
-        dev: argv.live,
+        dev: dev,
       },
       preprocess: sveltePreprocess(),
       filterWarnings: (warning) => {
@@ -67,7 +69,7 @@ const defaults = {
 }
 
 fs.mkdirsSync(`${outbase}`)
-if (!argv.live) {
+if (!dev) {
   fs.emptyDirSync(outbase)
 }
 
