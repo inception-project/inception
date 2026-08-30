@@ -139,6 +139,7 @@
     <asciidoctor.plugin.version>3.2.0</asciidoctor.plugin.version>
     <asciidoctor.version>3.0.1</asciidoctor.version>
     <asciidoctor-diagram.version>3.2.1</asciidoctor-diagram.version>
+    <asciidoctor-diagram-plantuml.version>1.2024.5</asciidoctor-diagram-plantuml.version>
     <build-asciidoctorj-pdf-version>2.3.23</build-asciidoctorj-pdf-version>
 
     <ant-version>1.10.17</ant-version>

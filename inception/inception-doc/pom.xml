@@ -71,6 +71,12 @@
       <version>${asciidoctor-diagram.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.asciidoctor</groupId>
+      <artifactId>asciidoctorj-diagram-plantuml</artifactId>
+      <version>${asciidoctor-diagram-plantuml.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
   <build>
     <!--
@@ -127,6 +133,7 @@
               -->
               <usedDependency>org.asciidoctor:asciidoctorj</usedDependency>
               <usedDependency>org.asciidoctor:asciidoctorj-diagram</usedDependency>
+              <usedDependency>org.asciidoctor:asciidoctorj-diagram-plantuml</usedDependency>
               <!--
                 - Maven doesn't detect JS dependencies. We use this in docinfo.html
               -->
