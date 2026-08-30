@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb;
 
+import static de.tudarmstadt.ukp.inception.kb.RdfImportParserConfigs.doctypeTolerantParserConfig;
 import static de.tudarmstadt.ukp.inception.kb.RepositoryType.LOCAL;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.skipCertificateChecks;
@@ -892,6 +893,7 @@ public class KnowledgeBaseServiceImpl
             // Load files into the repository
             try (var conn = getConnection(kb)) {
                 conn.setIsolationLevel(IsolationLevels.NONE);
+                conn.setParserConfig(doctypeTolerantParserConfig());
                 // If the RDF file contains relative URLs, then they probably start with a hash.
                 // To avoid having two hashes here, we drop the hash from the base prefix configured
                 // by the user.
