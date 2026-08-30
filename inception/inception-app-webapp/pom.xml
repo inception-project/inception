@@ -1123,6 +1123,11 @@
               <artifactId>asciidoctorj-diagram</artifactId>
               <version>${asciidoctor-diagram.version}</version>
             </dependency>
+            <dependency>
+              <groupId>org.asciidoctor</groupId>
+              <artifactId>asciidoctorj-diagram-plantuml</artifactId>
+              <version>${asciidoctor-diagram-plantuml.version}</version>
+            </dependency>
           </dependencies>
         </plugin>
         <plugin>
