@@ -62,6 +62,14 @@ public class ScrollToHandler
     }
 
     @Override
+    public boolean accepts(Request aRequest)
+    {
+        return COMMAND.equals(
+                aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString())
+                && !getVid(aRequest).isSynthetic();
+    }
+
+    @Override
     public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
             Request aRequest)
     {
