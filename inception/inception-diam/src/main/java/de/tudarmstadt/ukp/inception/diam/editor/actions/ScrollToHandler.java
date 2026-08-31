@@ -27,6 +27,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRangeList;
@@ -62,11 +63,9 @@ public class ScrollToHandler
     }
 
     @Override
-    public boolean accepts(Request aRequest)
+    public boolean accepts(DiamRequest aRequest)
     {
-        return COMMAND.equals(
-                aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toOptionalString())
-                && !getVid(aRequest).isSynthetic();
+        return super.accepts(aRequest) && !getVid(aRequest.getRequest()).isSynthetic();
     }
 
     @Override

@@ -221,7 +221,7 @@
       <dependency>
         <groupId>jaxen</groupId>
         <artifactId>jaxen</artifactId>
-        <version>${javax.activation-api-version}</version>
+        <version>${jaxen.version}</version>
         <exclusions>
           <exclusion>
             <artifactId>dom4j</artifactId>
