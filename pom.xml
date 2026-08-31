@@ -81,7 +81,7 @@
     <testcontainers.version>2.0.5</testcontainers.version>
     <keycloak-admin-client.version>26.0.12</keycloak-admin-client.version>
     <testcontainers-keycloak.version>4.3.1</testcontainers-keycloak.version>
-    <mock-oauth2-server.version>5.0.2</mock-oauth2-server.version>
+    <mock-oauth2-server.version>6.0.2</mock-oauth2-server.version>
 
     <awaitility.version>4.3.0</awaitility.version>
 
@@ -93,11 +93,11 @@
     <pdfbox.version>3.0.8</pdfbox.version>
 
     <spring.version>7.0.9</spring.version>
-    <spring.boot.version>4.1.0</spring.boot.version>
-    <spring.data.version>4.1.0</spring.data.version>
+    <spring.boot.version>4.1.1</spring.boot.version>
+    <spring.data.version>4.1.1</spring.data.version>
     <spring.security.version>7.1.0</spring.security.version>
-    <springdoc.version>3.0.3</springdoc.version>
-    <swagger.version>2.2.54</swagger.version>
+    <springdoc.version>3.1.0</springdoc.version>
+    <swagger.version>2.2.55</swagger.version>
     <jjwt.version>0.13.0</jjwt.version>
 
     <slf4j.version>2.0.18</slf4j.version>
@@ -119,7 +119,7 @@
     <liquibase-slf4j.version>5.1.0</liquibase-slf4j.version>
 
     <wicket.version>10.11.0</wicket.version>
-    <wicketstuff.version>10.9.2</wicketstuff.version>
+    <wicketstuff.version>10.10.0</wicketstuff.version>
     <wicket-bootstrap.version>7.0.14</wicket-bootstrap.version>
     <wicket-jquery-selectors.version>4.0.14</wicket-jquery-selectors.version>
     <wicket-webjars.version>4.0.14</wicket-webjars.version>
@@ -128,9 +128,9 @@
     <!--
       - These are all interconnected - because they share the dependency on Lucene.
       -->
-    <lucene.version>10.5.0</lucene.version>
+    <lucene.version>10.5.1</lucene.version>
     <solr.version>10.0.0</solr.version>
-    <opensearch.version>3.7.0</opensearch.version>
+    <opensearch.version>3.8.0</opensearch.version>
     <jena.version>6.2.0</jena.version>
     <libthrift.version>0.24.0</libthrift.version>
     <rdf4j.version>5.3.2</rdf4j.version>
@@ -139,20 +139,20 @@
     <asciidoctor.plugin.version>3.2.0</asciidoctor.plugin.version>
     <asciidoctor.version>3.0.1</asciidoctor.version>
     <asciidoctor-diagram.version>3.2.1</asciidoctor-diagram.version>
-    <asciidoctor-diagram-plantuml.version>1.2024.5</asciidoctor-diagram-plantuml.version>
+    <asciidoctor-diagram-plantuml.version>1.2026.2</asciidoctor-diagram-plantuml.version>
     <build-asciidoctorj-pdf-version>2.3.23</build-asciidoctorj-pdf-version>
 
     <ant-version>1.10.17</ant-version>
     <json.version>20240303</json.version>
     <jackson.version>2.22.1</jackson.version>
     <jackson3.version>3.2.1</jackson3.version>
-    <snakeyaml.version>2.6</snakeyaml.version>
+    <snakeyaml.version>2.7</snakeyaml.version>
     <okhttp.version>5.4.0</okhttp.version>
     <okio.version>3.18.1</okio.version>
     <byte-buddy.version>1.18.12</byte-buddy.version>
     <caffeine.version>3.2.4</caffeine.version>
     <commons-beanutils.version>1.11.0</commons-beanutils.version>
-    <commons-collections4.version>4.5.0</commons-collections4.version>
+    <commons-collections4.version>4.6.0</commons-collections4.version>
     <commons-csv.version>1.14.1</commons-csv.version>
     <commons-fileupload.version>1.6.0</commons-fileupload.version>
     <commons-pool2.version>2.13.1</commons-pool2.version>
@@ -183,7 +183,16 @@
     <json-schema-validator.version>3.0.7</json-schema-validator.version>
     <json-schema-generator.version>5.0.0</json-schema-generator.version>
     <jgit.version>7.7.1.202607240634-r</jgit.version>
+    <!--
+      javax.activation-api has no release after 1.2.0 - it is the last version under the
+      legacy javax.activation namespace (the successor is jakarta.activation-api).
+      -->
     <javax.activation-api-version>1.2.0</javax.activation-api-version>
+    <!--
+      jaxen previously (mis)used ${javax.activation-api-version}: the two artifacts are
+      unrelated and merely happened to share the version number 1.2.0.
+      -->
+    <jaxen.version>2.0.6</jaxen.version>
     <jaxb.version>4.0.9</jaxb.version>
     <!--
       jaxb-impl-version / jaxb-core-version must remain on the 2.3.x line: it is the last
@@ -201,13 +210,13 @@
     <snappy.version>1.1.10.8</snappy.version>
     <jsonld-java.version>0.13.6</jsonld-java.version>
     <jna.version>5.19.1</jna.version>
-    <jsoup.version>1.23.1</jsoup.version>
+    <jsoup.version>1.23.2</jsoup.version>
     <matomo-java-tracker-core-version>4.0.0</matomo-java-tracker-core-version>
     <mime4j.version>0.8.14</mime4j.version>
     <hsqldb.version>2.7.4</hsqldb.version>
     <opensaml.version>5.2.3</opensaml.version>
     <oauth2-oidc-sdk.version>11.38.2</oauth2-oidc-sdk.version>
-    <javassist.version>3.32.0-GA</javassist.version>
+    <javassist.version>3.33.0-GA</javassist.version>
     <openjson.version>1.0.13</openjson.version>
     <mjson.version>1.4.2</mjson.version>
     <jsr305.version>3.0.2</jsr305.version>
@@ -215,7 +224,7 @@
     <jtokkit.version>1.1.0</jtokkit.version>
     <rhino.version>1.7.15.1</rhino.version>
     <httpcore5.version>5.4.3</httpcore5.version>
-    <httpclient5.version>5.6.3</httpclient5.version>
+    <httpclient5.version>5.6.4</httpclient5.version>
     <omtd-share-annotations.version>3.0.2.7</omtd-share-annotations.version>
     <webstomp-client.version>1.2.6</webstomp-client.version>
 
@@ -386,7 +395,7 @@
             <plugin>
               <groupId>com.diffplug.spotless</groupId>
               <artifactId>spotless-maven-plugin</artifactId>
-              <version>3.9.0</version>
+              <version>3.10.1</version>
               <inherited>true</inherited>
               <configuration>
                 <java>
