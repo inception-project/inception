@@ -21,6 +21,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.MultiValueMode.NONE;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
@@ -51,6 +53,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
+import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
@@ -148,12 +151,12 @@ public class CurationEditorExtension
                     curationVid);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
-            actionJumpTo(aActionHandler, aTarget, curationVid, doc, srcUser);
+            actionJumpTo(aActionHandler, aState, aTarget, curationVid, doc, srcUser);
         }
     }
 
-    private void actionJumpTo(AnnotationActionHandler aActionHandler, AjaxRequestTarget aTarget,
-            CurationVID curationVid, SourceDocument doc, String srcUser)
+    private void actionJumpTo(AnnotationActionHandler aActionHandler, AnnotatorState aState,
+            AjaxRequestTarget aTarget, CurationVID curationVid, SourceDocument doc, String srcUser)
         throws IOException, AnnotationException
     {
         // get user CAS and annotation (to be merged into curator's)
@@ -161,6 +164,20 @@ public class CurationEditorExtension
 
         var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcUser));
         var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
+
+        var layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
+
+        if (RelationLayerSupport.TYPE.equals(layer.getType())
+                && annotationService.getAdapter(layer) instanceof RelationAdapter relationAdapter) {
+            var source = relationAdapter.getSourceAnnotation(sourceAnnotation);
+            var target = relationAdapter.getTargetAnnotation(sourceAnnotation);
+
+            if (source != null && target != null) {
+                aActionHandler.actionJump(aTarget, min(source.getBegin(), target.getBegin()),
+                        max(source.getEnd(), target.getEnd()));
+                return;
+            }
+        }
 
         aActionHandler.actionJump(aTarget, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
     }
