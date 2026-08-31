@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.reification;
 
+import static de.tudarmstadt.ukp.inception.kb.RdfImportParserConfigs.doctypeTolerantParserConfig;
 import static java.lang.System.currentTimeMillis;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -152,6 +153,7 @@ public class NoReificationTest
     private void importData(RDFFormat aFormat, InputStream aIS) throws IOException
     {
         try (var conn = rdf4jLocalRepo.getConnection()) {
+            conn.setParserConfig(doctypeTolerantParserConfig());
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.

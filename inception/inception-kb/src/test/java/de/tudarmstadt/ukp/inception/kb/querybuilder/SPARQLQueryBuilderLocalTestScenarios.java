@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.kb.querybuilder;
 
+import static de.tudarmstadt.ukp.inception.kb.RdfImportParserConfigs.doctypeTolerantParserConfig;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.newPerThreadSslCheckingHttpClientBuilder;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.restoreSslVerification;
 import static de.tudarmstadt.ukp.inception.kb.http.PerThreadSslCheckingHttpClientUtils.suspendSslVerification;
@@ -1476,6 +1477,7 @@ public class SPARQLQueryBuilderLocalTestScenarios
         throws IOException
     {
         try (var conn = aRepository.getConnection()) {
+            conn.setParserConfig(doctypeTolerantParserConfig());
             // If the RDF file contains relative URLs, then they probably start with a hash.
             // To avoid having two hashes here, we drop the hash from the base prefix configured
             // by the user.
