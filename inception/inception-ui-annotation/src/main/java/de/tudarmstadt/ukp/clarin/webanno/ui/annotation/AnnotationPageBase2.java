@@ -918,6 +918,12 @@ public abstract class AnnotationPageBase2
         if (doc != null && !doc.equals(state.getDocument())) {
             LOG.trace("Changing document: {} (prev: {})", doc, state.getDocument());
             state.setDocument(doc, getListOfDocs());
+
+            if (state.getDocumentIndex() == -1) {
+                failWithDocumentNotFound("Document [" + doc.getName() + "] in project ["
+                        + project.getName() + "] is not available");
+                return;
+            }
         }
     }
 

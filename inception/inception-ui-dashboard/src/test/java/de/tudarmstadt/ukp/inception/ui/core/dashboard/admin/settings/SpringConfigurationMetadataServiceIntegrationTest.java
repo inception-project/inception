@@ -179,7 +179,7 @@ public class SpringConfigurationMetadataServiceIntegrationTest
     private SpringConfigurationMetadataServiceImpl newService()
     {
         return new SpringConfigurationMetadataServiceImpl(environment, emptyList(),
-                () -> emptySet(), beanFactory);
+                namespaces(emptySet(), emptySet()), beanFactory);
     }
 
     private static ConfigurationProperty findProperty(List<ConfigurationProperty> aProperties,
@@ -248,7 +248,7 @@ public class SpringConfigurationMetadataServiceIntegrationTest
     void multiSegmentHiddenPrefixHidesOnlyMatchingSubtree()
     {
         var sut = new SpringConfigurationMetadataServiceImpl(environment, emptyList(),
-                () -> Set.of("test-hidden.matomo"), beanFactory);
+                namespaces(Set.of("test-hidden.matomo"), emptySet()), beanFactory);
 
         var names = sut.listProperties().stream() //
                 .map(ConfigurationProperty::getName) //
@@ -261,11 +261,83 @@ public class SpringConfigurationMetadataServiceIntegrationTest
                 .contains("test-hidden.kept.flag");
     }
 
+    private static SettingsPageProperties namespaces(Set<String> aHidden, Set<String> aVisible)
+    {
+        var properties = new SettingsPagePropertiesImpl();
+        properties.setHiddenNamespaces(aHidden);
+        properties.setVisibleNamespaces(aVisible);
+        return properties;
+    }
+
+    /**
+     * A more specific visible namespace un-hides a subtree of an otherwise hidden namespace. This
+     * is what allows {@code logging.request} to show up on the settings page even though the
+     * framework-provided {@code logging} namespace as a whole is hidden.
+     */
+    @Test
+    void moreSpecificVisiblePrefixOverridesHiddenPrefix()
+    {
+        var sut = new SpringConfigurationMetadataServiceImpl(environment, emptyList(),
+                namespaces(Set.of("test-hidden"), Set.of("test-hidden.kept")), beanFactory);
+
+        var names = sut.listProperties().stream() //
+                .map(ConfigurationProperty::getName) //
+                .filter(n -> n.startsWith("test-hidden.")) //
+                .toList();
+
+        assertThat(names) //
+                .as("the more specific visible prefix wins over the hidden one") //
+                .contains("test-hidden.kept.flag") //
+                .doesNotContain("test-hidden.matomo.flag");
+    }
+
+    /**
+     * A visible namespace that is less specific than the hidden one does not un-hide anything.
+     */
+    @Test
+    void lessSpecificVisiblePrefixDoesNotOverrideHiddenPrefix()
+    {
+        var sut = new SpringConfigurationMetadataServiceImpl(environment, emptyList(),
+                namespaces(Set.of("test-hidden.matomo"), Set.of("test-hidden")), beanFactory);
+
+        var names = sut.listProperties().stream() //
+                .map(ConfigurationProperty::getName) //
+                .filter(n -> n.startsWith("test-hidden.")) //
+                .toList();
+
+        assertThat(names) //
+                .as("a less specific visible prefix does not win") //
+                .doesNotContain("test-hidden.matomo.flag") //
+                .contains("test-hidden.kept.flag");
+    }
+
+    /**
+     * The very same namespace declared as both hidden and visible stays hidden -- only a strictly
+     * more specific visible namespace un-hides a subtree.
+     */
+    @Test
+    void equallySpecificVisiblePrefixDoesNotOverrideHiddenPrefix()
+    {
+        var sut = new SpringConfigurationMetadataServiceImpl(environment, emptyList(),
+                namespaces(Set.of("test-hidden.matomo"), Set.of("test-hidden.matomo")),
+                beanFactory);
+
+        var names = sut.listProperties().stream() //
+                .map(ConfigurationProperty::getName) //
+                .filter(n -> n.startsWith("test-hidden.")) //
+                .toList();
+
+        assertThat(names) //
+                .as("an equally specific visible prefix does not win") //
+                .doesNotContain("test-hidden.matomo.flag") //
+                .contains("test-hidden.kept.flag");
+    }
+
     @Test
     void topLevelHiddenPrefixHidesEntireSubtree()
     {
         var sut = new SpringConfigurationMetadataServiceImpl(environment, emptyList(),
-                () -> Set.of("test-hidden"), beanFactory);
+                namespaces(Set.of("test-hidden"), emptySet()), beanFactory);
 
         var names = sut.listProperties().stream() //
                 .map(ConfigurationProperty::getName) //

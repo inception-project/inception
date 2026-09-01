@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.EventListener;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletListenerRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -36,15 +37,19 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.support.logging.LoggingFilter;
+import de.tudarmstadt.ukp.inception.support.logging.LoggingProperties;
+import de.tudarmstadt.ukp.inception.support.logging.LoggingPropertiesImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Configuration
+@EnableConfigurationProperties(LoggingPropertiesImpl.class)
 public class InceptionServletContextInitializer
 {
     private @Autowired RepositoryProperties repoProperties;
+    private @Autowired LoggingProperties loggingProperties;
 
     @Bean
     public ServletListenerRegistrationBean<EventListener> springSessionLookup()
@@ -72,8 +77,8 @@ public class InceptionServletContextInitializer
     public FilterRegistrationBean<LoggingFilter> loggingFilter()
     {
         // Make username / repository accessible to logging framework
-        var registration = new FilterRegistrationBean<>(
-                new LoggingFilter(repoProperties.getPath().getAbsolutePath().toString()));
+        var registration = new FilterRegistrationBean<>(new LoggingFilter(
+                repoProperties.getPath().getAbsolutePath().toString(), loggingProperties));
         registration.setName("logging");
         registration.setDispatcherTypes(REQUEST, FORWARD, ASYNC);
         registration.setUrlPatterns(asList("/*"));
