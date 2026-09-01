@@ -28,17 +28,25 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class LoggingFilter
     implements Filter
 {
     public static final String PARAM_REPOSITORY_PATH = "repoPath";
 
-    private String repoPath;
+    private final String repoPath;
+    private final LoggingProperties properties;
 
     public LoggingFilter(String aRepoPath)
     {
+        this(aRepoPath, null);
+    }
+
+    public LoggingFilter(String aRepoPath, LoggingProperties aProperties)
+    {
         repoPath = aRepoPath;
+        properties = aProperties;
     }
 
     @Override
@@ -54,6 +62,13 @@ public class LoggingFilter
             setRepositoryPath(repoPath);
         }
 
+        var remoteAddressCaptured = false;
+        if (properties != null && properties.isRemoteAddress()
+                && req instanceof HttpServletRequest httpRequest) {
+            setRemoteAddress(httpRequest.getRemoteAddr());
+            remoteAddressCaptured = true;
+        }
+
         try {
             chain.doFilter(req, resp);
         }
@@ -64,6 +79,10 @@ public class LoggingFilter
 
             if (repoPath != null) {
                 clearRepositoryPath();
+            }
+
+            if (remoteAddressCaptured) {
+                clearRemoteAddress();
             }
         }
     }
@@ -94,5 +113,15 @@ public class LoggingFilter
     public static void clearRepositoryPath()
     {
         MDC.remove(Logging.KEY_REPOSITORY_PATH);
+    }
+
+    public static void setRemoteAddress(String aRemoteAddress)
+    {
+        MDC.put(Logging.KEY_REMOTE_ADDRESS, aRemoteAddress);
+    }
+
+    public static void clearRemoteAddress()
+    {
+        MDC.remove(Logging.KEY_REMOTE_ADDRESS);
     }
 }

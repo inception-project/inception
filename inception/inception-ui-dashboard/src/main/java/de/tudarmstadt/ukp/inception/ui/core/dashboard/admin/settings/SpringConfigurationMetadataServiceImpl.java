@@ -95,6 +95,7 @@ public class SpringConfigurationMetadataServiceImpl
     {
         var metadata = getMetadata();
         var hidden = settingsProperties.getHiddenNamespaces();
+        var visible = settingsProperties.getVisibleNamespaces();
         // Snapshot every PropertySource's property names once -- without this we'd rescan
         // every enumerable source for every metadata property, giving O(properties x sources
         // x keys) behavior on a page with thousands of keys across dozens of sources.
@@ -102,7 +103,7 @@ public class SpringConfigurationMetadataServiceImpl
 
         var views = new ArrayList<ConfigurationProperty>(metadata.size());
         for (var property : metadata) {
-            if (isHidden(property.getName(), hidden)) {
+            if (isHidden(property.getName(), hidden, visible)) {
                 continue;
             }
             views.add(toView(property, sources));
@@ -111,17 +112,33 @@ public class SpringConfigurationMetadataServiceImpl
         return views;
     }
 
-    private static boolean isHidden(String aName, Set<String> aHidden)
+    private static boolean isHidden(String aName, Set<String> aHidden, Set<String> aVisible)
     {
         if (aName == null || aHidden == null || aHidden.isEmpty()) {
             return false;
         }
-        for (var hidden : aHidden) {
-            if (aName.equals(hidden) || aName.startsWith(hidden + ".")) {
-                return true;
+
+        var hiddenMatch = longestMatch(aName, aHidden);
+        if (hiddenMatch < 0) {
+            return false;
+        }
+
+        return hiddenMatch >= longestMatch(aName, aVisible);
+    }
+
+    private static int longestMatch(String aName, Set<String> aNamespaces)
+    {
+        if (aNamespaces == null) {
+            return -1;
+        }
+
+        var result = -1;
+        for (var namespace : aNamespaces) {
+            if (aName.equals(namespace) || aName.startsWith(namespace + ".")) {
+                result = Math.max(result, namespace.length());
             }
         }
-        return false;
+        return result;
     }
 
     private ConfigurationProperty toView(ConfigurationMetadataProperty aProperty,
