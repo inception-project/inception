@@ -3,7 +3,7 @@
     <img width="471" style="max-width:50%;" src="inception/inception-doc/src/main/resources/META-INF/asciidoc/inception-logo.png"  alt="INCEpTION Logo"/>
   </a>
   <p>
-    A semantic annotation platform offering intelligent assistance and knowledge management.
+    Multi-layer text annotation with knowledge-base entity linking and machine-assisted suggestions.
   </p>
   <br/>
   <p>
@@ -26,21 +26,32 @@
 
 # INCEpTION
 
-INCEpTION provides a semantic annotation platform offering intelligent annotation assistance and knowledge management.
-For more information, visit the [INCEpTION website](https://inception-project.github.io/). For a first impression on
-what INCEpTION is, you may want to watch
-our [introduction videos](https://www.youtube.com/watch?v=Ely8eBKqiSI&list=PL5Hz5pttaj96SlXHGRZf8KzlYvpVHIoL-).
+Build annotated text corpora with your own annotation scheme, ground them in your own ontology, and
+let a recommender that learns as you go do the repetitive part.
 
 <div align="center" style="margin: 10px">
     <img src="https://inception-project.github.io/images/screenshot-annotation.png" alt="INCEpTION Screenshot" />
 </div>
 
-INCEpTION is a text-annotation environment useful for various kinds of annotation tasks on written text. Annotations are
-usually used for linguistic and/or machine learning concerns. INCEpTION is a web application in which several users can
-work on the same annotation project, and it can contain several annotation projects at a time. It provides a *recommender system* 
-that suggest potential annotations to help you create annotations faster and easier. Beyond annotating, you can also *create a corpus*
-by searching an external document repository and adding documents. Moreover, you can use *knowledge bases*, e.g. for
-tasks like entity linking.
+- **Annotate against your ontology.** Load RDF, OWL, OBO, SKOS or Turtle, or query a remote SPARQL
+  endpoint live. Profiles for Wikidata, SNOMED CT, the Gene Ontology, the Human Phenotype Ontology
+  and GND.
+- **Stack as many layers as your scheme needs.** Entities, relations, coreference, syntax, frames and
+  document labels over the same text, with typed features and slots. Define it all in the browser.
+- **Get suggestions that improve while you work.** Recommenders train on what you have annotated so
+  far; active learning asks about the cases they are least sure of. Nothing is stored until you
+  accept it.
+- **Know your annotations are good.** Curate several annotators into a gold standard, measure
+  inter-annotator agreement, and chart what you collected in the Explorer.
+- **Runs where you need it to run.** A desktop installer for one person, or a server deployment for
+  a whole institution — on your own hardware, with your own single sign-on.
+- **Drive it from your own code.** REST API, webhooks, and your own models as
+  [external recommenders](https://github.com/inception-project/inception-external-recommender).
+- **Speaks your field's formats.** Imports plain text, PDF, HTML and TEI; exports UIMA CAS XMI/JSON
+  with custom layers intact, or CoNLL-U.
+
+More detail, screenshots and example projects are on the
+**[INCEpTION website](https://inception-project.github.io/)**.
 
 ## Getting started
 
@@ -50,40 +61,26 @@ working through
 the [Getting Started Guide](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct) and
 playing with INCEpTION on the [demo server](https://morbo.ukp.informatik.tu-darmstadt.de/demo).
 
-## See our documentation for further reading
+## Documentation
 
-- **User Guide:** If you only use INCEpTION and do not develop it,
-  the [User Guide](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct) beginning right
-  after *Getting Started* is the guide of your choice. If it does not answer your questions, don’t hesitate to contact
-  us (see *Do you have questions or feedback?*).
-- **Admin Guide:** For information on how to set up INCEpTION for a group of users on a server and more installation
-  details, see the [Admin Guide](https://inception-project.github.io/documentation/latest/admin-guide).
-- **Developer Guide:** INCEpTION is open source. So if you would like to develop for it,
-  the [Developer Guide](https://inception-project.github.io/documentation/latest/developer-guide) might be interesting
-  for you.
+- [User Guide](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct)
+  — using INCEpTION.
+- [Admin Guide](https://inception-project.github.io/documentation/latest/admin-guide)
+  — installing and running it for a group of users.
+- [Developer Guide](https://inception-project.github.io/documentation/latest/developer-guide)
+  — building and extending it.
 
-Many more materials like [example projects](https://inception-project.github.io/example-projects/)
-, [use case descriptions](https://inception-project.github.io/use-cases/)
-and [helpful scripts](https://inception-project.github.io/example-projects/python/) are available via the INCEpTION
-homepage.
-
-We also offer several Jupyter Notebooks which describe how you can interact in Python with INCEpTION, prepare or 
-post-process annotations:
-
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/annotations_as_one_sentence_and_label_per_line.ipynb) Export annotations as one sentence per line
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/using_pretokenized_and_preannotated_text.ipynb) Use pre-tokenized and pre-annotated documents in INCEpTION
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/annotated_word_files_to_cas_xmi.ipynb) Convert Word files to CAS XMI for import into INCEpTION
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/inception-project/inception/blob/master/notebooks/Working_with_INCEpTION_slot_features_in_DKPro_Cassis.ipynb) Working with INCEpTION slot features in DKPro Cassis
-- ... [more Python examples](https://inception-project.github.io/example-projects/python/)
-
+[Example projects](https://inception-project.github.io/example-projects/) and
+[use cases](https://inception-project.github.io/use-cases/) are on the website, along with
+[Python scripts and Jupyter notebooks](https://inception-project.github.io/example-projects/python/)
+for preparing and post-processing annotations.
 
 ## Do you have questions or feedback?
 
-INCEpTION is still in development, so you are welcome to give us feedback and tell us your wishes and requirements.
+INCEpTION is actively developed and maintained, and you are welcome to give us feedback and tell us your wishes and requirements.
 
-- For many questions, you find answers in the main documentation: [Core Functionalities](https://inception-project.github.io/documentation/latest/user-guide#sect_core_funct).
-- Consider our Google group [inception-users](https://groups.google.com/forum/#!forum/inception-users)
-- You can also open an issue on [Github](https://github.com/inception-project/inception/issues).
+- Ask on our Google group [inception-users](https://groups.google.com/forum/#!forum/inception-users).
+- Open an issue on [GitHub](https://github.com/inception-project/inception/issues).
 
 ## How to cite
 
