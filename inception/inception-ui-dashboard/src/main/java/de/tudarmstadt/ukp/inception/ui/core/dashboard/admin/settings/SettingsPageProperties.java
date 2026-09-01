@@ -22,4 +22,10 @@ import java.util.Set;
 public interface SettingsPageProperties
 {
     Set<String> getHiddenNamespaces();
+
+    /**
+     * @return namespaces exempted from {@link #getHiddenNamespaces()}. The most specific matching
+     *         namespace wins, so an entry here overrides a shorter entry in the hidden set.
+     */
+    Set<String> getVisibleNamespaces();
 }
