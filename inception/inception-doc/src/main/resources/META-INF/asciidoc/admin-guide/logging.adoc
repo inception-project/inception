@@ -42,6 +42,44 @@ A custom logging configuration can be specified when starting up {product-name} 
 `-Dlogging.config=/path/to/your/log4.xml`. This should be a standard Log4J2 configuration file.
 A good starting point is the default configuration used by {product-name} which can be found in link:https://github.com/inception-project/inception/blob/main/inception/inception-app-webapp/src/main/resources/log4j2-spring.xml[our code repository].
 
+== Logging the remote address
+
+By default, {product-name} does not record the network address of the client from which a request
+originated. If your installation is subject to regulations requiring an audit trail that includes
+the client address, you can enable capturing it by adding the following property to the
+`settings.properties` file:
+
+[source,text]
+----
+logging.request.remote-address=true
+----
+
+When enabled, the remote address is made available to the logging framework as the
+`remoteAddress` context variable, which you can then include in the pattern of a
+custom logging configuration (cf. <<Custom logging>>):
+
+[source,text]
+----
+<PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %level{length=5} [%encode{$${ctx:username:-SYSTEM}}{CRLF}] [%encode{$${ctx:remoteAddress:-}}{CRLF}] %logger{1} - %encode{%msg}{CRLF}%n" />
+----
+
+CAUTION: In many jurisdictions - e.g. under the GDPR in the European Union - the network address
+         of a client counts as personal data. Before enabling this setting, make sure that
+         recording it is covered by the privacy policy of your installation and that your log
+         retention policy accounts for it.
+
+There are two important limitations to be aware of:
+
+* **Only requests are covered.** The remote address is only available while {product-name} is
+  processing a request from the client. Work that happens on a background thread - most notably
+  project export, but also e.g. recommender training - is not associated with a client address and
+  the `remoteAddress` variable will be empty for any message logged from such a thread.
+* **Reverse proxies must be set up correctly.** If {product-name} runs behind a reverse proxy, the
+  address of the actual client is only recorded if the proxy has been set up as described in
+  <<sect_reverse_proxy>>. Otherwise, the address that ends up in the log is that of the proxy
+  rather than that of the client. You can inspect the effective settings on the *Network* page in
+  the administration dashboard.
+
 == Logging in JSON format
 
 If you would like to integrate the logging output of {product-name} with something like LogStash and

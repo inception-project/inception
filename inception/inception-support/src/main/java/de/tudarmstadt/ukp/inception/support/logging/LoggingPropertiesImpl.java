@@ -17,15 +17,28 @@
  */
 package de.tudarmstadt.ukp.inception.support.logging;
 
-public final class Logging
-{
-    public static final String KEY_PROJECT_ID = "projectId";
-    public static final String KEY_USERNAME = "username";
-    public static final String KEY_REPOSITORY_PATH = "repositoryPath";
-    public static final String KEY_REMOTE_ADDRESS = "remoteAddress";
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
-    private Logging()
+@ConfigurationProperties("logging.request")
+public class LoggingPropertiesImpl
+    implements LoggingProperties
+{
+    /**
+     * Make the network address of the client from which a request originated available to the
+     * logging framework as the {@code remoteAddress} context variable. Note that in many
+     * jurisdictions - e.g. under the GDPR in the European Union - the network address of a client
+     * counts as personal data.
+     */
+    private boolean remoteAddress;
+
+    @Override
+    public boolean isRemoteAddress()
     {
-        // No instances
+        return remoteAddress;
+    }
+
+    public void setRemoteAddress(boolean aRemoteAddress)
+    {
+        remoteAddress = aRemoteAddress;
     }
 }

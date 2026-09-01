@@ -33,7 +33,8 @@ public class SettingsPagePropertiesImpl
      * be a single segment (e.g. {@code "spring"}) to hide everything below it, or a dotted
      * multi-segment prefix (e.g. {@code "telemetry.matomo"}) to hide only that subtree. A property
      * is hidden when its name equals an entry, or starts with an entry followed by a dot. Matching
-     * is case-sensitive.
+     * is case-sensitive. Entries in {@code visibleNamespaces} take precedence over entries here if
+     * they are more specific.
      */
     // Default declared in META-INF/additional-spring-configuration-metadata.json
     // because the metadata processor cannot evaluate the LinkedHashSet/List.of expression.
@@ -57,5 +58,19 @@ public class SettingsPagePropertiesImpl
     public void setHiddenNamespaces(Set<String> aHiddenNamespaces)
     {
         hiddenNamespaces = aHiddenNamespaces != null ? aHiddenNamespaces : new LinkedHashSet<>();
+    }
+
+    private Set<String> visibleNamespaces = new LinkedHashSet<>(List.of( //
+            "logging.request"));
+
+    @Override
+    public Set<String> getVisibleNamespaces()
+    {
+        return visibleNamespaces;
+    }
+
+    public void setVisibleNamespaces(Set<String> aVisibleNamespaces)
+    {
+        visibleNamespaces = aVisibleNamespaces != null ? aVisibleNamespaces : new LinkedHashSet<>();
     }
 }
