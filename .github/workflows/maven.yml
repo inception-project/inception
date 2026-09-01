@@ -26,6 +26,51 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
+    - name: Allocate swap space
+      # Must run before "Harden Runner" since that disables sudo, which this needs.
+      # Only touches local files (no network), so it is compatible with the egress block.
+      # The Linux build regularly kills the runner in the middle of a Surefire run
+      # ("The runner has received a shutdown signal"), which is the signature of the
+      # kernel OOM killer. The extra swap is meant as an emergency buffer for that.
+      if: runner.os == 'Linux'
+      run: |
+        set -euo pipefail
+
+        echo "::group::Memory and disk before"
+        free -h; swapon --show; df -h
+        echo "::endgroup::"
+
+        # Put the swap file on whichever volume has the most room
+        SWAPDIR=/
+        if [ -d /mnt ] && \
+           [ "$(df -k --output=avail /mnt | tail -n1)" -gt "$(df -k --output=avail / | tail -n1)" ]; then
+          SWAPDIR=/mnt
+        fi
+        SWAPFILE="${SWAPDIR%/}/swapfile"
+
+        # ... but leave at least 20 GB for the build itself
+        AVAIL_GB=$(( $(df -k --output=avail "$SWAPDIR" | tail -n1) / 1024 / 1024 ))
+        SIZE_GB=$(( AVAIL_GB - 20 ))
+        if [ "$SIZE_GB" -gt 12 ]; then SIZE_GB=12; fi
+
+        if [ "$SIZE_GB" -lt 2 ]; then
+          echo "::warning::Only ${AVAIL_GB} GB free on ${SWAPDIR} - keeping the default swap"
+        else
+          # Replace the small swap file that ships with the runner image
+          sudo swapoff -a
+          sudo rm -f /swapfile /mnt/swapfile
+          sudo fallocate -l "${SIZE_GB}G" "$SWAPFILE"
+          sudo chmod 600 "$SWAPFILE"
+          sudo mkswap "$SWAPFILE"
+          sudo swapon "$SWAPFILE"
+          # Use the swap as an emergency buffer only instead of paging out idle JVM heap
+          sudo sysctl -w vm.swappiness=10
+        fi
+
+        echo "::group::Memory and disk after"
+        free -h; swapon --show; df -h
+        echo "::endgroup::"
+
     - name: Harden Runner
       uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
       with:
