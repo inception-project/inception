@@ -31,7 +31,8 @@ jobs:
       with:
         # egress-policy: audit
         egress-policy: block
-        disable-sudo: true
+        # sudo is left available so the "Allocate swap space" step below can work
+        disable-sudo: false
         allowed-endpoints: >
           *.data.mcr.microsoft.com:443
           api.github.com:443
@@ -67,6 +68,41 @@ jobs:
           repo1.maven.org:443
           www.ims.uni-stuttgart.de:443
           zoidberg.ukp.informatik.tu-darmstadt.de:443
+
+    - name: Allocate swap space
+      # The Linux build regularly kills the runner in the middle of a Surefire run
+      # ("The runner has received a shutdown signal"), which is the signature of the
+      # kernel OOM killer. The runner image pairs 15 GB of RAM with only 3 GB of swap
+      # while leaving ~85 GB of disk unused, so trade some of that disk for a buffer.
+      # This needs sudo, hence `disable-sudo: false` on the Harden Runner step above.
+      # Touches only local files, so it is compatible with the egress block.
+      if: runner.os == 'Linux'
+      run: |
+        set -euo pipefail
+
+        echo "::group::Memory and disk before"
+        free -h; swapon --show; df -h /
+        echo "::endgroup::"
+
+        SIZE_GB=24
+        AVAIL_GB=$(( $(df -k --output=avail / | tail -n1) / 1024 / 1024 ))
+        if [ "$AVAIL_GB" -lt $(( SIZE_GB + 30 )) ]; then
+          echo "::warning::Only ${AVAIL_GB} GB free on / - keeping the default swap"
+        else
+          # Replace the small swap file that comes with the runner image
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          sudo fallocate -l "${SIZE_GB}G" /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          # Use the swap as an emergency buffer instead of paging out idle JVM heap early
+          sudo sysctl -w vm.swappiness=10
+        fi
+
+        echo "::group::Memory and disk after"
+        free -h; swapon --show; df -h /
+        echo "::endgroup::"
 
     - name: Checkout repository
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
