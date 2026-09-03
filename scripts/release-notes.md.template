@@ -1,0 +1,52 @@
+INCEpTION is an extensible web-based collaborative environment for text annotation. It integrates machine-learning-based annotation support, knowledge base management and corpus building into a single comprehensive platform.
+
+{{RELEASE_KIND}}
+
+{{CHANGELOG}}
+
+
+### Download
+
+The new version can be downloaded from our website [3] or is available as docker images from GitHub [8].
+
+
+### Important upgrade notes
+
+Please check the upgrade notes [7]. If you upgrade from an older version, check upgrade and release notes of intermediate releases as well.
+
+An in-place upgrade from INCEpTION {{PREVIOUS_VERSION}} to {{VERSION}} is possible. You can usually also perform an in-place upgrade from an older version, but you should make sure that each of the intermediate releases allow an in-place upgrade to the next higher release.
+
+Back up your data before the upgrade [4].
+
+
+### Publication
+
+An overview of INCEpTION can be found in
+
+>Klie, J.-C., Bugert, M., Boullosa, B., Eckart de Castilho, R. and Gurevych, I. (2018):
+The INCEpTION Platform: Machine-Assisted and Knowledge-Oriented Interactive Annotation.
+In Proceedings of System Demonstrations of the 27th International Conference on Computational Linguistics (COLING 2018), Santa Fe, New Mexico, USA
+
+PDF and BibTeX as well as more publications on specific features are available from our website [5].
+
+
+### License and System requirements
+
+INCEpTION is provided as open source software under the Apache License version 2.
+
+Running INCEpTION requires **Java version {{JAVA_VERSION}}** or higher.
+
+By default, INCEpTION uses an embedded database which is sufficient for testing. However, the use of a MariaDB database is recommended.
+
+INCEpTION works best with Chrome and Safari.
+
+-- The INCEpTION developer team
+
+[1] https://github.com/inception-project/inception/issues?q=milestone%3A{{VERSION}}
+[2] https://github.com/inception-project/inception/issues
+[3] https://inception-project.github.io/downloads/
+[4] https://inception-project.github.io/releases/{{VERSION}}/docs/admin-guide.html#_backup_your_data
+[5] https://inception-project.github.io/publications/
+[6] https://inception-project.github.io/releases/{{VERSION}}/docs/admin-guide.html#_running_the_behind_a_reverse_proxy_jar
+[7] https://inception-project.github.io/releases/{{VERSION}}/docs/admin-guide.html#_upgrade_notes
+[8] https://github.com/inception-project/inception/pkgs/container/inception
