@@ -23,7 +23,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -35,26 +35,9 @@ import org.testcontainers.utility.DockerImageName;
 // SQL Server 2022 - previous release; mainstream support to 2028-01-11, EOL 2033-01-11
 // Note: the 2022-latest tag floats, so the exact patch level shifts over time
 @Testcontainers(disabledWithoutDocker = true)
-@DisabledIf(value = "isUnsupportedArchitecture", //
-        disabledReason = "SQL Server image is linux/amd64 only and this host has no amd64 emulation")
+@EnabledOnOs(architectures = { "amd64", "x86_64" })
 class InceptionMSSQLServer_Previous_IntegrationTest
 {
-    // Microsoft ships mcr.microsoft.com/mssql/server as a single-platform linux/amd64
-    // image - there is no arm64 manifest. On arm64 hosts that provide amd64 emulation
-    // (Docker Desktop on Apple Silicon via Rosetta 2) it runs fine, so we let it run by
-    // default everywhere. CI sets -Dmssql.skipWithoutAmd64=true because the GitHub arm64
-    // runners install no binfmt/qemu handler, and there the container would fail to start
-    // rather than being skipped.
-    static boolean isUnsupportedArchitecture()
-    {
-        if (!Boolean.getBoolean("mssql.skipWithoutAmd64")) {
-            return false;
-        }
-
-        var arch = System.getProperty("os.arch", "");
-        return !"amd64".equals(arch) && !"x86_64".equals(arch);
-    }
-
     static final DockerImageName image = DockerImageName.parse("mcr.microsoft.com/mssql/server")
             .withTag("2022-latest");
     // .withTag("@sha256:45a1a9d13ca5574cf8e0fe4ae73ab77248b66d9c3132ac9658fb6c16dd72a8af");

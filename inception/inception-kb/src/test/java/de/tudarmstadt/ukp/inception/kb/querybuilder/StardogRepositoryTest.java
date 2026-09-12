@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.TestInfo;
+import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -51,6 +52,7 @@ import de.tudarmstadt.ukp.inception.kb.querybuilder.SPARQLQueryBuilderLocalTestS
 // stardog-admin db create -n test -o search.enabled=true --
 @Disabled("Requires manually setting up a test server AND license key!")
 @Testcontainers(disabledWithoutDocker = true)
+@EnabledOnOs(architectures = { "amd64", "x86_64" })
 public class StardogRepositoryTest
 {
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());

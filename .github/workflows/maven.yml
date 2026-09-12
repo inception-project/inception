@@ -151,28 +151,8 @@ jobs:
         restore-keys: |
           nodejs-cache-${{ runner.os }}-
 
-    # EXPERIMENT (2026-09-12): the arm64 runners ship no binfmt/qemu handler, so
-    # linux/amd64-only images (SQL Server, MarkLogic, AllegroGraph, Stardog) fail at
-    # container startup instead of being skipped. Install emulation and see whether
-    # those tests pass reliably rather than merely starting. Judge by: does MarkLogic
-    # reach its first assertion, and how does arm64 wall-clock compare to amd64?
-    # Re-run several times - the failure mode under test is intermittent timeout, not
-    # deterministic breakage. If this proves out, the -Dmssql.skipWithoutAmd64 flag
-    # below and the per-test guards it drives can go away entirely.
-    # The binfmt image comes from docker.io, which is already on the harden-runner
-    # allow-list; cache-image is off so this needs no further egress allowances.
-    - name: Set up QEMU emulation
-      if: runner.arch == 'ARM64'
-      uses: docker/setup-qemu-action@1f40c72289eff860ee54a304f1438e3cff362e0a # v4.3.0
-      with:
-        platforms: amd64
-        cache-image: false
-
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-latest' && github.event_name == 'push')"
-      # -Dmssql.skipWithoutAmd64 is deliberately NOT passed on arm64 while the QEMU
-      # experiment above is running, so the amd64-only tests actually attempt to run
-      # under emulation instead of skipping. Restore it if the experiment is reverted.
       run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify -T 1C ${{ runner.os == 'Linux' && '-Pci-docker-cleanup' || '' }}
 
     - name: Build with Maven and publish artifacts
