@@ -25,6 +25,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
+/**
+ * @deprecated Part of the action bar guidelines UI, retained only for the legacy curation page. See
+ *             {@link GuidelinesActionBarExtension}.
+ */
+@Deprecated
 public class GuidelinesActionBarItem
     extends Panel
 {

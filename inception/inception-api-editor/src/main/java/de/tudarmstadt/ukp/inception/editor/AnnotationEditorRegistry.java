@@ -30,4 +30,31 @@ public interface AnnotationEditorRegistry
     AnnotationEditorFactory getDefaultEditorFactory();
 
     AnnotationEditorFactory getPreferredEditorFactory(Project aProject, String aFormat);
+
+    /**
+     * Get the proper editor factory for the given format.
+     *
+     * @param aProject
+     *            the project the document belongs to.
+     * @param aFormat
+     *            the format of the document to display.
+     * @param aConfiguredId
+     *            bean name of the explicitly configured editor, or {@code null} if none is
+     *            configured. An unknown name is treated like {@code null}.
+     * @return the editor factory to use. Never {@code null} as long as any editor is registered.
+     */
+    AnnotationEditorFactory getEditorFactory(Project aProject, String aFormat,
+            String aConfiguredId);
+
+    /**
+     * @param aFactory
+     *            the factory to check. May be {@code null}, which is never suitable.
+     * @param aProject
+     *            the project the document belongs to.
+     * @param aFormat
+     *            the format of the document to display.
+     * @return whether the given factory can display documents of the given format, i.e. whether it
+     *         reports anything other than {@link AnnotationEditorFactory#NOT_SUITABLE}.
+     */
+    boolean isSuitable(AnnotationEditorFactory aFactory, Project aProject, String aFormat);
 }

@@ -37,7 +37,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -85,7 +84,8 @@ public class LayerSelectionPanel
                 .map(layerChoices -> layerChoices.size() > 1) //
                 .orElse(false).getObject()));
 
-        add(visibleWhen(() -> getEditorPage().isEditable()));
+        add(visibleWhen(
+                () -> findParent(AnnotationDetailEditorPanel.class).isActiveEditorEditable()));
 
         allowedAnchoringModes = Model.ofList(emptyList());
 
@@ -105,11 +105,6 @@ public class LayerSelectionPanel
                             .getAnchoringMode()::allows) //
                     .toList());
         }
-    }
-
-    public AnnotationPageBase getEditorPage()
-    {
-        return (AnnotationPageBase) getPage();
     }
 
     private Label createRelationHint()

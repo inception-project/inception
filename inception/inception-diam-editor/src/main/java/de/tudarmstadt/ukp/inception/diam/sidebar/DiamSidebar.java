@@ -19,11 +19,9 @@ package de.tudarmstadt.ukp.inception.diam.sidebar;
 
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public class DiamSidebar
@@ -36,10 +34,9 @@ public class DiamSidebar
     private DiamAnnotationBrowser browser;
     private ContextMenu contextMenu;
 
-    public DiamSidebar(String aId, AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            AnnotationPageBase2 aAnnotationPage, String aUserPreferencesKey)
+    public DiamSidebar(String aId, AnnotationPageBase2 aAnnotationPage, String aUserPreferencesKey)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         userPreferencesKey = aUserPreferencesKey;
 

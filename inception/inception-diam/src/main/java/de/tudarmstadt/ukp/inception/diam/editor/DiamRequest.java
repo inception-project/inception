@@ -17,28 +17,26 @@
  */
 package de.tudarmstadt.ukp.inception.diam.editor;
 
+import org.apache.wicket.request.IRequestParameters;
 import org.apache.wicket.request.Request;
 
+import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 
 /**
  * The dispatch context for a DIAM AJAX request: the {@link Request} together with the
- * {@link DiamContext} of the editor that received it.
- * <p>
- * This is the {@code C} of the {@code Extension<C>} framework for
- * {@link de.tudarmstadt.ukp.inception.diam.editor.actions.EditorAjaxRequestHandler}. Bundling both
- * into a single value keeps the framework's single-context {@code accepts(C)} shape while still
- * giving acceptance checks access to the requesting editor's state (so they no longer fall back to
- * the main page).
+ * {@link DiamContext} and the {@link ContextMenuLookup} of the editor that received it.
  */
 public class DiamRequest
 {
     private final DiamContext context;
+    private final ContextMenuLookup contextMenuLookup;
     private final Request request;
 
-    public DiamRequest(DiamContext aContext, Request aRequest)
+    public DiamRequest(DiamContext aContext, ContextMenuLookup aContextMenuLookup, Request aRequest)
     {
         context = aContext;
+        contextMenuLookup = aContextMenuLookup;
         request = aRequest;
     }
 
@@ -47,8 +45,18 @@ public class DiamRequest
         return context;
     }
 
+    public ContextMenuLookup getContextMenuLookup()
+    {
+        return contextMenuLookup;
+    }
+
     public Request getRequest()
     {
         return request;
+    }
+
+    public IRequestParameters getRequestParameters()
+    {
+        return request.getRequestParameters();
     }
 }

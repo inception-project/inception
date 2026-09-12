@@ -30,7 +30,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -77,10 +76,9 @@ public class CurationSidebarAutoConfiguration
 
     @Bean("curationSidebar")
     public CurationSidebarFactory curationSidebarFactory(ProjectService aProjectService,
-            UserDao aUserService, CurationSidebarProperties aCurationSidebarProperties)
+            UserDao aUserService)
     {
-        return new CurationSidebarFactory(aProjectService, aUserService,
-                aCurationSidebarProperties);
+        return new CurationSidebarFactory(aProjectService, aUserService);
     }
 
     @Bean

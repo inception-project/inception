@@ -38,7 +38,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBa
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -57,7 +56,6 @@ public class CurationProjectSettingsPanel
     private @SpringBean CurationService curationService;
     private @SpringBean ProjectService projectService;
     private @SpringBean PreferencesService preferencesService;
-    private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
     private IModel<CurationWorkflow> curationWorkflowModel;
     private CompoundPropertyModel<CurationSidebarManagerPrefs> curationSidebarPrefs;

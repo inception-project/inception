@@ -22,6 +22,7 @@ import org.springframework.context.ApplicationEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.support.wicket.event.HybridApplicationUIEvent;
 
 public class DocumentOpenedEvent
@@ -38,7 +39,7 @@ public class DocumentOpenedEvent
     private final String sessionOwner;
     private final AnnotationDocumentState stateBeforeOpening;
 
-    public DocumentOpenedEvent(Object aSource, CAS aCas, SourceDocument aDocument,
+    public DocumentOpenedEvent(DocumentEditorManager aSource, CAS aCas, SourceDocument aDocument,
             AnnotationDocumentState aStateBeforeOpening, String aDocumentOwner,
             String aSessionOwner)
     {
@@ -73,5 +74,11 @@ public class DocumentOpenedEvent
     public AnnotationDocumentState getStateBeforeOpening()
     {
         return stateBeforeOpening;
+    }
+
+    @Override
+    public DocumentEditorManager getSource()
+    {
+        return (DocumentEditorManager) super.getSource();
     }
 }

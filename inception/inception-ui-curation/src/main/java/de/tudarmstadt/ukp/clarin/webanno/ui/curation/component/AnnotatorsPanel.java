@@ -80,6 +80,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
@@ -98,6 +99,8 @@ public class AnnotatorsPanel
     extends Panel
 {
     private static final Logger LOG = LoggerFactory.getLogger(AnnotatorsPanel.class);
+
+    private final DocumentEditorManager manager;
 
     private static final String PARAM_TYPE = "type";
     private static final String PARAM_ID = "id";
@@ -122,9 +125,12 @@ public class AnnotatorsPanel
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
     private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
 
-    public AnnotatorsPanel(String id, IModel<List<AnnotatorSegmentState>> aModel)
+    public AnnotatorsPanel(String id, DocumentEditorManager aManager,
+            IModel<List<AnnotatorSegmentState>> aModel)
     {
         super(id, aModel);
+
+        manager = aManager;
         setOutputMarkupId(true);
 
         contextMenu = new ContextMenu("contextMenu");
@@ -138,7 +144,7 @@ public class AnnotatorsPanel
             protected void populateItem(ListItem<AnnotatorSegmentState> aItem)
             {
                 final var annotatorSegment = aItem.getModelObject();
-                var curationVisualizer = new BratSuggestionVisualizer("annotationViewer",
+                var curationVisualizer = new BratSuggestionVisualizer("annotationViewer", manager,
                         new Model<>(annotatorSegment), aItem.getIndex())
                 {
                     private static final long serialVersionUID = -1205541428144070566L;
@@ -540,7 +546,9 @@ public class AnnotatorsPanel
             // curation might be anonymous and then we would leak the true name
             error("Unable to render: " + e.getMessage());
             LOG.error("Unable to render annotations for user {}", aSegment.getUser(), e);
-            aTarget.addChildren(getPage(), IFeedback.class);
+            if (aTarget != null) {
+                aTarget.addChildren(getPage(), IFeedback.class);
+            }
         }
     }
 

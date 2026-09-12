@@ -22,14 +22,13 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static java.util.Optional.empty;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
-import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -41,7 +40,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -89,39 +87,22 @@ public class CurationSidebarServiceImpl
     /**
      * @return CAS associated with curation doc for the given user
      */
-    // REC: Do we really needs this? Why not save via the AnnotationPage facilities? Or at least
-    // the curation target should already be set in the annotator state, so why not rely on that?
     @Transactional
-    private Optional<CAS> retrieveCurationCAS(String aSessionOwner, long aProjectId,
-            SourceDocument aDoc)
-        throws IOException
+    private CAS retrieveCurationCAS(SourceDocument aDoc) throws IOException
     {
-        var curationUser = curationSessionService.getCurationTarget(aSessionOwner, aProjectId);
-        if (curationUser == null) {
-            return empty();
-        }
-
-        return Optional
-                .of(documentService.readAnnotationCas(aDoc, AnnotationSet.forUser(curationUser)));
+        return documentService.readAnnotationCas(aDoc, CURATION_SET);
     }
 
     /**
      * Write to CAS associated with curation doc for the given user and update timestamp
      */
-    // REC: Do we really needs this? Why not save via the AnnotationPage facilities? Or at least
-    // the curation target should already be set in the annotator state, so why not rely on that?
     @Transactional
-    private void writeCurationCas(CAS aTargetCas, AnnotatorState aState, long aProjectId)
-        throws IOException
+    private void writeCurationCas(CAS aTargetCas, AnnotatorState aState) throws IOException
     {
-        var curatorName = curationSessionService.getCurationTarget(aState.getUser().getUsername(),
-                aProjectId);
-        User curator = userRegistry.getUserOrCurationUser(curatorName);
-
         var doc = aState.getDocument();
-        var annoDoc = documentService.createOrGetAnnotationDocument(doc, curator);
+        var annoDoc = documentService.createOrGetAnnotationDocument(doc, CURATION_SET);
         documentService.writeAnnotationCas(aTargetCas, annoDoc, EXPLICIT_ANNOTATOR_USER_ACTION);
-        casStorageService.getCasTimestamp(doc, AnnotationSet.forUser(curator.getUsername()))
+        casStorageService.getCasTimestamp(doc, CURATION_SET)
                 .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
@@ -154,29 +135,25 @@ public class CurationSidebarServiceImpl
     }
 
     @Override
-    public boolean isCurationFinished(AnnotatorState aState, String aSessionOwner)
+    public boolean isCurationFinished(AnnotatorState aState)
     {
         var username = aState.getUser().getUsername();
         var sourceDoc = aState.getDocument();
-        return (username.equals(aSessionOwner)
-                && documentService.isAnnotationFinished(sourceDoc, aState.getUser()))
-                || (username.equals(CURATION_USER)
-                        && sourceDoc.getState().equals(CURATION_FINISHED));
+        return username.equals(CURATION_USER) && sourceDoc.getState().equals(CURATION_FINISHED);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     @Override
     @Transactional
     public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
-            String aCurator, Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
+            Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
         throws IOException, UIMAException
     {
         MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
         var traits = factory.readTraits(aWorkflow);
         var mergeStrategy = factory.makeStrategy(traits);
         var doc = aState.getDocument();
-        var aTargetCas = retrieveCurationCAS(aCurator, doc.getProject().getId(), doc).orElseThrow(
-                () -> new IllegalArgumentException("No target CAS configured in curation state"));
+        var aTargetCas = retrieveCurationCAS(doc);
 
         var userCases = documentService.readAllCasesSharedNoUpgrade(doc,
                 aDataOwners.stream().map(AnnotationSet::id).toArray(String[]::new));
@@ -188,13 +165,9 @@ public class CurationSidebarServiceImpl
                 mergeStrategy, aState.getAnnotationLayers(), aClearTargetCas);
 
         // write back and update timestamp
-        writeCurationCas(aTargetCas, aState, doc.getProject().getId());
+        writeCurationCas(aTargetCas, aState);
 
-        // The target may also be a regular user curating into their own annotation document, in
-        // which case the source document state is none of our business.
-        if (CURATION_USER.equals(aState.getUser().getUsername())) {
-            curationDocumentService.markCurationInProgress(doc);
-        }
+        curationDocumentService.markCurationInProgress(doc);
 
         LOG.debug("Merge done");
         return factory;

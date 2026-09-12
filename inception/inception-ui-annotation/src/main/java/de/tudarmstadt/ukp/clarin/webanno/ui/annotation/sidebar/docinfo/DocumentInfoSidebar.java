@@ -20,20 +20,17 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.docinfo;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.model.PropertyModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 
 public class DocumentInfoSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = 6127948490101336779L;
 
-    public DocumentInfoSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public DocumentInfoSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         var model = aAnnotationPage.getModel();
         add(new Label("id", PropertyModel.of(model, "document.name")));

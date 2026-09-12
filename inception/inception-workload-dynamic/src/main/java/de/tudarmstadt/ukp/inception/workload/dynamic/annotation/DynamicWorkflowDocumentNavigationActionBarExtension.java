@@ -28,12 +28,11 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
@@ -59,8 +58,6 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     private final DynamicWorkloadExtension dynamicWorkloadExtension;
     private final ProjectService projectService;
     private final UserDao userService;
-
-    private AnnotatorState annotatorState;
 
     @Autowired
     public DynamicWorkflowDocumentNavigationActionBarExtension(DocumentService aDocumentService,
@@ -88,32 +85,31 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
         // #Issue 1813 fix
-        var project = aPage.getModelObject().getProject();
+        var project = aContext.page().getModelObject().getProject();
         if (project == null) {
             return false;
         }
 
         var sessionOwner = userService.getCurrentUser();
-        var workloadConfig = workloadManagementService
-                .loadOrCreateWorkloadManagerConfiguration(aPage.getModelObject().getProject());
+        var workloadConfig = workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
+                aContext.page().getModelObject().getProject());
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadConfig.getType())
                 && !projectService.hasRole(sessionOwner, project, CURATOR);
     }
 
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
         return new DynamicDocumentNavigator(aId);
     }
 
-    // Init of the page, select a document
     @Override
-    public void onInitialize(AnnotationPageBase aPage)
+    public void onInitialize(ActionBarContext aContext)
     {
-        annotatorState = aPage.getModelObject();
+        var annotatorState = aContext.page().getModelObject();
         var user = annotatorState.getUser();
         var project = annotatorState.getProject();
         var target = RequestCycle.get().find(AjaxRequestTarget.class);
@@ -122,20 +118,21 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
         var allDocuments = documentService.listSourceDocuments(project);
         var nextDocument = dynamicWorkloadExtension.nextDocumentToAnnotate(project, user);
         if (nextDocument.isPresent()) {
-            var state = aPage.getModelObject();
+            var state = aContext.page().getModelObject();
             // This was the case, so load the document and return
             if (!nextDocument.get().equals(state.getDocument())) {
                 // If the document is already loaded, do nothing (avoids an endless recursion
                 // triggered by actionLoadDocument refreshing the action bar which then
                 // calls onInitialize).
                 state.setDocument(nextDocument.get(), allDocuments);
-                aPage.actionLoadDocument(target.orElse(null));
+                aContext.page().actionLoadDocument(target.orElse(null));
             }
             return;
         }
 
         // Nothing left, so returning to home page and showing hint
-        aPage.getSession().info("There are no more documents to annotate available for you.");
-        aPage.setResponsePage(aPage.getApplication().getHomePage());
+        aContext.page().getSession()
+                .info("There are no more documents to annotate available for you.");
+        aContext.page().setResponsePage(aContext.page().getApplication().getHomePage());
     }
 }

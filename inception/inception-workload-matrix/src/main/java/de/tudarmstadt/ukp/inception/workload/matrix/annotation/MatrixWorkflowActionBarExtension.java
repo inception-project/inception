@@ -20,8 +20,8 @@ package de.tudarmstadt.ukp.inception.workload.matrix.annotation;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManagerAutoConfiguration;
 
@@ -35,10 +35,17 @@ import de.tudarmstadt.ukp.inception.workload.matrix.config.MatrixWorkloadManager
 public class MatrixWorkflowActionBarExtension
     implements ActionBarExtension
 {
+
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
-        return new MatrixWorkflowActionBarItemGroup(aId, aPage);
+        return aContext.hasDocument() && aContext.editorContext().isEditor();
+    }
+
+    @Override
+    public Panel createActionBarItem(String aId, ActionBarContext aContext)
+    {
+        return new MatrixWorkflowActionBarItemGroup(aId, aContext);
     }
 
     @Override

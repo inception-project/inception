@@ -40,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
@@ -49,7 +48,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerS
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.image.feature.ImageFeatureSupport;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -71,10 +69,9 @@ public class ImageSidebar
 
     final WebMarkupContainer mainContainer;
 
-    public ImageSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public ImageSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -104,10 +101,15 @@ public class ImageSidebar
         var state = getModelObject();
         var project = state.getProject();
 
+        var context = getActiveContext();
+        if (context.isEmpty()) {
+            return emptyList();
+        }
+
         // Get the CAS
         CAS cas;
         try {
-            cas = getCasProvider().get();
+            cas = context.get().getEditorCas();
         }
         catch (IOException e) {
             error("Unable to load CAS");
@@ -172,7 +174,7 @@ public class ImageSidebar
             var state = getModelObject();
 
             // Get the CAS
-            var cas = getCasProvider().get();
+            var cas = getActiveContext().orElseThrow().getEditorCas();
 
             var fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
@@ -182,7 +184,7 @@ public class ImageSidebar
                 return;
             }
 
-            getAnnotationPage().actionActivateAndSelect(aTarget, aHandle.getVid());
+            getActiveContext().orElseThrow().actionActivateAndSelect(aTarget, aHandle.getVid());
         }
         catch (IOException | AnnotationException e) {
             error("Unable to select annotation: " + e.getMessage());

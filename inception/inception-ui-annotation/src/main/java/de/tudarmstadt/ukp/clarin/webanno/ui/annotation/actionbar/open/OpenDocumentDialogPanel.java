@@ -40,6 +40,7 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.DropDownChoice;
@@ -54,6 +55,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
@@ -319,7 +322,20 @@ public class OpenDocumentDialogPanel
             onDocumentSelected.accept(aEvent.getTarget());
         }
         else {
-            ((AnnotationPageBase) getPage()).actionLoadDocument(aEvent.getTarget());
+            var page = (AnnotationPageBase) getPage();
+            if (page instanceof DocumentEditorManager manager) {
+                try {
+                    manager.resolveEditorFor(aEvent.getAnnotationDocument().getDocument());
+                }
+                catch (AnnotationException e) {
+                    error(e.getMessage());
+                    aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+                    findParent(ModalDialog.class).close(aEvent.getTarget());
+                    return;
+                }
+            }
+
+            page.actionLoadDocument(aEvent.getTarget());
         }
 
         findParent(ModalDialog.class).close(aEvent.getTarget());

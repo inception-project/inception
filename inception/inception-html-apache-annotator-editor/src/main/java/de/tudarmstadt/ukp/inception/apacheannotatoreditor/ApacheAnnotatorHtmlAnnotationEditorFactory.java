@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceMapValue;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.Strings;
@@ -97,10 +98,11 @@ public class ApacheAnnotatorHtmlAnnotationEditorFactory
 
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            DocumentEditorManager aManager, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider)
     {
-        return new ApacheAnnotatorHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
-                getBeanName());
+        return new ApacheAnnotatorHtmlAnnotationEditor(aId, aModel, aManager, aActionHandler,
+                aCasProvider, getBeanName());
     }
 
     @Override

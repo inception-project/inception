@@ -50,6 +50,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
@@ -86,18 +87,18 @@ public class MatrixWorkflowActionBarItemGroup
     private @SpringBean MatrixWorkloadExtension matrixWorkloadExtension;
     private @SpringBean PreferencesService preferencesService;
 
-    private final DiamContext editorContext;
     private final AnnotationPageBase page;
+    private final DiamContext editorContext;
     private final ModalDialog dialog;
     private final IModel<MatrixWorkloadTraits> traits;
     private final LoadableDetachableModel<Boolean> reopenableByUser;
 
-    public MatrixWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
+    public MatrixWorkflowActionBarItemGroup(String aId, ActionBarContext aContext)
     {
         super(aId);
 
-        editorContext = aPage;
-        page = aPage;
+        page = aContext.page();
+        editorContext = aContext.editorContext();
 
         traits = LoadableDetachableModel
                 .of(() -> matrixWorkloadExtension.readTraits(workloadManagementService
@@ -124,7 +125,7 @@ public class MatrixWorkflowActionBarItemGroup
     private Component createResetDocumentLink(String aString)
     {
         var link = new LambdaAjaxLink(aString, this::actionRequestResetDocumentConfirmation);
-        link.add(enabledWhen(() -> page.isEditable()));
+        link.add(enabledWhen(this::isHostEditorEditable));
         link.add(visibleWhen(
                 traits.map(MatrixWorkloadTraits::isDocumentResetAllowed).orElse(false)));
         return link;
@@ -134,7 +135,7 @@ public class MatrixWorkflowActionBarItemGroup
     {
         var link = new LambdaAjaxLink(aId, this::actionFinishOrReopen);
         link.setOutputMarkupId(true);
-        link.add(enabledWhen(() -> page.isEditable() || reopenableByUser.getObject()));
+        link.add(enabledWhen(() -> isHostEditorEditable() || reopenableByUser.getObject()));
         link.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
         var stateLabel = new Label("state");
@@ -158,6 +159,12 @@ public class MatrixWorkflowActionBarItemGroup
         else {
             actionRequestFinishDocumentConfirmation(aTarget);
         }
+    }
+
+    private boolean isHostEditorEditable()
+    {
+        var context = editorContext;
+        return context != null && context.getActionHandler().isEditable();
     }
 
     private boolean isReopenableByUser()
@@ -264,7 +271,7 @@ public class MatrixWorkflowActionBarItemGroup
         throws IOException, AnnotationException
     {
         try {
-            page.actionValidateDocument(aTarget, page.getEditorCas());
+            page.actionValidateDocument(aTarget, editorContext);
         }
         catch (ValidationException e) {
             page.error("Document cannot be marked as finished: " + e.getMessage());
@@ -282,7 +289,7 @@ public class MatrixWorkflowActionBarItemGroup
     private void actionFinishDocumentDialogSubmitted(AjaxRequestTarget aTarget,
             Form<FinishDocumentDialogModel> aForm)
     {
-        var state = page.getModelObject();
+        var state = editorContext.getAnnotatorState();
 
         var newState = aForm.getModelObject().getState();
 
@@ -302,8 +309,7 @@ public class MatrixWorkflowActionBarItemGroup
 
     private void actionToggleDocumentState(AjaxRequestTarget aTarget)
     {
-        // state instead
-        var state = page.getModelObject();
+        var state = editorContext.getAnnotatorState();
         var document = state.getDocument();
 
         // Curation sidebar: when writing to the curation document, we need to update the docuement

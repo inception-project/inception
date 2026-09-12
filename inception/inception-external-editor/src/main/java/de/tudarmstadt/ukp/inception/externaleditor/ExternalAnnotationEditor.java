@@ -36,6 +36,7 @@ import de.tudarmstadt.ukp.inception.externaleditor.config.ExternalEditorPluginDe
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import jakarta.servlet.ServletContext;
 
 public class ExternalAnnotationEditor
@@ -50,10 +51,10 @@ public class ExternalAnnotationEditor
     private @SpringBean ServletContext context;
 
     public ExternalAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            String aEditorFactoryId)
+            DocumentEditorManager aManager, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
+        super(aId, aModel, aManager, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override

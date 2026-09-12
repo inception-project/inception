@@ -20,12 +20,11 @@ package de.tudarmstadt.ukp.inception.editor;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public interface AnnotationEditorExtensionRegistry
@@ -34,8 +33,7 @@ public interface AnnotationEditorExtensionRegistry
 
     AnnotationEditorExtension getExtension(String aName);
 
-    void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
+    void fireAction(DiamContext aContext, AjaxRequestTarget aTarget, VID aParamId, String aAction)
         throws IOException, AnnotationException;
 
     void fireRenderRequested(AjaxRequestTarget aTarget, AnnotatorState aState);

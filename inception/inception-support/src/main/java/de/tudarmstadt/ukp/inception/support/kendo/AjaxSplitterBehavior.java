@@ -57,6 +57,7 @@ public abstract class AjaxSplitterBehavior
 
     private final Orientation orientation;
     private AbstractDefaultAjaxBehavior resizeBehavior;
+    private Double[] percentIntent;
 
     public AjaxSplitterBehavior(String aSelector, Orientation aOrientation, Options aOptions)
     {
@@ -145,15 +146,17 @@ public abstract class AjaxSplitterBehavior
      *
      * @param aTarget
      *            the Ajax request target
-     * @param aPanesJson
-     *            the new {@code panes} option as a JSON array literal, one entry per pane in DOM
-     *            order
+     * @param aPanes
+     *            the new pane configuration, one entry per pane in DOM order. The percentage intent
+     *            is derived from these, so it cannot disagree with them.
      */
-    public void reconfigure(AjaxRequestTarget aTarget, String aPanesJson)
+    public void reconfigure(AjaxRequestTarget aTarget, Options... aPanes)
     {
-        aTarget.appendJavaScript(format("reconfigureInceptionAjaxSplitter(%s, %s, %s, %s);",
-                asString(selector), aPanesJson, asString(resizeBehavior.getCallbackUrl()),
-                asString(orientation.optionValue())));
+        percentIntent = percentIntentOf(aPanes);
+
+        aTarget.appendJavaScript(format("reconfigureInceptionAjaxSplitter(%s, %s, %s, %s, %s);",
+                asString(selector), panesJson(aPanes), asString(resizeBehavior.getCallbackUrl()),
+                asString(orientation.optionValue()), percentIntentJson()));
     }
 
     @Override
@@ -163,9 +166,80 @@ public abstract class AjaxSplitterBehavior
 
         aResponse.render(forReference(AjaxSplitterJavaScriptReference.get()));
 
-        var script = format("initInceptionAjaxSplitter(%s, %s, %s);", asString(selector),
-                asString(resizeBehavior.getCallbackUrl()), asString(orientation.optionValue()));
+        var script = format("initInceptionAjaxSplitter(%s, %s, %s, %s);", asString(selector),
+                asString(resizeBehavior.getCallbackUrl()), asString(orientation.optionValue()),
+                percentIntentJson());
 
         aResponse.render(OnDomReadyHeaderItem.forScript(script));
+    }
+
+    /**
+     * Set the pane widths in in percent.
+     *
+     * @param aPanes
+     *            one entry per pane in DOM order
+     */
+    protected void setPanes(Options... aPanes)
+    {
+        setOption("panes", (Object[]) aPanes);
+        percentIntent = percentIntentOf(aPanes);
+    }
+
+    private static String panesJson(Options... aPanes)
+    {
+        var json = new StringBuilder("[");
+        for (int i = 0; i < aPanes.length; i++) {
+            if (i > 0) {
+                json.append(",");
+            }
+            json.append(aPanes[i]);
+        }
+        return json.append("]").toString();
+    }
+
+    private static Double[] percentIntentOf(Options... aPanes)
+    {
+        var percentages = new Double[aPanes.length];
+        for (int i = 0; i < aPanes.length; i++) {
+            percentages[i] = percentOrNull(aPanes[i]);
+        }
+        return percentages;
+    }
+
+    private static Double percentOrNull(Options aPane)
+    {
+        var size = aPane.get("size");
+        if (size == null) {
+            return null;
+        }
+
+        // Options renders string values quoted, so strip those along with the percent sign.
+        var text = size.toString().replace("\"", "").trim();
+        if (!text.endsWith("%")) {
+            return null;
+        }
+
+        try {
+            return Double.valueOf(text.substring(0, text.length() - 1));
+        }
+        catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private String percentIntentJson()
+    {
+        if (percentIntent == null) {
+            return "null";
+        }
+
+        var json = new StringBuilder("[");
+        for (int i = 0; i < percentIntent.length; i++) {
+            if (i > 0) {
+                json.append(",");
+            }
+            json.append(percentIntent[i] == null ? "null" : percentIntent[i].toString());
+        }
+        return json.append("]").toString();
     }
 }

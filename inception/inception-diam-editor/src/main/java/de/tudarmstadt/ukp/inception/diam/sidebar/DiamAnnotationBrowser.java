@@ -33,6 +33,7 @@ import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamJavaScriptReference;
@@ -122,7 +123,8 @@ public class DiamAnnotationBrowser
 
     protected DiamAjaxBehavior createDiamBehavior()
     {
-        return new DiamAjaxBehavior(findParent(AnnotationPageBase.class), contextMenu);
+        var manager = findParent(DocumentEditorManager.class);
+        return new DiamAjaxBehavior(() -> manager.getActiveContext().orElse(null), contextMenu);
     }
 
     @Override

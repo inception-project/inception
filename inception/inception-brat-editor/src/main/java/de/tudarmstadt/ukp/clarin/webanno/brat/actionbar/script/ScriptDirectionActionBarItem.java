@@ -20,7 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.brat.actionbar.script;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class ScriptDirectionActionBarItem
@@ -28,20 +28,20 @@ public class ScriptDirectionActionBarItem
 {
     private static final long serialVersionUID = 4139817495914347777L;
 
-    private final AnnotationPageBase page;
+    private final DiamContext editorContext;
 
-    public ScriptDirectionActionBarItem(String aId, AnnotationPageBase aPage)
+    public ScriptDirectionActionBarItem(String aId, DiamContext aEditorContext)
     {
         super(aId);
 
-        page = aPage;
+        editorContext = aEditorContext;
 
         add(new LambdaAjaxLink("toggleScriptDirection", this::actionToggleScriptDirection));
     }
 
     private void actionToggleScriptDirection(AjaxRequestTarget aTarget) throws Exception
     {
-        page.getModelObject().toggleScriptDirection();
-        page.actionRefreshDocument(aTarget);
+        editorContext.getAnnotatorState().toggleScriptDirection();
+        editorContext.actionRefreshDocument(aTarget);
     }
 }

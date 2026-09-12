@@ -40,7 +40,6 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature_;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -60,7 +59,6 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.Recommender_;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.recommendation.imls.llm.support.traits.LlmRecommenderTraits;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -107,10 +105,9 @@ public class InteractiveRecommenderSidebar
 
     private CompoundPropertyModel<InteractiveRecommenderSidebarPrefs> sidebarPrefs;
 
-    public InteractiveRecommenderSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public InteractiveRecommenderSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         sidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
 
@@ -415,7 +412,7 @@ public class InteractiveRecommenderSidebar
     private void execute(AjaxRequestTarget aTarget, Form<Recommender> aForm) throws Exception
     {
         var sessionOwner = userService.getCurrentUser();
-        var state = getModelObject();
+        var state = getActiveContext().orElseThrow().getAnnotatorState();
         var document = state.getDocument();
         var dataOwner = state.getUser().getUsername();
         var rec = aForm.getModelObject();

@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -59,6 +60,7 @@ import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreferencesChangedEvent;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
@@ -172,7 +174,8 @@ public class AnnotationPreferencesDialogContent
 
     private List<Pair<String, String>> getEditorChoices()
     {
-        var editors = annotationEditorRegistry.getEditorFactories().stream()
+        var editors = annotationEditorRegistry.getEditorFactories().stream() //
+                .filter(AnnotationEditorFactory::isUserSelectable) //
                 .map(f -> Pair.of(f.getBeanName(), f.getDisplayName())) //
                 .collect(toList());
         editors.add(0, Pair.of(null, "Auto (based on document format)"));
@@ -213,6 +216,9 @@ public class AnnotationPreferencesDialogContent
             }
 
             userPreferencesService.savePreferences(state, userDao.getCurrentUsername());
+
+            send(getPage(), Broadcast.BREADTH, new AnnotationPreferencesChangedEvent(
+                    state.getProject(), userDao.getCurrentUsername(), state, aTarget));
         }
         catch (IOException e) {
             error("Preference file not found");

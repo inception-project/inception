@@ -22,16 +22,19 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateCha
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
 import java.util.List;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenDialogBehavior;
+import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -46,10 +49,13 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate/#{" + PAGE_PARAM_DOCUMENT + "}")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}" + CurationPage.PAGE_PATH + "/#{"
+        + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
     extends AnnotationPageBase2
 {
+    public static final String PAGE_PATH = "/curate";
+
     private static final long serialVersionUID = 8665608337791132617L;
 
     private @SpringBean DocumentService documentService;
@@ -64,11 +70,15 @@ public class CurationPage
 
         add(new CurationSidebarBehavior());
 
+        add(new CurationAutoOpenDialogBehavior());
+        addToFooter(new CurationOpenDocumentDialog(ApplicationPageBase.CID_FOOTER_ITEM, getModel(),
+                LoadableDetachableModel.of(this::getListOfDocs)));
+
         var state = getModelObject();
         state.enableExtension(CurationEditorExtension.EXTENSION_ID);
 
-        curationSessionService.startSession(userRepository.getCurrentUsername(), state.getProject(),
-                false);
+        curationSessionService.startSession(userRepository.getCurrentUsername(),
+                state.getProject());
     }
 
     @Override
@@ -80,10 +90,6 @@ public class CurationPage
     @Override
     protected void ensureDocumentMayBeOpened(SourceDocument aDocument)
     {
-        if (!isCuratingToCurationSet()) {
-            return;
-        }
-
         // Must run before the curation CAS is created: once it exists, isDocumentCuratable treats
         // curation as started and would let the document through on any subsequent attempt.
         if (!curationDocumentService.isDocumentCuratable(aDocument)) {
@@ -103,7 +109,11 @@ public class CurationPage
         var sessionOwner = userRepository.getCurrentUser();
         requireProjectRole(sessionOwner, CURATOR);
 
-        super.handleParameters(aDocumentParameter, aFocusParameter, aUserParameter);
+        // Pin data owner to the curation user
+        var curationUser = userRepository.getCurationUser();
+        getModelObject().setUser(curationUser);
+        super.handleParameters(aDocumentParameter, aFocusParameter,
+                StringValue.valueOf(curationUser.getUsername()));
     }
 
     @Override
@@ -125,11 +135,7 @@ public class CurationPage
         // some reason not be editable, the transition into CURATION_IN_PROGRESS should
         // happen to indicate the initial merge was done. Note, we also do this even if
         // somebody might have disabled the initial merge - just for consistency.
-        // Note we only do then when curating into the shared CURATION_USER, not
-        // when curating in the annotator's own user.
-        if (isCuratingToCurationSet()) {
-            curationDocumentService.markCurationInProgress(state.getDocument());
-        }
+        curationDocumentService.markCurationInProgress(state.getDocument());
 
         // State transition may have had an impact on editability, so let's clear the cache
         clearIsEditableCache();
@@ -141,10 +147,5 @@ public class CurationPage
                         AnnotationDocumentState.IN_PROGRESS, EXPLICIT_ANNOTATOR_USER_ACTION);
             }
         }
-    }
-
-    private boolean isCuratingToCurationSet()
-    {
-        return CURATION_USER.equals(getModelObject().getUser().getUsername());
     }
 }

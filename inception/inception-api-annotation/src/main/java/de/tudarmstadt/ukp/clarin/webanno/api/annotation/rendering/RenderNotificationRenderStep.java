@@ -17,9 +17,10 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering;
 
+import static org.apache.wicket.event.Broadcast.BREADTH;
+
 import org.apache.wicket.Page;
 import org.apache.wicket.core.request.handler.IPageRequestHandler;
-import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.springframework.core.annotation.Order;
 
@@ -50,16 +51,25 @@ public class RenderNotificationRenderStep
     @Override
     public void render(VDocument aVDoc, RenderRequest aRequest)
     {
+        // Only render requests that go into an editor are announced to the UI. A request without
+        // an editor not, e.g. exporting a document to a file and serving a websocket viewport both
+        // run this pipeline. Notifying the page about them would invite sidebars to contribute
+        // markers and we do not want that.
+        var editorContext = aRequest.getEditorContext();
+        if (editorContext.isEmpty()) {
+            return;
+        }
+
         // Fire render event into UI
-        RequestCycle requestCycle = RequestCycle.get();
+        var requestCycle = RequestCycle.get();
         if (requestCycle == null) {
             return;
         }
 
         requestCycle.find(IPageRequestHandler.class).ifPresent(handler -> {
-            Page page = (Page) handler.getPage();
-            page.send(page, Broadcast.BREADTH,
-                    new RenderAnnotationsEvent(aRequest.getCas(), aRequest, aVDoc));
+            var page = (Page) handler.getPage();
+            page.send(page, BREADTH, new RenderAnnotationsEvent(aRequest.getCas(), aRequest, aVDoc,
+                    editorContext.get()));
         });
     }
 }

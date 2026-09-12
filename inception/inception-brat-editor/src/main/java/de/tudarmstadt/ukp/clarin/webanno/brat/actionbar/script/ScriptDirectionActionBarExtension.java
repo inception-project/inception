@@ -24,11 +24,10 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.config.BratAnnotationEditorAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * <p>
@@ -49,9 +48,13 @@ public class ScriptDirectionActionBarExtension
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
-        AnnotatorState state = aPage.getModelObject();
+        if (!aContext.hasDocument()) {
+            return false;
+        }
+
+        var state = aContext.editorContext().getAnnotatorState();
 
         if (state == null) {
             return false;
@@ -71,8 +74,8 @@ public class ScriptDirectionActionBarExtension
     }
 
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new ScriptDirectionActionBarItem(aId, aPage);
+        return new ScriptDirectionActionBarItem(aId, aContext.editorContext());
     }
 }

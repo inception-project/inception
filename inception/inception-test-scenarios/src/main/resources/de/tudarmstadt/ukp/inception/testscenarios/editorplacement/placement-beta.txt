@@ -1,0 +1,5 @@
+Beta document. Representatives of Siemens and Airbus joined the talks.
+A joint statement was issued by the German Chancellery and the Elysee Palace.
+This is the second of three documents in the editor-placement scenario.
+Its distinctive marker word is BETAMARKER, so a test can tell which document
+is currently shown in a given editor without relying on the document title.

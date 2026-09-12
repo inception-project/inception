@@ -25,12 +25,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 @Component
 public class ActionBarExtensionPointImpl
-    extends ExtensionPoint_ImplBase<AnnotationPageBase, ActionBarExtension>
+    extends ExtensionPoint_ImplBase<ActionBarContext, ActionBarExtension>
     implements ActionBarExtensionPoint
 {
     public ActionBarExtensionPointImpl(
@@ -45,7 +44,7 @@ public class ActionBarExtensionPointImpl
      * {@link ActionBarExtension#getPriority() priority} is returned.
      */
     @Override
-    public List<ActionBarExtension> getExtensions(AnnotationPageBase aContext)
+    public List<ActionBarExtension> getExtensions(ActionBarContext aContext)
     {
         // Using a LinkedHashMap here because we want to preserve the order in which the extensions
         // are displayed in the action bar.

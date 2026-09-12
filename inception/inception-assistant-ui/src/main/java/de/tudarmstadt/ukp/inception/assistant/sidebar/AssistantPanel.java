@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantWebsocketController;
@@ -66,7 +67,8 @@ public class AssistantPanel
 
         add(new SvelteBehavior());
 
-        add(diamBehavior = new DiamAjaxBehavior(findParent(AnnotationPageBase.class)));
+        var manager = findParent(DocumentEditorManager.class);
+        add(diamBehavior = new DiamAjaxBehavior(() -> manager.getActiveContext().orElse(null)));
     }
 
     @Override

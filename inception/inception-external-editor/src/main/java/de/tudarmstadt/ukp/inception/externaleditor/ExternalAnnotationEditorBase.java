@@ -67,14 +67,15 @@ import de.tudarmstadt.ukp.inception.externaleditor.command.ScrollToCommand;
 import de.tudarmstadt.ukp.inception.externaleditor.model.AnnotationEditorProperties;
 import de.tudarmstadt.ukp.inception.externaleditor.resources.ExternalEditorJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.io.xml.css.StylesheetRegistry;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 import jakarta.servlet.ServletContext;
@@ -106,10 +107,10 @@ public abstract class ExternalAnnotationEditorBase
     private ContextMenu contextMenu;
 
     public ExternalAnnotationEditorBase(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            String aEditorFactoryId)
+            DocumentEditorManager aManager, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider);
+        super(aId, aModel, aManager, aActionHandler, aCasProvider);
 
         editorFactoryId = aEditorFactoryId;
 
@@ -195,12 +196,6 @@ public abstract class ExternalAnnotationEditorBase
             int aBegin, int aEnd)
         throws IOException, AnnotationException
     {
-        // Forward the target document to the action handler, which is the host-scoped seam:
-        // switching to a different document is the concern of whatever hosts the editor. The main
-        // editor's detail panel switches the page to that document (so a cross-document scroll-to
-        // opens it before centering); a read-only reference-document viewer's handler ignores
-        // navigation (passive), so navigation stays local instead of driving the main editor's
-        // page.
         getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
     }
 
@@ -271,10 +266,7 @@ public abstract class ExternalAnnotationEditorBase
     {
         // We cannot use a @OnEvent annotation for this because it will not handle
         // events for non-visible components - and the editor may not be visible in the
-        // hierarchy a this time
-        // Only react to scroll requests originating from our own state. The event is broadcast to
-        // the whole page, so without this filter paging one editor would also scroll every other
-        // editor on the page (e.g. a read-only reference-document sidebar viewer).
+        // hierarchy a this time.
         if (aEvent.getPayload() instanceof ScrollToEvent event
                 && event.getSource() == getModelObject()) {
             var command = new ScrollToCommand(event.getOffset(), event.getPosition());

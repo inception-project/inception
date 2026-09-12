@@ -24,7 +24,7 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 public class RecommenderActionBarPanel
@@ -38,13 +38,13 @@ public class RecommenderActionBarPanel
 
     private final LambdaAjaxLink refreshDocumentButton;
 
-    private final AnnotationPageBase page;
+    private final DiamContext editorContext;
 
-    public RecommenderActionBarPanel(String aId, AnnotationPageBase aPage)
+    public RecommenderActionBarPanel(String aId, DiamContext aEditorContext)
     {
         super(aId);
 
-        page = aPage;
+        editorContext = aEditorContext;
 
         refreshDocumentButton = new LambdaAjaxLink("refreshDocument", this::actionRefreshDocument);
         add(refreshDocumentButton);
@@ -52,6 +52,6 @@ public class RecommenderActionBarPanel
 
     private void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
-        page.actionRefreshDocument(aTarget);
+        editorContext.actionRefreshDocument(aTarget);
     }
 }

@@ -26,7 +26,7 @@ import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -77,13 +77,12 @@ public class LoadAnnotationsHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
         try {
-            var request = prepareRenderRequest(aBehavior.getContext(), aRequest);
+            var request = prepareRenderRequest(aRequest.getContext(), aRequest.getRequest());
             var vdoc = renderingPipeline.render(request);
-            var json = serializeToWireFormat(aRequest, request, vdoc);
+            var json = serializeToWireFormat(aRequest.getRequest(), request, vdoc);
             attachResponse(aTarget, aRequest, json);
             return new DefaultAjaxResponse();
         }
@@ -111,7 +110,7 @@ public class LoadAnnotationsHandler
                 .toBoolean(false);
 
         return RenderRequest.builder() //
-                .withState(state) //
+                .withEditorContext(aContext) //
                 .withSessionOwner(userService.getCurrentUser()) //
                 .withCas(aContext.getEditorCas()) //
                 .withWindow(begin, end) //

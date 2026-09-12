@@ -38,10 +38,8 @@ public interface CurationSidebarService
      * 
      * @param state
      *            the annotator state
-     * @param currentUsername
-     *            the currently logged in user
      */
-    boolean isCurationFinished(AnnotatorState state, String currentUsername);
+    boolean isCurationFinished(AnnotatorState state);
 
     void setShowAll(String aUsername, Long aProjectId, boolean aValue);
 
@@ -52,6 +50,6 @@ public interface CurationSidebarService
     boolean isShowScore(String aUsername, Long aProjectId);
 
     MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
-            String aCurator, Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
+            Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
         throws IOException, UIMAException;
 }

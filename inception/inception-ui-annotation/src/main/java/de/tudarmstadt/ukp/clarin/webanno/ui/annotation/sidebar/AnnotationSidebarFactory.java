@@ -21,10 +21,8 @@ import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
@@ -43,8 +41,7 @@ public interface AnnotationSidebarFactory
 
     Component createIcon(String aId, IModel<AnnotatorViewState> aState);
 
-    AnnotationSidebar_ImplBase create(String id, final AnnotationActionHandler aActionHandler,
-            final CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage);
+    AnnotationSidebar_ImplBase create(String id, AnnotationPageBase2 aAnnotationPage);
 
     /**
      * @return if the sidebar is available for the given project. Override for cases when sidebar

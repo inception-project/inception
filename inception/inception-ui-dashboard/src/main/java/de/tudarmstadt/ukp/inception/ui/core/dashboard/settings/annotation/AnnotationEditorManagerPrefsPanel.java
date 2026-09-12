@@ -37,6 +37,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaForm;
@@ -84,6 +85,7 @@ public class AnnotationEditorManagerPrefsPanel
     private List<Pair<String, String>> listAvailableEditors()
     {
         return annotationEditorRegistry.getEditorFactories().stream() //
+                .filter(AnnotationEditorFactory::isUserSelectable) //
                 .map(f -> Pair.of(f.getBeanName(), f.getDisplayName())) //
                 .toList();
     }

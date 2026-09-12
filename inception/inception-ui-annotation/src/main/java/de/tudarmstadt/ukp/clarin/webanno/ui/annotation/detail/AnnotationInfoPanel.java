@@ -34,7 +34,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameAppender;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class AnnotationInfoPanel
@@ -83,11 +82,6 @@ public class AnnotationInfoPanel
         return getModelObject().getSelection().getAnnotation().isSet();
     }
 
-    public AnnotationPageBase getEditorPage()
-    {
-        return (AnnotationPageBase) getPage();
-    }
-
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
@@ -95,7 +89,7 @@ public class AnnotationInfoPanel
 
     private Label createSelectedAnnotationLayerLabel()
     {
-        Label label = new Label("selectedAnnotationLayer",
+        var label = new Label("selectedAnnotationLayer",
                 CompoundPropertyModel.of(getDefaultModel()).bind("selectedAnnotationLayer.uiName"));
         label.setOutputMarkupPlaceholderTag(true);
         return label;
@@ -103,7 +97,7 @@ public class AnnotationInfoPanel
 
     private Label createSelectedAnnotationTypeLabel()
     {
-        Label label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
+        var label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
             try {
                 var editorPanel = findParent(AnnotationDetailEditorPanel.class);
                 return String.valueOf(selectFsByAddr(editorPanel.activeEditorCas(),

@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsCssReso
 import de.tudarmstadt.ukp.inception.recogitojseditor.resources.RecogitoJsJavascriptResourceReference;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import jakarta.servlet.ServletContext;
 
 public class RecogitoHtmlAnnotationEditor
@@ -50,10 +51,10 @@ public class RecogitoHtmlAnnotationEditor
     private @SpringBean ServletContext servletContext;
 
     public RecogitoHtmlAnnotationEditor(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider,
-            String aEditorFactoryId)
+            DocumentEditorManager aManager, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider, String aEditorFactoryId)
     {
-        super(aId, aModel, aActionHandler, aCasProvider, aEditorFactoryId);
+        super(aId, aModel, aManager, aActionHandler, aCasProvider, aEditorFactoryId);
     }
 
     @Override

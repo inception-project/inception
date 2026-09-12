@@ -17,38 +17,29 @@
  */
 package de.tudarmstadt.ukp.inception.ui.refdoc;
 
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_down_s;
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_up_s;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.link_s;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.link_slash_s;
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationNavigationUserPrefs.KEY_ANNOTATION_NAVIGATION_USER_PREFS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarState.KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE;
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
-import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
-import org.apache.wicket.markup.html.panel.EmptyPanel;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.Model;
@@ -58,97 +49,54 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.DocumentEditorActionHandler;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.DefaultPagingNavigator;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.multiedit.DocumentEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
-import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import jakarta.persistence.NoResultException;
 
-/**
- * A sidebar that opens an arbitrary document from the current project in a read-only annotation
- * editor. The editor is auto-selected based on the document's format ("AUTO" mode).
- */
 public class ReferenceDocumentSidebar
     extends AnnotationSidebar_ImplBase
-    implements DocumentEditorActionHandler
 {
     private static final long serialVersionUID = 1L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    private static final String MID_EDITOR = "editor";
-    private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
-
-    private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userRepository;
-    private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean PreferencesService preferencesService;
-    private @SpringBean AnnotationSchemaService annotationSchemaService;
 
     private final IModel<AnnotatorState> stateModel;
-    private final WebMarkupContainer editorContainer;
-    private final DocumentNamePanel documentNamePanel;
-    private final WebMarkupContainer actionBar;
-    private final LambdaAjaxLink actionBarToggle;
-    private final WebMarkupContainer documentNavigation;
-    private final DefaultPagingNavigator pagingNavigator;
+    private final RefDocEditorPanel documentEditorPanel;
     private final OpenDocumentDialog openDialog;
-
-    // Whether the sidebar's own action bar (open/navigate/paging controls) is hidden. Mirrors the
-    // show/hide toggle the main editor offers, and is persisted per user/project via
-    // ReferenceDocumentSidebarState so it survives page reloads and sessions.
-    private boolean actionBarCollapsed = false;
 
     private boolean scrollSyncEnabled = false;
     private transient boolean syncingViewport = false;
 
-    private final WebMarkupContainer scrollSyncGroup;
+    private WebMarkupContainer scrollSyncGroup;
 
-    // The editor and CAS provider for the reference document currently shown (null while none).
-    private AnnotationEditorBase editor;
-    private CasProvider casProvider;
-
-    public ReferenceDocumentSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public ReferenceDocumentSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         var sessionOwner = userRepository.getCurrentUser();
         var project = getModelObject().getProject();
 
-        // Independent state so paging/selection in the sidebar never affects the main editor.
         var state = new AnnotatorStateImpl();
         stateModel = Model.of(state);
         state.setUser(sessionOwner);
-        // No document is shown yet - use the no-op paging strategy so the position label renders
-        // empty until a reference document is loaded (mirrors AnnotationPageBase2).
         state.setPagingStrategy(new NoPagingStrategy());
+
         if (project != null) {
             state.setProject(project);
             // Populates visible/selectable layers and the annotation preferences (window size etc.)
@@ -159,148 +107,64 @@ public class ReferenceDocumentSidebar
                 throw new RuntimeException("Unable to load annotation preferences", e);
             }
 
-            // Restore the persisted sidebar layout (e.g. whether the action bar is collapsed) so it
-            // survives page reloads and sessions.
-            var sidebarState = preferencesService.loadTraitsForUserAndProject(
-                    KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE, sessionOwner, project);
-            actionBarCollapsed = sidebarState.isActionBarCollapsed();
-            scrollSyncEnabled = sidebarState.isScrollSyncEnabled();
+            scrollSyncEnabled = loadSidebarState().isScrollSyncEnabled();
         }
 
-        // Document name/project info line, same component the main editor uses in its header. The
-        // sidebar is read-only, so editability comes from our own action handler rather than the
-        // (editable) enclosing page.
-        documentNamePanel = new DocumentNamePanel("documentNamePanel", stateModel,
-                this::isEditable);
-        add(documentNamePanel);
+        // Default to the document currently open in the main editor - if any
+        state.setDocument(getModelObject().getDocument(), emptyList());
 
-        // Position info line ("N-M / K sentences [doc x / y]"); the concrete label is produced by
-        // the current paging strategy, so it is recreated whenever a document is (re)loaded.
-        add(state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES, stateModel));
-
-        // The action bar (open/navigate/paging controls) can be collapsed via the toggle in the
-        // card header, mirroring the main editor. Its children live inside this container so a
-        // single class swap hides them all at once.
-        actionBar = new WebMarkupContainer("actionBar");
-        actionBar.setOutputMarkupId(true);
-        actionBar.add(AttributeModifier.append("class",
-                LambdaModel.of(() -> actionBarCollapsed ? " visually-hidden" : "")));
-        add(actionBar);
-
-        actionBarToggle = new LambdaAjaxLink("toggleActionBar", this::actionToggleActionBar);
-        actionBarToggle.add(new Icon("toggleActionBarIcon",
-                LambdaModel.of(() -> actionBarCollapsed ? chevron_down_s : chevron_up_s)));
-        actionBarToggle.setOutputMarkupId(true);
-        add(actionBarToggle);
-
-        actionBar.add(
-                new LambdaAjaxLink("showOpenDocumentDialog", this::actionShowOpenDocumentDialog));
-
-        // Previous/next document buttons stepping through the same accessible-documents list the
-        // open dialog offers. Only meaningful once a reference document is loaded.
-        documentNavigation = new WebMarkupContainer("documentNavigation");
-        documentNavigation.setOutputMarkupPlaceholderTag(true);
-        documentNavigation
-                .add(visibleWhen(stateModel.map(AnnotatorState::getDocument).isPresent()));
-        documentNavigation
-                .add(new LambdaAjaxLink("showPreviousDocument", this::actionShowPreviousDocument));
-        documentNavigation
-                .add(new LambdaAjaxLink("showNextDocument", this::actionShowNextDocument));
-        actionBar.add(documentNavigation);
-
-        // Two-way scroll synchronization with the main editor. Only meaningful while a document is
-        // shown; whether it actually engages is gated in scrollSyncScript().
-        // The tooltip sits on the group, not on the button: browsers deliver no pointer events to a
-        // disabled button, so a title on the button itself would stay invisible precisely when it
-        // explains why the toggle cannot be used.
-        scrollSyncGroup = new WebMarkupContainer("scrollSyncGroup");
-        scrollSyncGroup.setOutputMarkupPlaceholderTag(true);
-        scrollSyncGroup.add(visibleWhen(stateModel.map(AnnotatorState::getDocument).isPresent()));
-        scrollSyncGroup.add(AttributeModifier.replace("title",
-                LambdaModel.of(() -> isScrollSyncPossible()
-                        ? "Synchronize scrolling with the main editor"
-                        : "Scroll synchronization is unavailable while a paged editor shows a "
-                                + "different document than the main editor")));
-        actionBar.add(scrollSyncGroup);
-
-        var scrollSyncToggle = new LambdaAjaxLink("toggleScrollSync", this::actionToggleScrollSync);
-        scrollSyncToggle.add(new Icon("toggleScrollSyncIcon",
-                LambdaModel.of(() -> scrollSyncEnabled ? link_s : link_slash_s)));
-        scrollSyncToggle.add(enabledWhen(this::isScrollSyncPossible));
-        scrollSyncGroup.add(scrollSyncToggle);
+        documentEditorPanel = new RefDocEditorPanel("documentEditorPanel", stateModel);
+        add(documentEditorPanel);
 
         openDialog = new OpenDocumentDialog("openDialog", stateModel,
-                getAnnotationPage()::listAccessibleDocuments, this::actionLoadDocument);
+                getAnnotationPage()::listAccessibleDocuments,
+                documentEditorPanel::actionLoadDocument);
         add(openDialog);
-
-        pagingNavigator = new DefaultPagingNavigator("pagingNavigator", this);
-        pagingNavigator.add(visibleWhen(stateModel.map(AnnotatorState::getDocument).isPresent()));
-        actionBar.add(pagingNavigator);
-
-        editorContainer = new WebMarkupContainer("editorContainer");
-        editorContainer.setOutputMarkupId(true);
-        editorContainer.add(new EmptyPanel(MID_EDITOR).setOutputMarkupId(true));
-        add(editorContainer);
     }
 
-    @Override
-    protected void onInitialize()
+    private ReferenceDocumentSidebarState loadSidebarState()
     {
-        super.onInitialize();
+        return preferencesService.loadTraitsForUserAndProject(KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE,
+                userRepository.getCurrentUser(), stateModel.getObject().getProject());
+    }
 
-        var state = stateModel.getObject();
-
-        // Default to the document currently open in the main editor so the sidebar shows useful
-        // content immediately instead of an empty viewer. The user can still switch to any other
-        // accessible document via the open dialog or the previous/next buttons.
-        var mainDocument = getModelObject().getDocument();
-        if (mainDocument != null && state.getProject() != null) {
-            // Keep the full accessible-documents list on the state so the position label reads
-            // "[doc i / n]" and previous/next navigation works from the default document onwards.
-            state.setDocument(mainDocument, listReferenceDocuments());
-            try {
-                loadDocumentIntoEditor();
-            }
-            catch (IOException e) {
-                // Fall back to the empty viewer - the user can pick a document manually.
-                state.setDocument(null, Collections.emptyList());
-                LOG.error("Unable to load default reference document [{}]", mainDocument, e);
-            }
+    private void saveSidebarState(ReferenceDocumentSidebarState aState)
+    {
+        var project = stateModel.getObject().getProject();
+        if (project == null) {
+            return;
         }
+
+        preferencesService.saveTraitsForUserAndProject(KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE,
+                userRepository.getCurrentUser(), project, aState);
     }
 
-    private void actionToggleActionBar(AjaxRequestTarget aTarget)
+    private List<SourceDocument> listReferenceDocuments()
     {
-        actionBarCollapsed = !actionBarCollapsed;
-
         var state = stateModel.getObject();
         var project = state.getProject();
-        if (project != null) {
-            var sessionOwner = userRepository.getCurrentUser();
-            var sidebarState = preferencesService.loadTraitsForUserAndProject(
-                    KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE, sessionOwner, project);
-            sidebarState.setActionBarCollapsed(actionBarCollapsed);
-            preferencesService.saveTraitsForUserAndProject(KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE,
-                    sessionOwner, project, sidebarState);
+        var user = state.getUser();
+        if (project == null || user == null) {
+            return emptyList();
         }
 
-        aTarget.add(actionBar, actionBarToggle);
+        return getAnnotationPage().listAccessibleDocuments(project, user).stream()
+                .map(AnnotationDocument::getDocument) //
+                .collect(toList());
+    }
+
+    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
+    {
+        openDialog.show(aTarget);
     }
 
     private void actionToggleScrollSync(AjaxRequestTarget aTarget)
     {
         scrollSyncEnabled = !scrollSyncEnabled;
 
-        var state = stateModel.getObject();
-        var project = state.getProject();
-        if (project != null) {
-            var sessionOwner = userRepository.getCurrentUser();
-            var sidebarState = preferencesService.loadTraitsForUserAndProject(
-                    KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE, sessionOwner, project);
-            sidebarState.setScrollSyncEnabled(scrollSyncEnabled);
-            preferencesService.saveTraitsForUserAndProject(KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE,
-                    sessionOwner, project, sidebarState);
-        }
+        var sidebarState = loadSidebarState();
+        sidebarState.setScrollSyncEnabled(scrollSyncEnabled);
+        saveSidebarState(sidebarState);
 
         aTarget.add(scrollSyncGroup);
         scrollSyncScript().ifPresent(aTarget::appendJavaScript);
@@ -308,19 +172,19 @@ public class ReferenceDocumentSidebar
 
     private Optional<String> scrollSyncScript()
     {
+        var editor = documentEditorPanel.getEditor();
         var sidebarEditorId = editor != null ? editor.getViewportSyncClientId().orElse(null) : null;
         if (sidebarEditorId == null) {
             return Optional.empty();
         }
 
-        var mainEditor = getAnnotationPage().getAnnotationEditor();
-        var mainEditorId = mainEditor != null ? mainEditor.getViewportSyncClientId().orElse(null)
-                : null;
+        var partnerEditorId = findSyncPartner(stateModel.getObject())
+                .flatMap(DiamContext::getViewportSyncClientId).orElse(null);
 
         String script;
-        if (isScrollSyncActive() && mainEditorId != null) {
+        if (isScrollSyncActive() && partnerEditorId != null) {
             script = format("ExternalEditor.viewportSync.link('%s', '%s');", sidebarEditorId,
-                    mainEditorId);
+                    partnerEditorId);
         }
         else {
             script = format("ExternalEditor.viewportSync.unlink('%s');", sidebarEditorId);
@@ -340,19 +204,24 @@ public class ReferenceDocumentSidebar
     private boolean isScrollSyncPossible()
     {
         var state = stateModel.getObject();
-        if (state.getDocument() == null) {
+
+        var maybePartner = findSyncPartner(state);
+        if (maybePartner.isEmpty()) {
+            // Nothing shows the same annotations - there is nothing to sync with
             return false;
         }
 
+        var partnerState = maybePartner.get().getAnnotatorState();
+
         var refDocPaged = !(state.getPagingStrategy() instanceof NoPagingStrategy);
-        var mainPaged = !(getModelObject().getPagingStrategy() instanceof NoPagingStrategy);
-        if ((mainPaged && !refDocPaged) || (!mainPaged && refDocPaged)) {
+        var partnerPaged = !(partnerState.getPagingStrategy() instanceof NoPagingStrategy);
+        if ((partnerPaged && !refDocPaged) || (!partnerPaged && refDocPaged)) {
             // Mixed mode cannot sync
             return false;
         }
 
-        if (mainPaged && refDocPaged && !Objects.equals(state.getPagingStrategy().getClass(),
-                getModelObject().getPagingStrategy().getClass())) {
+        if (partnerPaged && refDocPaged && !Objects.equals(state.getPagingStrategy().getClass(),
+                partnerState.getPagingStrategy().getClass())) {
             // If both editors are paging, they must have the same paging regime
             return false;
         }
@@ -369,278 +238,22 @@ public class ReferenceDocumentSidebar
                 .ifPresent(script -> aResponse.render(OnDomReadyHeaderItem.forScript(script)));
     }
 
-    private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
-    {
-        openDialog.show(aTarget);
-    }
-
-    private void actionShowPreviousDocument(AjaxRequestTarget aTarget)
-    {
-        actionShowAdjacentDocument(aTarget, -1, "previous");
-    }
-
-    private void actionShowNextDocument(AjaxRequestTarget aTarget)
-    {
-        actionShowAdjacentDocument(aTarget, 1, "next");
-    }
-
     /**
-     * Step to the {@code aDirection}-adjacent accessible document, honoring the same "skip finished
-     * documents" navigation preference the main editor's {@code DocumentNavigator} respects, so the
-     * buttons behave identically in both places.
+     * @param aState
+     *            the state of the reference document shown in this sidebar
+     * @return the editor showing the same annotations as this sidebar, if any. Scroll sync moves
+     *         one viewport to the other's character offset, which is only meaningful between two
+     *         views of the same document and data owner.
      */
-    private void actionShowAdjacentDocument(AjaxRequestTarget aTarget, int aDirection,
-            String aWhich)
+    private Optional<DiamContext> findSyncPartner(AnnotatorState aState)
     {
-        var state = stateModel.getObject();
-        var documents = listReferenceDocuments();
-        var prefs = preferencesService.loadTraitsForUserAndProject(
-                KEY_ANNOTATION_NAVIGATION_USER_PREFS, userRepository.getCurrentUser(),
-                state.getProject());
-        var skipFinished = prefs.isFinishedDocumentsSkippedByNavigation();
-
-        var index = documents.indexOf(state.getDocument());
-        while (true) {
-            index += aDirection;
-
-            if (index < 0 || index >= documents.size()) {
-                if (skipFinished) {
-                    info("There is no " + aWhich + " unfinished document. Use the Open Document"
-                            + " dialog to select finished documents.");
-                }
-                else {
-                    info("There is no " + aWhich + " document.");
-                }
-                aTarget.addChildren(getPage(), IFeedback.class);
-                return;
-            }
-
-            var candidate = documents.get(index);
-            if (!skipFinished || !isTerminal(candidate)) {
-                // Keep the full list on the state so the position label stays
-                // "[doc i / n]"-consistent.
-                state.setDocument(candidate, documents);
-                actionLoadDocument(aTarget);
-                return;
-            }
-        }
-    }
-
-    private boolean isTerminal(SourceDocument aDocument)
-    {
-        var state = stateModel.getObject();
-        var dataOwner = state.getUser();
-        try {
-            return documentService.getAnnotationDocument(aDocument, dataOwner).getState()
-                    .isTerminal();
-        }
-        catch (NoResultException e) {
-            return AnnotationDocumentState.NEW.isTerminal();
-        }
-    }
-
-    /**
-     * The accessible documents to step through - the same list, in the same order, that the open
-     * dialog offers (both go through {@link AnnotationPageBase2#listAccessibleDocuments}).
-     */
-    private List<SourceDocument> listReferenceDocuments()
-    {
-        var state = stateModel.getObject();
-        var project = state.getProject();
-        var user = state.getUser();
-        if (project == null || user == null) {
-            return Collections.emptyList();
+        if (aState.getDocument() == null) {
+            return Optional.empty();
         }
 
-        return getAnnotationPage().listAccessibleDocuments(project, user).stream()
-                .map(AnnotationDocument::getDocument) //
-                .collect(toList());
-    }
-
-    @Override
-    public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
-        throws AnnotationException
-    {
-        var documents = listReferenceDocuments();
-        if (!documents.contains(aDocument)) {
-            throw new AnnotationException(
-                    "Document [" + aDocument.getName() + "] cannot be shown in this sidebar.");
-        }
-
-        // Keep the full list on the state so the position label stays "[doc i / n]"-consistent.
-        stateModel.getObject().setDocument(aDocument, documents);
-        actionLoadDocument(aTarget);
-    }
-
-    /**
-     * Load the document currently set on our {@link #state} into a fresh read-only editor. Invoked
-     * by the open dialog once the user has picked a document (the dialog has already set it on our
-     * state model). The editor type is resolved automatically from the document format.
-     */
-    public void actionLoadDocument(AjaxRequestTarget aTarget)
-    {
-        try {
-            loadDocumentIntoEditor();
-
-            send(getPage(), BREADTH,
-                    new EditorContentReplacedEvent(stateModel.getObject(), aTarget));
-
-            aTarget.add(editorContainer);
-            aTarget.add(documentNamePanel);
-            aTarget.add(documentNavigation);
-            aTarget.add(pagingNavigator);
-            aTarget.add(scrollSyncGroup);
-            aTarget.add(get(MID_NUMBER_OF_PAGES));
-
-            scrollSyncScript().ifPresent(aTarget::appendJavaScript);
-        }
-        catch (IOException e) {
-            error("Unable to load reference document: " + e.getMessage());
-            aTarget.addChildren(getPage(), IFeedback.class);
-        }
-    }
-
-    /**
-     * Build a fresh read-only editor for the document currently set on our {@link #state} and swap
-     * it into the sidebar (along with a matching position label). Does not touch any
-     * {@link AjaxRequestTarget}, so it can be used both during initial rendering (see
-     * {@link #onInitialize()}) and from AJAX actions such as {@link #actionLoadDocument}. The
-     * editor type is resolved automatically from the document format.
-     */
-    private void loadDocumentIntoEditor() throws IOException
-    {
-        var state = stateModel.getObject();
-        var document = state.getDocument();
-
-        Component newEditor;
-        if (document == null) {
-            editor = null;
-            casProvider = null;
-            state.setPagingStrategy(new NoPagingStrategy());
-            newEditor = new EmptyPanel(MID_EDITOR);
-        }
-        else {
-            // AUTO editor mode: pick the editor based on the document format
-            var factory = editorRegistry.getPreferredEditorFactory(document.getProject(),
-                    document.getFormat());
-            state.setEditorFactoryId(factory.getBeanName());
-
-            casProvider = () -> readReferenceCas(document);
-
-            editor = factory.create(MID_EDITOR, stateModel, this, casProvider);
-
-            // Let the editor configure the paging strategy, then page the document
-            factory.initState(state);
-            var cas = casProvider.get();
-            state.reset();
-            state.getPagingStrategy().recalculatePage(state, cas);
-            state.moveToUnit(cas, 0, TOP);
-
-            newEditor = editor;
-        }
-
-        newEditor.setOutputMarkupId(true);
-        editorContainer.addOrReplace(newEditor);
-
-        // The position label is bound to the (possibly new) paging strategy, so recreate it.
-        var positionLabel = state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES,
-                stateModel);
-        addOrReplace(positionLabel);
-    }
-
-    private CAS readReferenceCas(SourceDocument aDocument) throws IOException
-    {
-        // Read-only: SHARED_READ_ONLY_ACCESS never writes the CAS file (so it does not bump the
-        // optimistic-locking timestamp), does not take the exclusive pool lock used by the main
-        // editor, and for documents the user has never annotated it returns a transient CAS that is
-        // never persisted. This mode requires AUTO_CAS_UPGRADE (upgrade happens in-memory only).
-        return documentService.readAnnotationCas(aDocument,
-                AnnotationSet.forUser(userRepository.getCurrentUser()), AUTO_CAS_UPGRADE,
-                SHARED_READ_ONLY_ACCESS);
-    }
-
-    @Override
-    public void actionLoadSelectedAnnotationDetails(AjaxRequestTarget aTarget)
-    {
-        // Activating the editor loads its selected annotation in the ADEP
-        activate(aTarget);
-
-        // Re-render document so selection highlight shows
-        actionRefreshDocument(aTarget);
-    }
-
-    @Override
-    public void ensureIsEditable() throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
-
-    @Override
-    public void actionDelete(AjaxRequestTarget aTarget) throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
-
-    @Override
-    public void actionReverse(AjaxRequestTarget aTarget) throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
-
-    @Override
-    public void actionFillSlot(AjaxRequestTarget aTarget, int aSlotFillerBegin, int aSlotFillerEnd)
-        throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
-
-    @Override
-    public void actionFillSlot(AjaxRequestTarget aTarget, VID aExistingSlotFillerId)
-        throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
-
-    @Override
-    public void writeEditorCas() throws AnnotationException
-    {
-        throw new NotEditableException("This editor is read-only.");
-    }
-
-    @Override
-    public IModel<AnnotatorState> getStateModel()
-    {
-        return stateModel;
-    }
-
-    @Override
-    public CAS getEditorCas() throws IOException
-    {
-        if (casProvider == null) {
-            throw new IllegalStateException("No reference document is currently loaded");
-        }
-        return casProvider.get();
-    }
-
-    @Override
-    public AnnotationActionHandler getActionHandler()
-    {
-        return this;
-    }
-
-    @Override
-    public Selection selectionFor(VID aVid, AnnotationFS aAnnotation)
-    {
-        return annotationSchemaService.findAdapter(getProject(), aAnnotation).select(aVid,
-                aAnnotation);
-    }
-
-    @Override
-    public void actionRefreshDocument(AjaxRequestTarget aTarget)
-    {
-        if (editor != null) {
-            editor.requestRender(aTarget);
-        }
+        return getDocumentEditorManager().findEditorFor(aState.getDocument(), aState.getDataOwner())
+                // ... but not this sidebar itself, which is where the event came from.
+                .filter(context -> context != documentEditorPanel);
     }
 
     @OnEvent
@@ -655,37 +268,42 @@ public class ReferenceDocumentSidebar
             return;
         }
 
-        var mainState = getModelObject();
         var state = stateModel.getObject();
 
-        // If not showing the same document, we cannot sync by character offset - bail out
-        if (!Objects.equals(mainState.getDocument(), state.getDocument())) {
+        // Sync by character offset only makes sense against an editor showing the same
+        // annotations. Ask which editor that is rather than assuming a particular one - if none
+        // is, there is nothing to sync with.
+        var partner = findSyncPartner(state);
+        if (partner.isEmpty()) {
             return;
         }
 
-        // ... otherwise we can sync by character offset.
+        var partnerContext = partner.get();
+        var partnerState = partnerContext.getAnnotatorState();
+
         try {
             syncingViewport = true;
 
-            if (aEvent.isFor(mainState)) {
-                // Main editor paged - follow it in the sidebar.
-                var mainEditor = getAnnotationPage().getAnnotationEditor();
-                if (editor == null || mainEditor == null) {
+            var editor = documentEditorPanel.getEditor();
+
+            if (aEvent.isFor(partnerState)) {
+                // Partner editor paged - follow it in the sidebar.
+                if (editor == null) {
                     return;
                 }
-                state.moveToOffset(getEditorCas(), mainState.getWindowBeginOffset(), TOP);
+                state.moveToOffset(documentEditorPanel.getEditorCas(),
+                        partnerState.getWindowBeginOffset(), TOP);
                 editor.requestRender(target);
-                target.add(pagingNavigator);
-                target.add(get(MID_NUMBER_OF_PAGES));
+                target.add(documentEditorPanel.getActionBarItems(),
+                        documentEditorPanel.getPositionLabel());
             }
             else if (aEvent.isFor(state)) {
-                // Sidebar paged - follow it in the main editor.
-                var mainEditor = getAnnotationPage().getAnnotationEditor();
-                if (mainEditor == null) {
-                    return;
-                }
-                mainState.moveToOffset(getCasProvider().get(), state.getWindowBeginOffset(), TOP);
-                mainEditor.requestRender(target);
+                // Sidebar paged - follow it in the partner editor. Explicitly the partner's CAS,
+                // not the active editor's: this branch moves the partner's state and re-renders
+                // it, and the active editor here is typically this sidebar itself.
+                partnerState.moveToOffset(partnerContext.getEditorCas(),
+                        state.getWindowBeginOffset(), TOP);
+                partnerContext.actionRefreshDocument(target);
             }
         }
         catch (IOException e) {
@@ -693,6 +311,93 @@ public class ReferenceDocumentSidebar
         }
         finally {
             syncingViewport = false;
+        }
+    }
+
+    /**
+     * The reference document viewer. Read-only, lists the same documents the open dialog offers,
+     * and contributes the sidebar-specific action bar items (open document, scroll sync toggle).
+     */
+    private class RefDocEditorPanel
+        extends DocumentEditorPanel
+        implements ReferenceDocumentEditor
+    {
+        private static final long serialVersionUID = -6631967232128940695L;
+
+        public RefDocEditorPanel(String aId, IModel<AnnotatorState> aModel)
+        {
+            super(aId, ReferenceDocumentSidebar.this.getDocumentEditorManager(), aModel);
+        }
+
+        @Override
+        public List<SourceDocument> listAccessibleDocuments()
+        {
+            return listReferenceDocuments();
+        }
+
+        @Override
+        protected boolean isActionBarCollapsed()
+        {
+            var project = stateModel.getObject().getProject();
+            return project != null && loadSidebarState().isActionBarCollapsed();
+        }
+
+        @Override
+        protected void onActionBarCollapsedChanged(boolean aCollapsed)
+        {
+            var sidebarState = loadSidebarState();
+            sidebarState.setActionBarCollapsed(aCollapsed);
+            saveSidebarState(sidebarState);
+        }
+
+        @Override
+        protected Component createActionBarItemsBefore(String aId)
+        {
+            var fragment = new Fragment(aId, "openDocumentItem", ReferenceDocumentSidebar.this);
+
+            fragment.add(new LambdaAjaxLink("showOpenDocumentDialog",
+                    ReferenceDocumentSidebar.this::actionShowOpenDocumentDialog));
+
+            return fragment;
+        }
+
+        @Override
+        protected Component createActionBarItemsAfter(String aId)
+        {
+            var fragment = new Fragment(aId, "scrollSyncItem", ReferenceDocumentSidebar.this);
+
+            // Two-way scroll synchronization with the main editor. Only meaningful while a document
+            // is shown; whether it actually engages is gated in scrollSyncScript().
+            // The tooltip sits on the group, not on the button: browsers deliver no pointer events
+            // to a disabled button, so a title on the button itself would stay invisible precisely
+            // when it explains why the toggle cannot be used.
+            scrollSyncGroup = new WebMarkupContainer("scrollSyncGroup");
+            scrollSyncGroup.setOutputMarkupPlaceholderTag(true);
+            scrollSyncGroup
+                    .add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
+            scrollSyncGroup.add(AttributeModifier.replace("title",
+                    LambdaModel.of(() -> isScrollSyncPossible()
+                            ? "Synchronize scrolling with the main editor"
+                            : "Scroll synchronization is unavailable while a paged editor shows a "
+                                    + "different document than the main editor")));
+            fragment.add(scrollSyncGroup);
+
+            var scrollSyncToggle = new LambdaAjaxLink("toggleScrollSync",
+                    ReferenceDocumentSidebar.this::actionToggleScrollSync);
+            scrollSyncToggle.add(new Icon("toggleScrollSyncIcon",
+                    LambdaModel.of(() -> scrollSyncEnabled ? link_s : link_slash_s)));
+            scrollSyncToggle.add(enabledWhen(ReferenceDocumentSidebar.this::isScrollSyncPossible));
+            scrollSyncGroup.add(scrollSyncToggle);
+
+            return fragment;
+        }
+
+        @Override
+        protected void onDocumentLoaded(AjaxRequestTarget aTarget)
+        {
+            aTarget.add(scrollSyncGroup);
+
+            scrollSyncScript().ifPresent(aTarget::appendJavaScript);
         }
     }
 }

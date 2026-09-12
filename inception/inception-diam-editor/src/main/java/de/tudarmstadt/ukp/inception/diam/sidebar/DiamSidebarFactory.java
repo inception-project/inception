@@ -27,14 +27,12 @@ import com.networknt.schema.Schema;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.diam.sidebar.config.AnnotationBrowserSidebarAutoConfiguration;
 import de.tudarmstadt.ukp.inception.preferences.ClientSidePreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvider;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -82,10 +80,9 @@ public class DiamSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        return new DiamSidebar(aId, aActionHandler, aCasProvider, aAnnotationPage,
+        return new DiamSidebar(aId, aAnnotationPage,
                 getUserPreferencesKey().get().getClientSideKey());
     }
 

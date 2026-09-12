@@ -49,11 +49,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -78,17 +78,17 @@ public class AttachedAnnotationListPanel
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean LayerSupportRegistry layerRegistry;
 
-    private final AnnotationPageBase page;
+    private final DocumentEditorManager manager;
     private final WebMarkupContainer noAttachedAnnotationsInfo;
     private final WebMarkupContainer attachedAnnotationsContainer;
     private final IModel<List<AttachedAnnotationInfo>> annotations;
 
-    public AttachedAnnotationListPanel(String aId, AnnotationPageBase aPage,
+    public AttachedAnnotationListPanel(String aId, DocumentEditorManager aManager,
             IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
 
-        page = aPage;
+        manager = aManager;
         annotations = LoadableDetachableModel.of(this::getRelationInfo);
 
         noAttachedAnnotationsInfo = new WebMarkupContainer("noAttachedAnnotationsInfo");
@@ -121,7 +121,7 @@ public class AttachedAnnotationListPanel
 
     private AnnotationActionHandler actionHandler()
     {
-        return page.getActiveContext().getActionHandler();
+        return manager.getActiveContext().orElseThrow().getActionHandler();
     }
 
     private List<AttachedAnnotationInfo> getRelationInfo()
@@ -134,7 +134,7 @@ public class AttachedAnnotationListPanel
 
         CAS cas;
         try {
-            cas = page.getActiveContext().getEditorCas();
+            cas = manager.getActiveContext().orElseThrow().getEditorCas();
         }
         catch (IOException e) {
             // If we have trouble accessing the CAS, we probably never get here anyway...

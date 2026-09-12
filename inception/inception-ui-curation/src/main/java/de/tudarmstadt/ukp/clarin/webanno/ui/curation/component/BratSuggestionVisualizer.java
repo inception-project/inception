@@ -31,6 +31,7 @@ import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.uima.cas.CAS;
+import org.apache.commons.lang3.Validate;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -44,7 +45,6 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
-import org.apache.wicket.request.Request;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
@@ -54,6 +54,7 @@ import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
@@ -66,7 +67,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
@@ -81,6 +81,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
@@ -114,10 +115,16 @@ public abstract class BratSuggestionVisualizer
 
     private final int position;
 
-    public BratSuggestionVisualizer(String aId, IModel<AnnotatorSegmentState> aModel, int aPosition)
+    private final DocumentEditorManager manager;
+
+    public BratSuggestionVisualizer(String aId, DocumentEditorManager aManager,
+            IModel<AnnotatorSegmentState> aModel, int aPosition)
     {
         super(aId, aModel);
 
+        Validate.notNull(aManager, "Document editor manager must be provided");
+
+        manager = aManager;
         position = aPosition;
 
         vis = new WebMarkupContainer("vis");
@@ -194,7 +201,7 @@ public abstract class BratSuggestionVisualizer
             break;
         }
 
-        ((LegacyCurationPage) getPage()).actionLoadDocument(aTarget);
+        ((AnnotationPageBase) getPage()).actionLoadDocument(aTarget);
     }
 
     private AnnotationDocument getAnnotationDocument()
@@ -248,6 +255,12 @@ public abstract class BratSuggestionVisualizer
         var segment = getModelObject();
         return documentService.readAnnotationCas(segment.getAnnotatorState().getDocument(),
                 AnnotationSet.forUser(segment.getUser().getUsername()));
+    }
+
+    @Override
+    public DocumentEditorManager getDocumentEditorManager()
+    {
+        return manager;
     }
 
     @Override
@@ -395,14 +408,13 @@ public abstract class BratSuggestionVisualizer
         }
 
         @Override
-        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-                Request aRequest)
+        public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
         {
             try {
                 final var request = getRequest().getPostParameters();
                 final var paramId = BratRequestUtils.getVidFromRequest(request);
 
-                var context = aBehavior.getContext();
+                var context = aRequest.getContext();
                 var state = context.getViewState();
                 var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
                         context::getEditorCas, state.getDocument(), getModelObject().getUser(),
@@ -424,8 +436,7 @@ public abstract class BratSuggestionVisualizer
         private static final long serialVersionUID = 8053988681869772378L;
 
         @Override
-        public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-                Request aRequest)
+        public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
         {
             try {
                 onClientEvent(aTarget);

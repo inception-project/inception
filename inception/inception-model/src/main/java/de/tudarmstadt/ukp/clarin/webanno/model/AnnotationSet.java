@@ -103,11 +103,27 @@ public record AnnotationSet(String id, String name, AnnotationSetMarker marker)
 
     public static AnnotationSet forUser(String aUsername)
     {
+        if (INITIAL_CAS_PSEUDO_USER.equals(aUsername)) {
+            return INITIAL_SET;
+        }
+
+        if (CURATION_USER.equals(aUsername)) {
+            return CURATION_SET;
+        }
+
         return new AnnotationSet(aUsername);
     }
 
     public static AnnotationSet forUser(User aUser)
     {
+        if (INITIAL_CAS_PSEUDO_USER.equals(aUser.getUsername())) {
+            return INITIAL_SET;
+        }
+
+        if (CURATION_USER.equals(aUser.getUsername())) {
+            return CURATION_SET;
+        }
+
         return new AnnotationSet(aUser.getUsername(), aUser.getUiName());
     }
 

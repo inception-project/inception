@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.inception.io.pdf.PdfFormatSupport;
 import de.tudarmstadt.ukp.inception.pdfeditor2.config.PdfAnnotationEditor2SupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 
 /**
  * Support for HTML-oriented editor component.
@@ -62,9 +63,11 @@ public class PdfAnnotationEditorFactory
 
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            DocumentEditorManager aManager, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider)
     {
-        return new PdfAnnotationEditor(aId, aModel, aActionHandler, aCasProvider, getBeanName());
+        return new PdfAnnotationEditor(aId, aModel, aManager, aActionHandler, aCasProvider,
+                getBeanName());
     }
 
     @Override

@@ -50,7 +50,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -78,7 +77,6 @@ public class CurationSidebarServiceTest
     private @MockitoBean CasStorageService casStorageService;
     private @MockitoBean CurationService curationService;
     private @MockitoBean CurationMergeService curationMergeService;
-    private @MockitoBean CurationSidebarProperties curationSidebarProperties;
     private @MockitoBean CurationDocumentService curationDocumentService;
 
     private Project testProject;
@@ -90,8 +88,8 @@ public class CurationSidebarServiceTest
     public void setUp() throws Exception
     {
         var curationSessionService = new CurationSessionServiceImpl(preferencesService,
-                sessionRegistry, projectService, userRegistry, curationSidebarProperties,
-                curationDocumentService, documentService);
+                sessionRegistry, projectService, userRegistry, curationDocumentService,
+                documentService);
 
         sut = curationSessionService;
 

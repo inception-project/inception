@@ -18,7 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
 
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
-import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
 
 import java.io.IOException;
@@ -66,7 +66,10 @@ public interface DocumentEditorActionHandler
     default void actionSelect(AjaxRequestTarget aTarget, VID aVid)
         throws IOException, AnnotationException
     {
-        var annoFs = selectAnnotationByAddr(getEditorCas(), aVid.getId());
+        if (!(selectFsByAddr(getEditorCas(), aVid.getId()) instanceof AnnotationFS annoFs)) {
+            return;
+        }
+
         getAnnotatorState().setSelection(selectionFor(aVid, annoFs));
         actionLoadSelectedAnnotationDetails(aTarget);
     }
@@ -78,7 +81,10 @@ public interface DocumentEditorActionHandler
         actionSelect(aTarget, aVid);
 
         var cas = getEditorCas();
-        var annoFs = selectAnnotationByAddr(cas, aVid.getId());
+
+        if (!(selectFsByAddr(cas, aVid.getId()) instanceof AnnotationFS annoFs)) {
+            return;
+        }
 
         actionJump(aTarget, annoFs.getBegin(), annoFs.getEnd(),
                 getAnnotatorState().getSelection().pingRanges(cas));
@@ -169,6 +175,10 @@ public interface DocumentEditorActionHandler
         var switched = aDocument != null && !aDocument.equals(getAnnotatorState().getDocument());
         if (switched) {
             actionOpenDocument(aTarget, aDocument);
+        }
+
+        if (getAnnotatorState().getDocument() == null) {
+            return;
         }
 
         actionJump(aTarget, aBegin, aEnd, aAdditionalPingRanges, switched);

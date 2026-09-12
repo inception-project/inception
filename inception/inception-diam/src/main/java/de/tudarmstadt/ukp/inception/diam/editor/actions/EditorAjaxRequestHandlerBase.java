@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
@@ -61,9 +62,19 @@ public abstract class EditorAjaxRequestHandlerBase
         return (AnnotationPageBase) getAjaxRequestTarget().getPage();
     }
 
+    protected String getAction(DiamRequest aRequest)
+    {
+        return getAction(aRequest.getRequest());
+    }
+
     protected String getAction(Request aRequest)
     {
         return aRequest.getRequestParameters().getParameterValue(PARAM_ACTION).toString();
+    }
+
+    public VID getVid(DiamRequest aRequest)
+    {
+        return getVid(aRequest.getRequest());
     }
 
     public VID getVid(Request aRequest)
@@ -71,6 +82,11 @@ public abstract class EditorAjaxRequestHandlerBase
         var requestParameters = aRequest.getRequestParameters();
 
         return VID.parseOptional(requestParameters.getParameterValue(PARAM_ID).toString());
+    }
+
+    protected void attachResponse(AjaxRequestTarget aTarget, DiamRequest aRequest, String json)
+    {
+        attachResponse(aTarget, aRequest.getRequest(), json);
     }
 
     protected void attachResponse(AjaxRequestTarget aTarget, Request aRequest, String json)

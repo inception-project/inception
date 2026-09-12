@@ -68,7 +68,6 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.keybindings.KeyBindingsPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
@@ -107,9 +106,9 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SpanSuggestion;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionDocumentGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.Delta;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderAnnotationsEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -186,7 +185,6 @@ public class ActiveLearningSidebar
 
     private final WebMarkupContainer alMainContainer;
 
-    private AnnotationPageBase2 annotationPage;
     private BootstrapModalDialog dialog;
     private FeatureEditor editor;
     private Form<Void> recommendationForm;
@@ -203,12 +201,9 @@ public class ActiveLearningSidebar
         KEEP_SELECTED_ANNOTATION_AND_VIEW, CLEAR_SELECTED_ANNOTATION_AND_JUMP_TO_SUGGESTION
     }
 
-    public ActiveLearningSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public ActiveLearningSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
-
-        annotationPage = aAnnotationPage;
+        super(aId, aAnnotationPage);
 
         // Instead of maintaining the AL state in the sidebar, we maintain it in the page because
         // that way we persists even if we switch to another sidebar tab
@@ -289,8 +284,14 @@ public class ActiveLearningSidebar
             // Use the currently selected layer from the annotation detail editor panel as the
             // default choice in the active learning mode.
             var layersWithRecommenders = listLayersWithRecommenders();
-            if (layersWithRecommenders.contains(getModelObject().getDefaultAnnotationLayer())) {
-                alStateModel.getObject().setLayer(getModelObject().getDefaultAnnotationLayer());
+
+            // If no document is selected yet, layer may be unset
+            var defaultLayer = getActiveContext() //
+                    .map(DiamContext::getAnnotatorState) //
+                    .map(AnnotatorState::getDefaultAnnotationLayer) //
+                    .orElse(null);
+            if (defaultLayer != null && layersWithRecommenders.contains(defaultLayer)) {
+                alStateModel.getObject().setLayer(defaultLayer);
             }
             // If the currently selected layer has no recommenders, use the first one which has
             else if (!layersWithRecommenders.isEmpty()) {
@@ -355,7 +356,7 @@ public class ActiveLearningSidebar
     private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
     {
         var alState = alStateModel.getObject();
-        var state = getModelObject();
+        var state = getActiveContext().orElseThrow().getAnnotatorState();
         var userName = state.getUser().getUsername();
         var project = state.getProject();
 
@@ -413,7 +414,7 @@ public class ActiveLearningSidebar
                 .publishEvent(new ActiveLearningSessionCompletedEvent(this, project, userName));
 
         aTarget.add(alMainContainer, sessionControlForm);
-        annotationPage.actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private void actionToggleDocumentFilter(AjaxRequestTarget aTarget)
@@ -588,7 +589,8 @@ public class ActiveLearningSidebar
         return link;
     }
 
-    private void actionJumpToSuggestion(AjaxRequestTarget aTarget) throws IOException
+    private void actionJumpToSuggestion(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
         var alState = alStateModel.getObject();
         var suggestion = alState.getSuggestion().get();
@@ -613,10 +615,10 @@ public class ActiveLearningSidebar
         // REC: Potential bug: jumping causes the document to re-renderer and therefore the
         // predictions to switch. If the suggestion is no longer visible in the switched predictions
         // (e.g. because it is no longer predicted), then we jump to nothing?
-        getAnnotationPage().actionShowSelectedDocument(aTarget,
-                documentService.getSourceDocument(this.getModelObject().getProject().getId(),
-                        suggestion.getDocumentId()),
-                suggestion.getBegin(), suggestion.getEnd());
+        getActiveContext().orElseThrow()
+                .actionShowSelectedDocument(aTarget, documentService.getSourceDocument(
+                        this.getModelObject().getProject().getId(), suggestion.getDocumentId()),
+                        suggestion.getBegin(), suggestion.getEnd());
     }
 
     private Component initializeFeatureEditor()
@@ -655,7 +657,8 @@ public class ActiveLearningSidebar
 
         // Finally, create the editor
         var featureEditor = featureSupport.createEditor(CID_EDITOR, alMainContainer,
-                this.getActionHandler(), this.getModel(), Model.of(featureState));
+                getActiveContext().orElseThrow().getActionHandler(), this.getModel(),
+                Model.of(featureState));
         featureEditor.setOutputMarkupPlaceholderTag(true);
         featureEditor.add(visibleWhen(() -> alStateModel.getObject().getLayer() != null
                 && alState.getSuggestion().isPresent()));
@@ -737,7 +740,7 @@ public class ActiveLearningSidebar
     {
         LOG.trace("actionAnnotate()");
 
-        getAnnotationPage().ensureIsEditable();
+        getActiveContext().orElseThrow().getActionHandler().ensureIsEditable();
 
         var state = getModelObject();
         var alState = alStateModel.getObject();
@@ -773,7 +776,7 @@ public class ActiveLearningSidebar
     {
         LOG.trace("actionSkip()");
 
-        getAnnotationPage().ensureIsEditable();
+        getActiveContext().orElseThrow().getActionHandler().ensureIsEditable();
 
         var sessionOwner = userService.getCurrentUsername();
 
@@ -792,7 +795,7 @@ public class ActiveLearningSidebar
     {
         LOG.trace("actionReject()");
 
-        getAnnotationPage().ensureIsEditable();
+        getActiveContext().orElseThrow().getActionHandler().ensureIsEditable();
 
         var maybeSuggestion = alStateModel.getObject().getSuggestion();
         if (!maybeSuggestion.isPresent()) {
@@ -811,10 +814,10 @@ public class ActiveLearningSidebar
         LOG.trace("moveToNextSuggestion()");
 
         // Ensure that predictions are switched
-        annotationPage.actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
 
         var alState = alStateModel.getObject();
-        var state = getModelObject();
+        var state = getActiveContext().orElseThrow().getAnnotatorState();
         var project = state.getProject();
         var dataOwner = state.getUser();
         var sessionOwner = userService.getCurrentUser();
@@ -892,11 +895,11 @@ public class ActiveLearningSidebar
         try {
             // Clear the annotation detail editor and the selection to avoid confusions with the
             // highlight because the selection highlight from the right sidebar and the one from
-            // the AL sidebar have the same color!
+            // the AL sidebar have the same color! (Detail panel auto-refreshes via
+            // SelectionChangedEvent)
             state.clearSelection();
-            getAnnotationPage().getDetailEditor().refresh(aTarget);
 
-            getAnnotationPage().actionShowSelectedDocument(aTarget, sourceDocument,
+            getActiveContext().orElseThrow().actionShowSelectedDocument(aTarget, sourceDocument,
                     suggestion.getBegin(), suggestion.getEnd());
 
             // When the document is opened, the recommendation service defaults to only
@@ -905,7 +908,7 @@ public class ActiveLearningSidebar
             // See also PredictionTask::execute where it is set again to predict on single documents
             recommendationService.setPredictForAllDocuments(user.getUsername(), project, true);
         }
-        catch (IOException e) {
+        catch (IOException | AnnotationException e) {
             LOG.error("Error reading CAS: {}", e.getMessage());
             error("Error reading CAS " + e.getMessage());
             aTarget.addChildren(getPage(), IFeedback.class);
@@ -1005,14 +1008,15 @@ public class ActiveLearningSidebar
      * </ul>
      */
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
-        throws IOException
+        throws IOException, AnnotationException
     {
-        getAnnotationPage().actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+        var context = getActiveContext().orElseThrow();
+        context.actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                 aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
 
         // Since we have switched documents above (if it was necessary), the editor CAS should
         // now point to the correct one
-        var cas = getCasProvider().get();
+        var cas = context.getEditorCas();
 
         // ... if a matching annotation exists, highlight the annotaiton
         var annotation = getMatchingAnnotation(cas, aRecord);
@@ -1082,13 +1086,14 @@ public class ActiveLearningSidebar
     private void actionRemoveHistoryItem(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
-        getAnnotationPage().ensureIsEditable();
+        var context = getActiveContext().orElseThrow();
+        context.getActionHandler().ensureIsEditable();
 
         aTarget.add(alMainContainer);
 
         var alState = alStateModel.getObject();
 
-        annotationPage.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
         learningRecordService.deleteLearningRecord(aRecord);
 
         // The history records caused suggestions to disappear. Since visibility is only fully
@@ -1110,7 +1115,7 @@ public class ActiveLearningSidebar
                     AnnotationSet.forUser(aRecord.getUser()));
             if (getMatchingAnnotation(cas, aRecord).isPresent()) {
                 setActiveLearningHighlight(aRecord);
-                getAnnotationPage().actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
+                context.actionShowSelectedDocument(aTarget, aRecord.getSourceDocument(),
                         aRecord.getOffsetBegin(), aRecord.getOffsetEnd());
 
                 openHistoryItemRemovalConfirmationDialog(aTarget, aRecord);
@@ -1150,7 +1155,7 @@ public class ActiveLearningSidebar
             else {
                 clearActiveLearningHighlight();
             }
-            annotationPage.actionRefreshDocument(_t);
+            getActiveContext().orElseThrow().actionRefreshDocument(_t);
         });
 
         dialog.open(dialogContent, aTarget);
@@ -1159,15 +1164,15 @@ public class ActiveLearningSidebar
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
+        var context = getActiveContext().orElseThrow();
+        var state = context.getAnnotatorState();
 
-        CAS cas = this.getCasProvider().get();
-        Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
+        var cas = context.getEditorCas();
+        var anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
             state.setSelection(Selection.span(VID.of(anno.get()), cas, aRecord.getOffsetBegin(),
                     aRecord.getOffsetEnd()));
-            // FIXME: Should support active learning in arbitrary editors
-            getAnnotationPage().actionActivateAndDelete(aTarget);
+            context.actionActivateAndDelete(aTarget);
         }
     }
 
@@ -1175,7 +1180,7 @@ public class ActiveLearningSidebar
     public void onSpanCreated(SpanCreatedEvent aEvent)
     {
         // Is active learning on and is any suggestion currently displayed?
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
         if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
             return;
         }
@@ -1194,7 +1199,7 @@ public class ActiveLearningSidebar
     public void onRelationCreated(RelationCreatedEvent aEvent)
     {
         // Is active learning on and is any suggestion currently displayed?
-        ActiveLearningUserState alState = alStateModel.getObject();
+        var alState = alStateModel.getObject();
         if (!alState.isSessionActive() || !alState.getSuggestion().isPresent()) {
             return;
         }
@@ -1284,7 +1289,7 @@ public class ActiveLearningSidebar
 
             // Ensure that the predictions have been switched so we do not update visibility in an
             // outdated prediction state.
-            annotationPage.actionRefreshDocument(aTarget);
+            getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
 
             // Update visibility in case the that was created/deleted overlaps with any suggestions
             var cas = documentService.readAnnotationCas(aDocument,
@@ -1361,7 +1366,7 @@ public class ActiveLearningSidebar
     {
         LOG.trace("onRecommendationAcceptEvent()");
 
-        var state = getModelObject();
+        var state = getActiveContext().orElseThrow().getAnnotatorState();
         var predictions = recommendationService.getPredictions(state.getUser(), state.getProject(),
                 RECOMMENDER_SOURCE);
         var doc = state.getDocument();
@@ -1405,9 +1410,7 @@ public class ActiveLearningSidebar
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        // Only render our markers into our own editor, not into other editors on the page (e.g. the
-        // reference-document viewer or curation panes) even if they show the same document (#6146).
-        if (aEvent.getRequest().getState() != getModelObject()) {
+        if (getActiveContext().orElse(null) != aEvent.getEditorContext()) {
             return;
         }
 
@@ -1427,7 +1430,7 @@ public class ActiveLearningSidebar
             return;
         }
 
-        var currentDoc = getModelObject().getDocument();
+        var currentDoc = getActiveContext().orElseThrow().getAnnotatorState().getDocument();
         if (!Objects.equals(currentDoc.getId(), highlightDocumentId)) {
             LOG.trace("Active learning sidebar highlights are in document [{}], not in [{}]",
                     highlightDocumentId, currentDoc);

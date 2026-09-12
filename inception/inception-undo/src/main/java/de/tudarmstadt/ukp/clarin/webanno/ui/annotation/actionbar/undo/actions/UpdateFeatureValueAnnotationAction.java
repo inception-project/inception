@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions;
 
+import static java.util.Optional.empty;
+
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
+import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -75,7 +78,7 @@ public class UpdateFeatureValueAnnotationAction
                 oldValue);
         aMessages.add(LogMessage.info(this, "[%s] feature value of [%s] restored",
                 feature.getLayer().getUiName(), feature.getUiName()));
-        return Optional.of(new PostActionScrollToAndSelect(getVid()));
+        return postAction();
     }
 
     @Override
@@ -88,6 +91,16 @@ public class UpdateFeatureValueAnnotationAction
                 newValue);
         aMessages.add(LogMessage.info(this, "[%s] feature value of [%s] set",
                 feature.getLayer().getUiName(), feature.getUiName()));
+        return postAction();
+    }
+
+    private Optional<PostAction> postAction()
+    {
+        if (DocumentMetadataLayerSupport.TYPE.equals(getLayer().getType())) {
+            // Document metadata annotations cannot be selected and be scrolled to
+            return empty();
+        }
+
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }
 }

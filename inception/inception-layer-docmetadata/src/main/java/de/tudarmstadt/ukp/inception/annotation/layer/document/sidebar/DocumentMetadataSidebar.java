@@ -22,12 +22,10 @@ import java.util.Map;
 import org.apache.wicket.model.Model;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.recommendation.api.event.PredictionsSwitchedEvent;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 
 public class DocumentMetadataSidebar
@@ -37,13 +35,12 @@ public class DocumentMetadataSidebar
 
     private DiamAjaxBehavior diamBehavior;
 
-    public DocumentMetadataSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public DocumentMetadataSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
-        add(new DocumentMetadataAnnotationSelectionPanel("annotations", aCasProvider,
-                aAnnotationPage, aActionHandler));
+        add(new DocumentMetadataAnnotationSelectionPanel("annotations",
+                getDocumentEditorManager()));
     }
 
     @Override
@@ -51,7 +48,8 @@ public class DocumentMetadataSidebar
     {
         super.onInitialize();
 
-        add(diamBehavior = new DiamAjaxBehavior(findParent(AnnotationPageBase2.class)));
+        add(diamBehavior = new DiamAjaxBehavior(
+                () -> findParent(AnnotationPageBase2.class).getActiveContext().orElse(null)));
         add(new SvelteBehavior());
     }
 

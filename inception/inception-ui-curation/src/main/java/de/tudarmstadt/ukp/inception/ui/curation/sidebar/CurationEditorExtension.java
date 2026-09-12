@@ -44,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
@@ -68,6 +67,7 @@ import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionImplBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
@@ -125,8 +125,8 @@ public class CurationEditorExtension
     }
 
     @Override
-    public void handleAction(AnnotationActionHandler aActionHandler, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
+    public void handleAction(DiamContext aContext, AjaxRequestTarget aTarget, VID aParamId,
+            String aAction)
         throws AnnotationException, IOException
     {
         // only process actions relevant to curation
@@ -139,7 +139,8 @@ public class CurationEditorExtension
             return;
         }
 
-        var doc = aState.getDocument();
+        var state = aContext.getAnnotatorState();
+        var doc = state.getDocument();
         var srcUser = curationVid.getUsername();
 
         if (!documentService.existsAnnotationDocument(doc, AnnotationSet.forUser(srcUser))) {
@@ -148,11 +149,10 @@ public class CurationEditorExtension
         }
 
         if (SelectAnnotationHandler.COMMAND.equals(aAction)) {
-            actionCurationSuggestionSelected(aActionHandler, aState, aTarget, aCas, aAction,
-                    curationVid);
+            actionCurationSuggestionSelected(aContext, aTarget, aAction, curationVid);
         }
         else if (ScrollToHandler.COMMAND.equals(aAction)) {
-            actionJumpTo(aActionHandler, aState, aTarget, curationVid, doc, srcUser);
+            actionJumpTo(aContext.getActionHandler(), state, aTarget, curationVid, doc, srcUser);
         }
     }
 
@@ -183,21 +183,21 @@ public class CurationEditorExtension
         aActionHandler.actionJump(aTarget, sourceAnnotation.getBegin(), sourceAnnotation.getEnd());
     }
 
-    private void actionCurationSuggestionSelected(AnnotationActionHandler aActionHandler,
-            AnnotatorState aState, AjaxRequestTarget aTarget, CAS aCas, String aAction,
-            CurationVID curationVid)
+    private void actionCurationSuggestionSelected(DiamContext aContext, AjaxRequestTarget aTarget,
+            String aAction, CurationVID curationVid)
         throws NotEditableException, IOException, AnnotationException
     {
-        if (curationSidebarService.isCurationFinished(aState,
-                userRepository.getCurrentUsername())) {
+        var state = aContext.getAnnotatorState();
+
+        if (curationSidebarService.isCurationFinished(state)) {
             throw new NotEditableException("Curation is already finished. You can put it back "
                     + "into progress via the monitoring page.");
         }
 
-        var page = (AnnotationPageBase) aTarget.getPage();
-        page.ensureIsEditable();
+        aContext.getActionHandler().ensureIsEditable();
 
-        mergeAnnotation(aAction, aActionHandler, aState, aTarget, aCas, curationVid);
+        mergeAnnotation(aAction, aContext.getActionHandler(), state, aTarget,
+                aContext.getEditorCas(), curationVid);
     }
 
     @Override

@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.editor;
 
+import static de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactory.NOT_SUITABLE;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparing;
 
@@ -113,5 +114,39 @@ public class AnnotationEditorRegistryImpl
         return getEditorFactories().stream() //
                 .max(comparing(factory -> factory.accepts(aProject, aFormat))) //
                 .orElseGet(this::getDefaultEditorFactory);
+    }
+
+    @Override
+    public boolean isSuitable(AnnotationEditorFactory aFactory, Project aProject, String aFormat)
+    {
+        if (aFactory == null) {
+            return false;
+        }
+
+        return aFactory.accepts(aProject, aFormat) != NOT_SUITABLE;
+    }
+
+    @Override
+    public AnnotationEditorFactory getEditorFactory(Project aProject, String aFormat,
+            String aConfiguredId)
+    {
+        var configured = getEditorFactory(aConfiguredId);
+
+        if (isSuitable(configured, aProject, aFormat)) {
+            return configured;
+        }
+
+        if (configured != null) {
+            log.debug("Configured editor [{}] cannot display format [{}] - falling back to the "
+                    + "format-preferred editor", aConfiguredId, aFormat);
+        }
+
+        var preferred = getPreferredEditorFactory(aProject, aFormat);
+
+        if (!isSuitable(preferred, aProject, aFormat)) {
+            return getDefaultEditorFactory();
+        }
+
+        return preferred;
     }
 }

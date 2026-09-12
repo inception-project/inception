@@ -48,6 +48,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.LinkMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -380,6 +381,16 @@ public class AnnotatorStateImpl
         user = aUser;
     }
 
+    @Override
+    public AnnotationSet getDataOwner()
+    {
+        if (user == null) {
+            return null;
+        }
+
+        return AnnotationSet.forUser(user);
+    }
+
     /**
      * @deprecated use {@link #setPageBegin(CAS, int)} instead.
      */
@@ -702,6 +713,8 @@ public class AnnotatorStateImpl
     @Override
     public void reset()
     {
+        annotationDocumentTimestamp = null;
+
         clearSelection();
         clearArmedSlot();
         clearRememberedFeatures();
@@ -711,7 +724,6 @@ public class AnnotatorStateImpl
         unitCount = 0;
         windowBeginOffset = 0;
         windowEndOffset = 0;
-        annotationDocumentTimestamp = null;
 
         fireViewStateChanged();
     }
@@ -816,6 +828,12 @@ public class AnnotatorStateImpl
     public void setAnnotationDocumentTimestamp(long aAnnotationDocumentTimestamp)
     {
         annotationDocumentTimestamp = aAnnotationDocumentTimestamp;
+    }
+
+    @Override
+    public void clearAnnotationDocumentTimestamp()
+    {
+        annotationDocumentTimestamp = null;
     }
 
     @Override

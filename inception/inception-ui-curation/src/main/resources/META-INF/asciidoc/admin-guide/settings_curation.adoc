@@ -36,4 +36,13 @@ This section describes the global settings related to curation.
   this setting.
 | `false`
 | `true`
+
+| `curation.legacy-split-curation-page.enabled`
+| Selects which page the *split-pane* curation mode opens. When disabled (the default), it opens the
+  current split-pane curation page. When enabled, it opens the legacy one instead. The two are
+  intended to be equivalent, so this exists only as a fallback while the current page beds in - the
+  legacy page is slated for removal. This has no effect on projects configured for *integrated*
+  curation.
+| `false`
+| `true`
 |===

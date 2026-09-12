@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringStrategy;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 
 /**
  * Encapsulates information related to rendering an annotated document.
@@ -59,6 +60,7 @@ public class RenderRequest
     private final CAS cas;
     private final ColoringStrategy coloringStrategyOverride;
     private final Set<String> enabledExtensions;
+    private final DiamContext editorContext;
 
     private RenderRequest(Builder builder)
     {
@@ -80,6 +82,7 @@ public class RenderRequest
         hiddenFeatures = builder.hiddenFeatures;
         hiddenFeatureValues = builder.hiddenFeatureValues;
         enabledExtensions = builder.enabledExtensions;
+        editorContext = builder.editorContext;
     }
 
     public Optional<ColoringStrategy> getColoringStrategyOverride()
@@ -162,6 +165,14 @@ public class RenderRequest
     }
 
     /**
+     * @return the editor this rendering was requested for, if the requester knew it.
+     */
+    public Optional<DiamContext> getEditorContext()
+    {
+        return Optional.ofNullable(editorContext);
+    }
+
+    /**
      * @deprecated We want to minimize the state information carried around in the render request,
      *             so better not use the full annotator state and instead add relevant information
      *             as fields to the render request itself.
@@ -208,6 +219,7 @@ public class RenderRequest
         private CAS cas;
         private final List<AnnotationLayer> allLayers = new ArrayList<>();
         private final List<AnnotationLayer> visibleLayers = new ArrayList<>();
+        private DiamContext editorContext;
         private final Set<Long> hiddenFeatures = new HashSet<>();
         private final Map<Long, Set<String>> hiddenFeatureValues = new HashMap<>();
         private ColoringStrategy coloringStrategyOverride;
@@ -228,6 +240,15 @@ public class RenderRequest
         public Builder withSessionOwner(User aSessionOwner)
         {
             sessionOwner = aSessionOwner;
+            return this;
+        }
+
+        public Builder withEditorContext(DiamContext aEditorContext)
+        {
+            editorContext = aEditorContext;
+            if (aEditorContext != null) {
+                withState(aEditorContext.getAnnotatorState());
+            }
             return this;
         }
 

@@ -28,6 +28,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.support.xml.sanitizer.PolicyCollection;
 
 public interface AnnotationEditorFactory
@@ -51,8 +52,34 @@ public interface AnnotationEditorFactory
         return DEFAULT;
     }
 
+    /**
+     * @return whether this editor may be offered to users as a choice, e.g. as the default editor
+     *         of a project. Editors that only ever exist because a particular page pins them return
+     *         {@code false}, so they do not show up in the editor settings.
+     */
+    default boolean isUserSelectable()
+    {
+        return true;
+    }
+
+    /**
+     * Create an editor.
+     *
+     * @param id
+     *            the component ID
+     * @param aModel
+     *            the annotator state model
+     * @param aManager
+     *            the document editor manager owning the editor
+     * @param aActionHandler
+     *            the action handler that the editor delegates annotation actions to
+     * @param aCasProvider
+     *            provides the CAS the editor renders
+     * @return the editor
+     */
     AnnotationEditorBase create(String id, IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider);
+            final DocumentEditorManager aManager, final AnnotationActionHandler aActionHandler,
+            final CasProvider aCasProvider);
 
     /**
      * Configure the state to be compatible with the editor produced by this factory. E.g. set the

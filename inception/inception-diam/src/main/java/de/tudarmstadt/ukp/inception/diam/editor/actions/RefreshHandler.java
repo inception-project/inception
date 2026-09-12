@@ -18,10 +18,9 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -44,13 +43,12 @@ public class RefreshHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
         try {
             // Refresh acts on the editor that received the request (via its context), not
             // unconditionally on the main editor's page.
-            aBehavior.getContext().actionRefreshDocument(aTarget);
+            aRequest.getContext().actionRefreshDocument(aTarget);
             return new DefaultAjaxResponse();
         }
         catch (Exception e) {
