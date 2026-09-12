@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest]
         jdk: [21]
 
     runs-on: ${{ matrix.os }}
@@ -70,13 +70,13 @@ jobs:
           zoidberg.ukp.informatik.tu-darmstadt.de:443
 
     - name: Allocate swap space
-      # The Linux build regularly kills the runner in the middle of a Surefire run
-      # ("The runner has received a shutdown signal"), which is the signature of the
-      # kernel OOM killer. The runner image pairs 15 GB of RAM with only 3 GB of swap
+      # Headroom for the Linux build, which pairs 15 GB of RAM with only 3 GB of swap
       # while leaving ~85 GB of disk unused, so trade some of that disk for a buffer.
-      # The swap is a safety net only - the actual fix is the `maven.surefire.heap`
-      # cap in inception/pom.xml (512m), since -T 1C runs 4 reactor threads here and
-      # an uncapped fork defaults to 25% of RAM (~3.7 GB) each.
+      # Note this has NOT stopped the intermittent "The runner has received a shutdown
+      # signal" cancellations: in those runs swap sits at 0 B used, no OOM killer entry
+      # appears, and even the `if: always()` steps below never execute - which points at
+      # the VM going away rather than at memory pressure inside it. Per-fork test heap is
+      # capped by `maven.surefire.heap` in inception/pom.xml.
       # This needs sudo, hence `disable-sudo: false` on the Harden Runner step above.
       # Touches only local files, so it is compatible with the egress block.
       if: runner.os == 'Linux'
@@ -153,11 +153,9 @@ jobs:
 
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-latest' && github.event_name == 'push')"
-      # The per-fork test heap is capped by `maven.surefire.heap` in inception/pom.xml.
-      # It has to stay there rather than live here: `-T 1C` runs one reactor thread per
-      # core, so an uncapped fork (MaxRAMPercentage=25%) overcommits RAM on developer
-      # machines the same way it does on the runner.
-      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify -T 1C ${{ matrix.os == 'ubuntu-latest' && '-Pci-docker-cleanup' || '' }}
+      # -Dmssql.skipWithoutAmd64: the SQL Server image is linux/amd64 only and the
+      # arm64 runners have no emulation, so those tests skip there instead of failing.
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify -T 1C ${{ runner.os == 'Linux' && '-Pci-docker-cleanup' || '' }} ${{ runner.arch == 'ARM64' && '-Dmssql.skipWithoutAmd64=true' || '' }}
 
     - name: Build with Maven and publish artifacts
       if: matrix.os == 'ubuntu-latest' && github.event_name == 'push'
