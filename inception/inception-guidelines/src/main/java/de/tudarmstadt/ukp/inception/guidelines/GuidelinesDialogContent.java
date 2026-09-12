@@ -39,6 +39,11 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 /**
  * Modal window to display annotation guidelines
  */
+/**
+ * @deprecated Part of the action bar guidelines UI, retained only for the legacy curation page. See
+ *             {@link GuidelinesActionBarExtension}.
+ */
+@Deprecated
 public class GuidelinesDialogContent
     extends Panel
 {

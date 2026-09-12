@@ -28,9 +28,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 
@@ -44,14 +44,9 @@ public interface AnnotationEditorExtension
     /**
      * Handle an action.
      * 
-     * @param aActionHandler
-     *            the action handler.
-     * @param aState
-     *            the annotator state
-     * @param aTarget
-     *            the AJAX target
-     * @param aCas
-     *            the CAS being edited
+     * @param aContext
+     *            the context of the editor the action originated from. E * @param aTarget the AJAX
+     *            target
      * @param paramId
      *            the annotation the action is being performed on
      * @param aAction
@@ -61,8 +56,8 @@ public interface AnnotationEditorExtension
      * @throws IOException
      *             if there was an I/O-level exception
      */
-    default void handleAction(AnnotationActionHandler aActionHandler, AnnotatorState aState,
-            AjaxRequestTarget aTarget, CAS aCas, VID paramId, String aAction)
+    default void handleAction(DiamContext aContext, AjaxRequestTarget aTarget, VID paramId,
+            String aAction)
         throws AnnotationException, IOException
     {
         // Do nothing by default

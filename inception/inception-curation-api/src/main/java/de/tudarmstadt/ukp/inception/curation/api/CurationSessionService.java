@@ -24,7 +24,6 @@ import java.util.Set;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 
 public interface CurationSessionService
 {
@@ -53,14 +52,10 @@ public interface CurationSessionService
     boolean existsSession(String aSessionOwner, long aProjectId);
 
     @Deprecated
-    void startSession(String aSessionOwner, Project aProject, boolean aOwnDocument);
+    void startSession(String aSessionOwner, Project aProject);
 
     @Deprecated
     void closeSession(String aCurrentUser, long aProjectId);
-
-    String getCurationTarget(String aUser, long aProjectId);
-
-    User getCurationTargetUser(String aUser, long aProjectId);
 
     boolean isShowAll(String aSessionOwner, Long aProjectId);
 
@@ -73,5 +68,5 @@ public interface CurationSessionService
     List<AnnotationSet> listDataOwnersReadyForCuration(String aUsername, Project aProject,
             SourceDocument aDocument);
 
-    List<AnnotationSet> listCuratableDataOwners(String aSessionOwner, SourceDocument aDocument);
+    List<AnnotationSet> listCuratableDataOwners(SourceDocument aDocument);
 }

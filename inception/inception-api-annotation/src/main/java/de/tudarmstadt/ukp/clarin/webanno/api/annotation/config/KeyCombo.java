@@ -17,12 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.config;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import wicket.contrib.input.events.EventType;
 import wicket.contrib.input.events.key.KeyType;
 
 public class KeyCombo
+    implements Serializable
 {
+    private static final long serialVersionUID = 4592448882420594428L;
+
     private KeyType[] keys;
     private boolean disabledInInputs = false;
 

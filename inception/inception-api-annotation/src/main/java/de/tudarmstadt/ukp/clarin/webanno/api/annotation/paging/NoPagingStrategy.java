@@ -51,9 +51,13 @@ public class NoPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditorContext)
+    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditor)
     {
-        var navi = new DefaultPagingNavigator(aId, aEditorContext);
+        return hidden(new DefaultPagingNavigator(aId, aEditor));
+    }
+
+    private static DefaultPagingNavigator hidden(DefaultPagingNavigator navi)
+    {
         navi.setOutputMarkupPlaceholderTag(true);
         navi.setVisible(false);
         return navi;

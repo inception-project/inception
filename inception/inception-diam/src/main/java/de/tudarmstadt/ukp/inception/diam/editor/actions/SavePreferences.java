@@ -21,11 +21,10 @@ import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromValidatedJs
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -66,8 +65,7 @@ public class SavePreferences
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
         try {
             var keyParameter = aRequest.getRequestParameters().getParameterValue(PARAM_KEY)
@@ -92,7 +90,7 @@ public class SavePreferences
                         "Client-side user preferences not allowed for given key");
             }
 
-            var project = aBehavior.getContext().getAnnotatorState().getProject();
+            var project = aRequest.getContext().getAnnotatorState().getProject();
             var sessionOwner = userService.getCurrentUser();
             var dataString = aRequest.getRequestParameters().getParameterValue(PARAM_DATA);
             var data = fromValidatedJsonString(ClientSidePreferenceMapValue.class,

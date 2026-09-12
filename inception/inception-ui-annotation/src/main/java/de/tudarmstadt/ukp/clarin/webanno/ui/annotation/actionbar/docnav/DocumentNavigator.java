@@ -42,7 +42,6 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import jakarta.persistence.NoResultException;
 
@@ -59,7 +58,6 @@ public class DocumentNavigator
     private @SpringBean PreferencesService preferencesService;
 
     private AnnotationPageBase page;
-    private DiamContext context;
     private IModel<AnnotatorState> state;
 
     private final ExportDocumentDialog exportDialog;
@@ -69,7 +67,7 @@ public class DocumentNavigator
         super(aId);
 
         page = aPage;
-        state = LambdaModel.of(aPage::getAnnotatorState);
+        state = LambdaModel.of(aPage::getModelObject);
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(

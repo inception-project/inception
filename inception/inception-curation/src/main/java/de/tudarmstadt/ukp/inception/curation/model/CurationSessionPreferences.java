@@ -51,11 +51,22 @@ public class CurationSessionPreferences
      */
     private final Set<String> deselectedDataOwners = new LinkedHashSet<>();
 
+    /**
+     * @deprecated See {@link #getCurationTarget}.
+     */
+    @Deprecated
     public String getCurationTarget()
     {
         return curationTarget;
     }
 
+    /**
+     * @deprecated Currently, curation always targets the {@code CURATION_USER}, so this value is
+     *             never used. However, we had the ability for curators to curate to their own
+     *             annotation data CAS. In case we restore this functionality again, we keep this
+     *             field for the moment.
+     */
+    @Deprecated
     public void setCurationTarget(String aCurationTarget)
     {
         curationTarget = aCurationTarget;

@@ -88,8 +88,8 @@ public class SentenceOrientedPagingStrategy
     }
 
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditorContext)
+    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditor)
     {
-        return new DefaultPagingNavigator(aId, aEditorContext);
+        return new DefaultPagingNavigator(aId, aEditor);
     }
 }

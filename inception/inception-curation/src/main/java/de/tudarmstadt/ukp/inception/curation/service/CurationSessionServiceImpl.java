@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.service;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.inception.curation.model.CurationSessionPreferences.KEY_CURATION_SESSION;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toCollection;
@@ -48,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.model.CurationSessionPreferences;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -62,13 +59,11 @@ public class CurationSessionServiceImpl
     private final SessionRegistry sessionRegistry;
     private final ProjectService projectService;
     private final UserDao userRegistry;
-    private final CurationSidebarProperties curationSidebarProperties;
     private final CurationDocumentService curationDocumentService;
     private final DocumentService documentService;
 
     public CurationSessionServiceImpl(PreferencesService aPreferencesService,
             SessionRegistry aSessionRegistry, ProjectService aProjectService, UserDao aUserRegistry,
-            CurationSidebarProperties aCurationSidebarProperties,
             CurationDocumentService aCurationDocumentService, DocumentService aDocumentService)
     {
         sessions = new ConcurrentHashMap<>();
@@ -76,7 +71,6 @@ public class CurationSessionServiceImpl
         sessionRegistry = aSessionRegistry;
         projectService = aProjectService;
         userRegistry = aUserRegistry;
-        curationSidebarProperties = aCurationSidebarProperties;
         curationDocumentService = aCurationDocumentService;
         documentService = aDocumentService;
     }
@@ -125,7 +119,6 @@ public class CurationSessionServiceImpl
     public List<AnnotationSet> listDataOwnersReadyForCuration(String aSessionOwner,
             Project aProject, SourceDocument aDocument)
     {
-        String curationTarget;
         Set<AnnotationSet> deselected;
         synchronized (sessions) {
             var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
@@ -133,13 +126,12 @@ public class CurationSessionServiceImpl
                 return emptyList();
             }
 
-            curationTarget = session.getCurationTarget();
             deselected = new LinkedHashSet<>(session.getDeselectedDataOwners());
         }
 
         // The curatable-user lookup hits the database, so we run it outside the sessions lock,
         // having captured the session state we need above.
-        return listCuratableUserNames(aDocument, aSessionOwner, curationTarget).stream() //
+        return listCuratableUserNames(aDocument).stream() //
                 .map(AnnotationSet::forUser) //
                 .filter(dataOwner -> !deselected.contains(dataOwner)) //
                 .toList();
@@ -147,29 +139,24 @@ public class CurationSessionServiceImpl
 
     @Transactional
     @Override
-    public List<AnnotationSet> listCuratableDataOwners(String aSessionOwner,
-            SourceDocument aDocument)
+    public List<AnnotationSet> listCuratableDataOwners(SourceDocument aDocument)
     {
         var project = aDocument.getProject();
-        var curationTarget = getCurationTarget(aSessionOwner, project.getId());
-        var curatableUserNames = listCuratableUserNames(aDocument, aSessionOwner, curationTarget);
+        var curatableUserNames = listCuratableUserNames(aDocument);
 
         var dataOwners = documentService.getDataOwners(project, curatableUserNames);
         return curatableUserNames.stream().map(dataOwners::get).toList();
     }
 
     /**
-     * @return the usernames of the annotators that can be curated for the given document: the
-     *         curatable users, excluding the session owner unless they are curating into their own
-     *         document (i.e. the curation target is not the {@code CURATION_USER}).
+     * @return the usernames of the annotators that can be curated for the given document. Curation
+     *         always targets the {@code CURATION_USER}, so the session owner's own annotations are
+     *         curatable like everybody else's.
      */
-    private List<String> listCuratableUserNames(SourceDocument aDocument, String aSessionOwner,
-            String aCurationTarget)
+    private List<String> listCuratableUserNames(SourceDocument aDocument)
     {
         return curationDocumentService.listCuratableUsers(aDocument).stream() //
                 .map(User::getUsername) //
-                .filter(username -> !username.equals(aSessionOwner)
-                        || CURATION_USER.equals(aCurationTarget)) //
                 .toList();
     }
 
@@ -184,11 +171,10 @@ public class CurationSessionServiceImpl
 
     @Override
     @Deprecated
-    public void startSession(String aSessionOwner, Project aProject, boolean aOwnDocument)
+    public void startSession(String aSessionOwner, Project aProject)
     {
         synchronized (sessions) {
             getSession(aSessionOwner, aProject.getId());
-            setCurationTarget(aSessionOwner, aProject, aOwnDocument);
         }
     }
 
@@ -199,42 +185,6 @@ public class CurationSessionServiceImpl
         synchronized (sessions) {
             sessions.remove(new CurationSessionKey(aSessionOwner, aProjectId));
         }
-    }
-
-    @Transactional
-    @Override
-    public String getCurationTarget(String aSessionOwner, long aProjectId)
-    {
-        String curationUser;
-        synchronized (sessions) {
-            curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
-        }
-
-        if (curationUser == null) {
-            return aSessionOwner;
-        }
-
-        return curationUser;
-    }
-
-    @Transactional
-    @Override
-    public User getCurationTargetUser(String aSessionOwner, long aProjectId)
-    {
-        String curationUser;
-        synchronized (sessions) {
-            curationUser = getSession(aSessionOwner, aProjectId).getCurationTarget();
-        }
-
-        if (curationUser == null) {
-            return userRegistry.get(aSessionOwner);
-        }
-
-        if (CURATION_USER.equals(curationUser)) {
-            return userRegistry.getCurationUser();
-        }
-
-        return userRegistry.get(curationUser);
     }
 
     @Transactional
@@ -301,28 +251,6 @@ public class CurationSessionServiceImpl
         closeAllSessions(user);
     }
 
-    /**
-     * Store which name the curated document should be associated with
-     */
-    @Transactional
-    private void setCurationTarget(String aSessionOwner, Project aProject, boolean aOwnDocument)
-    {
-        synchronized (sessions) {
-            var session = sessions.get(new CurationSessionKey(aSessionOwner, aProject.getId()));
-            if (session == null) {
-                return;
-            }
-
-            if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && aOwnDocument
-                    && projectService.hasRole(aSessionOwner, aProject, ANNOTATOR)) {
-                session.setCurationTarget(aSessionOwner);
-            }
-            else {
-                session.setCurationTarget(CURATION_USER);
-            }
-        }
-    }
-
     private CurationSession getSession(String aSessionOwner, long aProjectId)
     {
         synchronized (sessions) {
@@ -346,12 +274,13 @@ public class CurationSessionServiceImpl
 
         CurationSession state;
         if (traits == null) {
-            state = new CurationSession(aSessionOwner);
+            state = new CurationSession();
         }
         else {
             var deselectedDataOwners = traits.getDeselectedDataOwners().stream() //
                     .map(AnnotationSet::forUser) //
                     .collect(toCollection(LinkedHashSet::new));
+            // Curation target is just passed through but not used
             state = new CurationSession(traits.getCurationTarget(), deselectedDataOwners);
         }
 
@@ -439,15 +368,13 @@ public class CurationSessionServiceImpl
         // The data owners the session owner has explicitly deselected. Everything not listed here
         // counts as selected, so an empty set means "curate all annotators".
         private Set<AnnotationSet> deselectedDataOwners = new LinkedHashSet<>();
-        // to find source document of the curated document
-        // the curationdoc can be retrieved from user (CURATION or current) and projectId
-        private String curationTarget;
+        private @Deprecated String curationTarget;
         private boolean showAll;
         private boolean showScore = true;
 
-        public CurationSession(String aUser)
+        public CurationSession()
         {
-            curationTarget = aUser;
+            // Nothing to do
         }
 
         public CurationSession(String aCurationTarget,
@@ -467,14 +394,16 @@ public class CurationSessionServiceImpl
             deselectedDataOwners = new LinkedHashSet<>(aDeselectedDataOwners);
         }
 
+        /**
+         * @deprecated Currently, curation always targets the {@code CURATION_USER}, so this value
+         *             is never used. However, we had the ability for curators to curate to their
+         *             own annotation data CAS. In case we restore this functionality again, we keep
+         *             this field for the moment.
+         */
+        @Deprecated
         public String getCurationTarget()
         {
             return curationTarget;
-        }
-
-        public void setCurationTarget(String aCurationTarget)
-        {
-            curationTarget = aCurationTarget;
         }
 
         public boolean isShowAll()

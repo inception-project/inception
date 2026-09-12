@@ -17,8 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.rendering.pipeline;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 
@@ -27,12 +29,17 @@ public class RenderAnnotationsEvent
     private final CAS cas;
     private final RenderRequest request;
     private final VDocument vdoc;
+    private final DiamContext editorContext;
 
-    public RenderAnnotationsEvent(CAS aCas, RenderRequest aRequest, VDocument aVDoc)
+    public RenderAnnotationsEvent(CAS aCas, RenderRequest aRequest, VDocument aVDoc,
+            DiamContext aEditorContext)
     {
+        Validate.notNull(aEditorContext, "Editor context must be provided");
+
         cas = aCas;
         request = aRequest;
         vdoc = aVDoc;
+        editorContext = aEditorContext;
     }
 
     public CAS getCas()
@@ -48,5 +55,13 @@ public class RenderAnnotationsEvent
     public VDocument getVDocument()
     {
         return vdoc;
+    }
+
+    /**
+     * @return the editor this rendering is for.
+     */
+    public DiamContext getEditorContext()
+    {
+        return editorContext;
     }
 }

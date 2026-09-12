@@ -17,19 +17,16 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhenNot;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
+import static java.util.Collections.emptyList;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -38,9 +35,7 @@ import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.CheckGroup;
-import org.apache.wicket.markup.html.form.DropDownChoice;
 import org.apache.wicket.markup.html.form.Form;
-import org.apache.wicket.markup.html.form.LambdaChoiceRenderer;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.model.IModel;
@@ -53,10 +48,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
@@ -65,26 +58,18 @@ import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarProperties;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 
 public class CurationSidebar
     extends AnnotationSidebar_ImplBase
 {
     private static final long serialVersionUID = -4195790451286055737L;
-
-    private static final String CID_SESSION_CONTROL_FORM = "sessionControlForm";
-    private static final String CID_START_SESSION_BUTTON = "startSession";
-    private static final String CID_STOP_SESSION_BUTTON = "stopSession";
-    private static final String CID_SELECT_CURATION_TARGET = "curationTarget";
 
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -96,10 +81,8 @@ public class CurationSidebar
     private @SpringBean CurationService curationService;
     private @SpringBean CurationMergeService curationMergeService;
     private @SpringBean AnnotationSchemaService annotationService;
-    private @SpringBean CurationSidebarProperties curationSidebarProperties;
 
     private CheckGroup<AnnotationSet> selectedUsers;
-    private DropDownChoice<String> curationTargetChoice;
     private ListView<AnnotationSet> users;
     private final Form<Void> usersForm;
     private CheckBox showMerged;
@@ -111,19 +94,14 @@ public class CurationSidebar
 
     private final MergeDialog mergeConfirm;
 
-    public CurationSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public CurationSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         var state = aAnnotationPage.getModelObject();
 
-        queue(createSessionControlForm(CID_SESSION_CONTROL_FORM)
-                .add(visibleWhen(() -> getPage() instanceof AnnotationPage)));
-
         isTargetFinished = LambdaModel.of(() -> {
-            var sessionOwner = userRepository.getCurrentUsername();
-            return curationSidebarService.isCurationFinished(state, sessionOwner);
+            return curationSidebarService.isCurationFinished(state);
         });
 
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
@@ -158,8 +136,7 @@ public class CurationSidebar
                 .of(curationService.readOrCreateCurationWorkflow(state.getProject()));
 
         // confirmation dialog when using automatic merging (might change user's annos)
-        IModel<String> documentNameModel = PropertyModel.of(getAnnotationPage().getModel(),
-                "document.name");
+        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
         queue(mergeConfirm = new MergeDialog("mergeConfirmDialog",
                 new ResourceModel("mergeConfirmTitle"), new ResourceModel("mergeConfirmText"),
                 documentNameModel, curationWorkflowModel));
@@ -170,7 +147,7 @@ public class CurationSidebar
         var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowAll(sessionOwner, getModelObject().getProject().getId(),
                 showMerged.getModelObject());
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private void actionToggleShowScore(AjaxRequestTarget aTarget)
@@ -178,7 +155,7 @@ public class CurationSidebar
         var sessionOwner = userRepository.getCurrentUsername();
         curationSidebarService.setShowScore(sessionOwner, getModelObject().getProject().getId(),
                 showScore.getModelObject());
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private void actionOpenMergeDialog(AjaxRequestTarget aTarget, Form<Void> aForm)
@@ -202,8 +179,7 @@ public class CurationSidebar
 
         try {
             var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
-                    dataOwner.getUsername(), selectedUsers.getModelObject(),
-                    aForm.getModelObject().isClearTargetCas());
+                    selectedUsers.getModelObject(), aForm.getModelObject().isClearTargetCas());
             success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
             refreshPage(aTarget, getPage());
         }
@@ -213,94 +189,10 @@ public class CurationSidebar
         }
     }
 
-    private Form<Void> createSessionControlForm(String aId)
-    {
-        var form = new Form<Void>(aId);
-
-        form.setOutputMarkupId(true);
-
-        var targetChoiceRenderer = new LambdaChoiceRenderer<>(
-                aUsername -> CURATION_USER.equals(aUsername) ? "curation document" : "my document");
-
-        var curationTargets = new ArrayList<String>();
-        curationTargets.add(CURATION_USER);
-        if (curationSidebarProperties.isOwnUserCurationTargetEnabled() && projectService.hasRole(
-                userRepository.getCurrentUsername(), getModelObject().getProject(), ANNOTATOR)) {
-            curationTargets.add(userRepository.getCurrentUsername());
-        }
-
-        curationTargetChoice = new DropDownChoice<>(CID_SELECT_CURATION_TARGET);
-        if (!isSessionActive()) {
-            curationTargetChoice.setModel(Model.of(curationTargets.get(0)));
-        }
-        else {
-            curationTargetChoice.setModel(Model.of(curationSessionService.getCurationTarget(
-                    userRepository.getCurrentUsername(), getModelObject().getProject().getId())));
-        }
-        curationTargetChoice.setChoices(curationTargets);
-        curationTargetChoice.setChoiceRenderer(targetChoiceRenderer);
-        curationTargetChoice.add(enabledWhenNot(this::isSessionActive));
-        curationTargetChoice.add(visibleWhen(() -> curationTargets.size() > 1));
-        curationTargetChoice.setOutputMarkupId(true);
-        curationTargetChoice.setRequired(true);
-        form.add(curationTargetChoice);
-
-        form.add(new LambdaAjaxSubmitLink<>(CID_START_SESSION_BUTTON, this::actionStartSession)
-                .add(visibleWhenNot(this::isSessionActive)));
-        form.add(new LambdaAjaxLink(CID_STOP_SESSION_BUTTON, this::actionStopSession)
-                .add(visibleWhen((this::isSessionActive))));
-
-        return form;
-    }
-
     private boolean isSessionActive()
     {
         return curationSessionService.existsSession(userRepository.getCurrentUsername(),
                 getModelObject().getProject().getId());
-    }
-
-    /**
-     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
-     *             startable/stoppable as it way on the annotation page. We keep this only as long
-     *             until we have resolved how to deal with changing the curation target without
-     *             creating inconsistencies.
-     */
-    @Deprecated
-    private void actionStartSession(AjaxRequestTarget aTarget, Form<?> form)
-    {
-        var sessionOwner = userRepository.getCurrentUsername();
-        var state = getModelObject();
-        var project = state.getProject().getId();
-
-        curationSessionService.startSession(sessionOwner, state.getProject(),
-                !curationTargetChoice.getModelObject().equals(CURATION_USER));
-
-        showMerged.setModelObject(curationSidebarService.isShowAll(sessionOwner, project));
-
-        state.setUser(curationSessionService.getCurationTargetUser(sessionOwner, project));
-        state.clearSelection();
-
-        getAnnotationPage().actionLoadDocument(aTarget);
-    }
-
-    /**
-     * @deprecated Curation is a permanent feature on the curation page, so it no longer needs to be
-     *             startable/stoppable as it way on the annotation page. We keep this only as long
-     *             until we have resolved how to deal with changing the curation target without
-     *             creating inconsistencies.
-     */
-    @Deprecated
-    private void actionStopSession(AjaxRequestTarget aTarget)
-    {
-        var state = getModelObject();
-        var sessionOwner = userRepository.getCurrentUser();
-
-        state.setUser(userRepository.getCurrentUser());
-        state.clearSelection();
-
-        curationSessionService.closeSession(sessionOwner.getUsername(), state.getProject().getId());
-
-        getAnnotationPage().actionLoadDocument(aTarget);
     }
 
     private Form<Void> createUserSelection(String aId)
@@ -380,19 +272,23 @@ public class CurationSidebar
      */
     private List<AnnotationSet> listCuratableDataOwners()
     {
-        var doc = getModelObject().getDocument();
-        if (doc == null) {
-            return Collections.emptyList();
+        var context = getActiveContext();
+        if (context.isEmpty()) {
+            return emptyList();
         }
 
-        return curationSessionService.listCuratableDataOwners(userRepository.getCurrentUsername(),
-                doc);
+        var doc = context.get().getAnnotatorState().getDocument();
+        if (doc == null) {
+            return emptyList();
+        }
+
+        return curationSessionService.listCuratableDataOwners(doc);
     }
 
     private void actionChangeVisibleUsers(AjaxRequestTarget aTarget)
     {
         aTarget.add(usersForm);
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private void actionSelectAll(AjaxRequestTarget aTarget)
@@ -404,7 +300,7 @@ public class CurationSidebar
 
     private void actionSelectNone(AjaxRequestTarget aTarget)
     {
-        setSelectedDataOwners(Collections.emptyList());
+        setSelectedDataOwners(emptyList());
         actionChangeVisibleUsers(aTarget);
     }
 

@@ -44,7 +44,6 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.IconType;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
@@ -52,7 +51,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -74,10 +72,9 @@ public class LayerVisibilitySidebar
 
     private Map<AnnotationLayer, Boolean> layerCollapseState = new HashMap<>();
 
-    public LayerVisibilitySidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public LayerVisibilitySidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         add(createLayerContainer("layer", LoadableDetachableModel.of(this::listLayers)));
     }
@@ -161,7 +158,7 @@ public class LayerVisibilitySidebar
         userPreferencesService.savePreferences(getModelObject(), sessionOwner);
         userPreferencesService.loadPreferences(getModelObject(), sessionOwner);
 
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private List<Tag> listSelectableTags(AnnotationFeature aFeature)

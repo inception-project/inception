@@ -27,8 +27,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 
 public class PostActionScrollToAndSelect
@@ -46,15 +46,13 @@ public class PostActionScrollToAndSelect
     }
 
     @Override
-    public void apply(Component aContextComponent, AjaxRequestTarget aTarget)
+    public void apply(Component aHost, DiamContext aContext, AjaxRequestTarget aTarget)
     {
         try {
-            AnnotationPageBase page = aContextComponent.findParent(AnnotationPageBase.class);
-            // FIXME: Undo is currently only supported in the main editor
-            page.actionActivateAndSelect(aTarget, vid);
+            aContext.actionActivateAndSelect(aTarget, vid);
         }
         catch (AnnotationException | IOException e) {
-            handleException(LOG, aContextComponent, aTarget, e);
+            handleException(LOG, aHost, aTarget, e);
         }
     }
 }

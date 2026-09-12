@@ -20,12 +20,10 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import java.io.Serializable;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemContext;
 import de.tudarmstadt.ukp.inception.annotation.menu.ContextMenuItemRegistry;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -59,10 +57,9 @@ public class ShowContextMenuHandler
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
-        var cm = aBehavior.getContextMenu();
+        var cm = aRequest.getContextMenuLookup().getContextMenu();
         if (cm == null) {
             return new DefaultAjaxResponse(getAction(aRequest));
         }
@@ -78,7 +75,8 @@ public class ShowContextMenuHandler
 
             // Bind the menu to the editor that received the request (its context / behavior),
             // not to the main editor's page, so its items act on that editor (cf. #6146).
-            var ctx = new ContextMenuItemContext(vid, aBehavior.getContext(), aBehavior);
+            var ctx = new ContextMenuItemContext(vid, aRequest.getContext(),
+                    aRequest.getContextMenuLookup());
 
             for (var ext : contextMenuItemRegistry.getExtensions(ctx)) {
                 items.add(ext.createMenuItem(ctx, clientX, clientY));

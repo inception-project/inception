@@ -18,12 +18,15 @@
 package de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil.handleException;
 import static java.util.Collections.emptyList;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -41,20 +44,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureDeletedEvent;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureEditor;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.FeatureState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -65,7 +65,6 @@ import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureEditorValueChanged
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
-import de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil;
 
 public class DocumentMetadataAnnotationDetailPanel
     extends Panel
@@ -83,18 +82,15 @@ public class DocumentMetadataAnnotationDetailPanel
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean FeatureSupportRegistry featureSupportRegistry;
 
-    private final AnnotationPageBase2 annotationPage;
-    private final CasProvider jcasProvider;
+    private final DocumentEditorManager manager;
     private final IModel<Project> project;
     private final IModel<SourceDocument> sourceDocument;
     private final IModel<User> user;
     private final ListView<FeatureState> featureList;
-    private final AnnotationActionHandler actionHandler;
     private final IModel<AnnotatorState> state;
 
     public DocumentMetadataAnnotationDetailPanel(String aId, IModel<VID> aModel,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage,
-            AnnotationActionHandler aActionHandler, IModel<AnnotatorState> aState)
+            DocumentEditorManager aManager, IModel<AnnotatorState> aState)
     {
         super(aId, aModel);
 
@@ -102,10 +98,8 @@ public class DocumentMetadataAnnotationDetailPanel
 
         sourceDocument = aState.map(AnnotatorState::getDocument);
         user = aState.map(AnnotatorState::getUser);
-        annotationPage = aAnnotationPage;
-        jcasProvider = aCasProvider;
+        manager = aManager;
         project = aState.map(AnnotatorState::getProject);
-        actionHandler = aActionHandler;
         state = aState;
 
         add(featureList = createFeaturesList());
@@ -117,8 +111,14 @@ public class DocumentMetadataAnnotationDetailPanel
         super.onConfigure();
 
         add(visibleWhen(this::isVisible));
-        setEnabled(annotationPage.isEditable()
-                && !getLayer().map(AnnotationLayer::isReadonly).orElse(true));
+        setEnabled(isEditable() && !getLayer().map(AnnotationLayer::isReadonly).orElse(true));
+    }
+
+    private boolean isEditable()
+    {
+        return manager.getActiveContext() //
+                .map(context -> context.getActionHandler().isEditable()) //
+                .orElse(false);
     }
 
     public VID getModelObject()
@@ -142,9 +142,10 @@ public class DocumentMetadataAnnotationDetailPanel
                 // Look up a suitable editor and instantiate it
                 var featureSupport = featureSupportRegistry.findExtension(featureState.feature)
                         .orElseThrow();
+                var context = manager.getActiveContext().orElseThrow();
                 editor = featureSupport.createEditor(CID_EDITOR,
-                        DocumentMetadataAnnotationDetailPanel.this, actionHandler,
-                        annotationPage.getModel(), item.getModel());
+                        DocumentMetadataAnnotationDetailPanel.this, context.getActionHandler(),
+                        context.getStateModel(), item.getModel());
 
                 if (!featureState.feature.getLayer().isReadonly()) {
                     // Whenever it is updating an annotation, it updates automatically when a
@@ -200,9 +201,9 @@ public class DocumentMetadataAnnotationDetailPanel
 
         CAS cas;
         try {
-            cas = jcasProvider.get();
+            cas = manager.getActiveContext().orElseThrow().getEditorCas();
         }
-        catch (IOException e) {
+        catch (IOException | NoSuchElementException e) {
             LOG.error("Unable to load CAS", e);
             return Optional.empty();
         }
@@ -230,9 +231,9 @@ public class DocumentMetadataAnnotationDetailPanel
 
         CAS cas;
         try {
-            cas = jcasProvider.get();
+            cas = manager.getActiveContext().orElseThrow().getEditorCas();
         }
-        catch (IOException e) {
+        catch (IOException | NoSuchElementException e) {
             LOG.error("Unable to load CAS", e);
             return emptyList();
         }
@@ -269,14 +270,15 @@ public class DocumentMetadataAnnotationDetailPanel
     private void actionAnnotate(AjaxRequestTarget aTarget)
     {
         try {
-            annotationPage.ensureIsEditable();
+            var context = manager.getActiveContext().orElseThrow();
+            context.getActionHandler().ensureIsEditable();
 
             // When updating an annotation in the sidebar, we must not force a
             // re-focus after rendering
             getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
 
             // Load the boiler-plate
-            var cas = jcasProvider.get();
+            var cas = context.getEditorCas();
             var fs = ICasUtil.selectFsByAddr(cas, getModelObject().getId());
             var layer = annotationService.findLayer(project.getObject(), fs);
             var adapter = annotationService.getAdapter(layer);
@@ -286,13 +288,12 @@ public class DocumentMetadataAnnotationDetailPanel
             writeFeatureEditorModelsToCas(adapter, cas);
 
             // persist changes
-            annotationPage.writeEditorCas(cas);
+            context.getActionHandler().writeEditorCas(cas);
 
-            findParent(AnnotationPageBase.class).actionRefreshDocument(aTarget);
+            context.actionRefreshDocument(aTarget);
         }
         catch (Exception e) {
-            WicketExceptionUtil.handleException(LOG, DocumentMetadataAnnotationDetailPanel.this,
-                    aTarget, e);
+            handleException(LOG, DocumentMetadataAnnotationDetailPanel.this, aTarget, e);
         }
     }
 
@@ -350,18 +351,18 @@ public class DocumentMetadataAnnotationDetailPanel
     {
         var target = aEvent.getTarget();
         try {
-            var cas = jcasProvider.get();
-            var fs = ICasUtil.selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
+            var context = manager.getActiveContext().orElseThrow();
+            var cas = context.getEditorCas();
+            var fs = selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
             state.getObject().setSelection(Selection.span(fs));
             if (state.getObject().getSelection().getAnnotation().isSet()) {
-                actionHandler.actionDelete(target);
+                context.getActionHandler().actionDelete(target);
 
-                findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getTarget());
+                context.actionRefreshDocument(aEvent.getTarget());
             }
         }
-        catch (IOException | AnnotationException e) {
-            WicketExceptionUtil.handleException(LOG, DocumentMetadataAnnotationDetailPanel.this,
-                    target, e);
+        catch (IOException | NoSuchElementException | AnnotationException e) {
+            handleException(LOG, DocumentMetadataAnnotationDetailPanel.this, target, e);
         }
     }
 
@@ -370,6 +371,6 @@ public class DocumentMetadataAnnotationDetailPanel
     {
         actionAnnotate(aEvent.getTarget());
 
-        findParent(AnnotationPageBase.class).actionRefreshDocument(aEvent.getTarget());
+        manager.getActiveContext().ifPresent(ctx -> ctx.actionRefreshDocument(aEvent.getTarget()));
     }
 }

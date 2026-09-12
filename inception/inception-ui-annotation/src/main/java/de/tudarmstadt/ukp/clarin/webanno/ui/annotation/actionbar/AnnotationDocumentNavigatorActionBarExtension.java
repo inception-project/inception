@@ -21,12 +21,10 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.docnav.DocumentNavigator;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 
 @Order(ActionBarExtension.ORDER_DOCUMENT_NAVIGATOR)
 @Component
@@ -40,45 +38,14 @@ public class AnnotationDocumentNavigatorActionBarExtension
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
-        return aPage instanceof AnnotationPage;
+        return aContext.page() instanceof AnnotationPage;
     }
 
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new DocumentNavigator(aId, aPage);
-    }
-
-    @Override
-    public void onInitialize(AnnotationPageBase aPage)
-    {
-        // Open the dialog if no document has been selected.
-        aPage.add(new AutoOpenDialogBehavior());
-
-        // We put the dialog into the page footer since this is presently the only place where we
-        // can dynamically add stuff to the page. We cannot add simply to the action bar (i.e.
-        // DocumentNavigator) because the action bar only shows *after* a document has been
-        // selected. In order to allow the dialog to be rendered *before* a document has been
-        // selected (i.e. when the action bar is still not on screen), we need to attach it to the
-        // page. The same for the AutoOpenDialogBehavior we add below.
-        aPage.addToFooter(createOpenDocumentsDialog(ApplicationPageBase.CID_FOOTER_ITEM, aPage));
-    }
-
-    @Override
-    public void onRemove(AnnotationPageBase aPage)
-    {
-        aPage.getBehaviors(AutoOpenDialogBehavior.class).forEach(aPage::remove);
-        aPage.getFooterItems().getObject().stream() //
-                .filter(OpenDocumentDialog.class::isInstance) //
-                .toList() // avoid concurrent modification problems
-                .forEach(aPage::removeFromFooter);
-    }
-
-    private OpenDocumentDialog createOpenDocumentsDialog(String aId, AnnotationPageBase aPage)
-    {
-        var page = (AnnotationPage) aPage;
-        return new OpenDocumentDialog(aId, aPage.getModel(), page::listAccessibleDocuments);
+        return new DocumentNavigator(aId, aContext.page());
     }
 }

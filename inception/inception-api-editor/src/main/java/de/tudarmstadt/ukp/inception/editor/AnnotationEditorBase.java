@@ -46,8 +46,10 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderingPipeline;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
@@ -66,17 +68,21 @@ public abstract class AnnotationEditorBase
     private @SpringBean UserDao userService;
     private @SpringBean RenderingPipeline renderingPipeline;
 
+    private final DocumentEditorManager manager;
     private final AnnotationActionHandler actionHandler;
     private final CasProvider casProvider;
 
     public AnnotationEditorBase(final String aId, final IModel<AnnotatorState> aModel,
-            final AnnotationActionHandler aActionHandler, final CasProvider aCasProvider)
+            final DocumentEditorManager aManager, final AnnotationActionHandler aActionHandler,
+            final CasProvider aCasProvider)
     {
         super(aId, aModel);
 
+        Validate.notNull(aManager, "Document editor manager must be provided");
         Validate.notNull(aActionHandler, "Annotation action handle must be provided");
         Validate.notNull(aCasProvider, "CAS provider must be provided");
 
+        manager = aManager;
         actionHandler = aActionHandler;
         casProvider = aCasProvider;
 
@@ -109,9 +115,25 @@ public abstract class AnnotationEditorBase
         return (AnnotatorState) getDefaultModelObject();
     }
 
+    /**
+     * @return the manager that owns this editor.
+     */
+    public DocumentEditorManager getDocumentEditorManager()
+    {
+        return manager;
+    }
+
     public AnnotationActionHandler getActionHandler()
     {
         return actionHandler;
+    }
+
+    /**
+     * @return the editor context this editor renders into.
+     */
+    protected DiamContext getEditorContext()
+    {
+        return actionHandler instanceof DiamContext context ? context : null;
     }
 
     public CasProvider getCasProvider()
@@ -200,6 +222,7 @@ public abstract class AnnotationEditorBase
             VDocumentSerializer<T> aTerminalStep)
     {
         var request = RenderRequest.builder() //
+                .withEditorContext(getEditorContext()) //
                 .withState(getModelObject()) //
                 .withWindow(aWindowBeginOffset, aWindowEndOffset) //
                 .withCas(aCas) //

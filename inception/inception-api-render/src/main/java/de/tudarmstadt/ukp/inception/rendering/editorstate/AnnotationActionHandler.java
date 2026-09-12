@@ -203,6 +203,8 @@ public interface AnnotationActionHandler
 
     void writeEditorCas() throws IOException, AnnotationException;
 
+    void writeEditorCas(CAS aCas) throws IOException, AnnotationException;
+
     /**
      * @return whether the editor served by this handler accepts mutations.
      */

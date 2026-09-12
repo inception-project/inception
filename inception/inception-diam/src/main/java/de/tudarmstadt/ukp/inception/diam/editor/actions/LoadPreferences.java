@@ -18,11 +18,10 @@
 package de.tudarmstadt.ukp.inception.diam.editor.actions;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
@@ -60,14 +59,13 @@ public class LoadPreferences
     }
 
     @Override
-    public AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
         try {
             var key = new ClientSidePreferenceKey<ClientSidePreferenceMapValue>(
                     ClientSidePreferenceMapValue.class,
                     aRequest.getRequestParameters().getParameterValue(PARAM_KEY).toString());
-            var project = aBehavior.getContext().getAnnotatorState().getProject();
+            var project = aRequest.getContext().getAnnotatorState().getProject();
             var sessionOwner = userService.getCurrentUser();
             var prefs = preferencesService.loadTraitsForUserAndProject(key, sessionOwner, project);
             var json = JSONUtil.toInterpretableJsonString(prefs);

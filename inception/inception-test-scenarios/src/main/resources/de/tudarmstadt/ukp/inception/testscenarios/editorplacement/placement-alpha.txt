@@ -1,0 +1,5 @@
+Alpha document. Angela Merkel visited Paris last week to meet Emmanuel Macron.
+The delegation from Berlin arrived at Charles de Gaulle Airport on Monday.
+This is the first of three documents in the editor-placement scenario.
+Its distinctive marker word is ALPHAMARKER, so a test can tell which document
+is currently shown in a given editor without relying on the document title.

@@ -19,8 +19,8 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.FILL_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.RECREATE;
+import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.FILL_ONLY;
+import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.RECREATE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static wicket.contrib.input.events.EventType.click;
 import static wicket.contrib.input.events.key.KeyType.Ctrl;
@@ -42,11 +42,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
@@ -55,9 +54,10 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 import wicket.contrib.input.events.key.KeyType;
 
 public class CuratorWorkflowActionBarItemGroup
@@ -71,17 +71,19 @@ public class CuratorWorkflowActionBarItemGroup
     private @SpringBean UserDao userRepository;
 
     private final AnnotationPageBase page;
+    private final DiamContext editorContext;
     // private final ConfirmationDialog finishDocumentDialog;
     private final LambdaAjaxLink toggleCurationStateLink;
     private final IModel<CurationWorkflow> curationWorkflowModel;
     private MergeDialog resetDocumentDialog;
     private LambdaAjaxLink resetDocumentLink;
 
-    public CuratorWorkflowActionBarItemGroup(String aId, AnnotationPageBase aPage)
+    public CuratorWorkflowActionBarItemGroup(String aId, ActionBarContext aContext)
     {
         super(aId);
 
-        page = aPage;
+        page = aContext.page();
+        editorContext = aContext.editorContext();
 
         // add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
         // new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -110,7 +112,7 @@ public class CuratorWorkflowActionBarItemGroup
 
     public String getStateClass()
     {
-        AnnotatorState state = page.getModelObject();
+        var state = page.getModelObject();
 
         if (curationDocumentService.isCurationFinished(state.getDocument())) {
             return FontAwesome7IconType.clipboard_s.cssClassName();
@@ -122,13 +124,13 @@ public class CuratorWorkflowActionBarItemGroup
 
     protected boolean isEditable()
     {
-        AnnotatorState state = page.getModelObject();
+        var state = page.getModelObject();
         if (state.getProject() == null || state.getDocument() == null) {
             return false;
         }
 
-        SourceDocument sourceDocument = documentService
-                .getSourceDocument(state.getDocument().getProject(), state.getDocument().getName());
+        var sourceDocument = documentService.getSourceDocument(state.getDocument().getProject(),
+                state.getDocument().getName());
         return sourceDocument.getState() != CURATION_FINISHED;
     }
 
@@ -142,7 +144,7 @@ public class CuratorWorkflowActionBarItemGroup
         switch (docState) {
         case CURATION_IN_PROGRESS:
             try {
-                page.actionValidateDocument(aTarget, page.getEditorCas());
+                page.actionValidateDocument(aTarget, editorContext);
             }
             catch (ValidationException e) {
                 page.error("Document cannot be marked as finished: " + e.getMessage());
@@ -180,7 +182,10 @@ public class CuratorWorkflowActionBarItemGroup
         }
 
         var mergeMode = aForm.getModelObject().isClearTargetCas() ? RECREATE : FILL_ONLY;
-        ((LegacyCurationPage) page).readOrCreateCurationCas(mergeStrategy, mergeMode);
+        var state = page.getModelObject();
+
+        ((CuratableDocumentPage) page).readOrCreateCurationCas(state.getDocument(), mergeStrategy,
+                mergeMode);
 
         // ... and load it
         page.actionLoadDocument(aTarget);

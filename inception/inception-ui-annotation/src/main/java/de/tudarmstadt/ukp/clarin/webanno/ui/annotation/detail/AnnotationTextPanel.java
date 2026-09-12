@@ -31,7 +31,6 @@ import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -109,11 +108,6 @@ public class AnnotationTextPanel
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
-    }
-
-    public AnnotationPageBase getEditorPage()
-    {
-        return (AnnotationPageBase) getPage();
     }
 
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget)

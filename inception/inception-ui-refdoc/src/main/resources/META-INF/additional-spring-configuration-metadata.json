@@ -1,0 +1,10 @@
+{
+  "properties": [
+    {
+      "name": "ui.reference-document.enabled",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enables the reference document sidebar which opens another document from the project in a read-only editor for reference."
+    }
+  ]
+}

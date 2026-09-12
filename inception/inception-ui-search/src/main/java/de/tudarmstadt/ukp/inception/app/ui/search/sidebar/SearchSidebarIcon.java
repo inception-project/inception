@@ -71,9 +71,8 @@ public class SearchSidebarIcon
     @OnEvent
     public void onRenderAnnotations(RenderAnnotationsEvent aEvent)
     {
-        // Only render our markers into our own editor, not into other editors on the page (e.g. the
-        // reference-document viewer or curation panes) even if they show the same document (#6146).
-        if (aEvent.getRequest().getState() != getModelObject()) {
+        var renderedState = aEvent.getRequest().getState();
+        if (renderedState == null || renderedState.getDocument() == null) {
             return;
         }
 
@@ -85,7 +84,7 @@ public class SearchSidebarIcon
                 .map(SearchOptions::getSelectedResultAnnotationSet).getObject();
         if (query.map(StringUtils::isNotBlank).orElse(false).getObject()) {
             try {
-                var results = query(query.getObject());
+                var results = query(query.getObject(), renderedState);
                 for (var result : results) {
                     if (result.equals(selectedResult)) {
                         // We render the selected result separately. Rendering it does not
@@ -110,8 +109,8 @@ public class SearchSidebarIcon
         }
 
         if (selectedResult != null
-                && selectedResult.getDocumentId() == getModelObject().getDocument().getId()
-                && AnnotationSet.forUser(getModelObject().getUser())
+                && selectedResult.getDocumentId() == renderedState.getDocument().getId()
+                && AnnotationSet.forUser(renderedState.getUser())
                         .equals(selectedResultAnnotationSet)) {
             var range = VRange.clippedRange(aEvent.getVDocument(), selectedResult.getOffsetStart(),
                     selectedResult.getOffsetEnd());
@@ -120,10 +119,9 @@ public class SearchSidebarIcon
         }
     }
 
-    private List<SearchResult> query(String aQuery) throws ExecutionException, IOException
+    private List<SearchResult> query(String aQuery, AnnotatorViewState state)
+        throws ExecutionException, IOException
     {
-        var state = getModelObject();
-
         var groupedResults = searchService.query(SearchQueryRequest.builder() //
                 .withProject(state.getProject()) //
                 .withUser(state.getUser()) //

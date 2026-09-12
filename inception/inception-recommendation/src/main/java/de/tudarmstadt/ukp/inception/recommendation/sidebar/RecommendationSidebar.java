@@ -45,14 +45,12 @@ import org.wicketstuff.event.annotation.OnEvent;
 import org.wicketstuff.jquery.core.Options;
 import org.wicketstuff.kendo.ui.widget.tooltip.TooltipBehavior;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.Preferences;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -80,10 +78,9 @@ public class RecommendationSidebar
     private RecommenderInfoPanel recommenderInfos;
     private LogDialog logDialog;
 
-    public RecommendationSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public RecommendationSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         recommendersAvailable = LoadableDetachableModel.of(this::isRecommendersAvailable);
 
@@ -94,9 +91,9 @@ public class RecommendationSidebar
         var sessionOwner = userRepository.getCurrentUser();
         var modelPreferences = LambdaModelAdapter.of(
                 () -> recommendationService.getPreferences(sessionOwner,
-                        aAnnotationPage.getModelObject().getProject()),
+                        getModelObject().getProject()),
                 (v) -> recommendationService.setPreferences(sessionOwner,
-                        aAnnotationPage.getModelObject().getProject(), v));
+                        getModelObject().getProject(), v));
 
         warning = new WebMarkupContainer("warning");
         warning.setOutputMarkupPlaceholderTag(true);
@@ -109,7 +106,7 @@ public class RecommendationSidebar
         var noRecommendersLabel = new Label("noRecommendersLabel",
                 new StringResourceModel("noRecommenders"));
         var recommenders = recommendationService
-                .listEnabledRecommenders(aAnnotationPage.getModelObject().getProject());
+                .listEnabledRecommenders(getModelObject().getProject());
         noRecommendersLabel.add(visibleWhen(() -> recommenders.isEmpty()));
         add(noRecommendersLabel);
 
@@ -125,13 +122,13 @@ public class RecommendationSidebar
 
         var modelEnabled = LambdaModelAdapter.of(
                 () -> !recommendationService.isSuspended(sessionOwner.getUsername(),
-                        aAnnotationPage.getModelObject().getProject()),
+                        getModelObject().getProject()),
                 (v) -> recommendationService.setSuspended(sessionOwner.getUsername(),
-                        aAnnotationPage.getModelObject().getProject(), !v));
+                        getModelObject().getProject(), !v));
         mainContainer.add(new CheckBox("enabled", modelEnabled).setOutputMarkupId(true)
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
         mainContainer.add(new EvaluationProgressPanel("progress",
-                aAnnotationPage.getModel().map(AnnotatorState::getProject)));
+                getModel().map(AnnotatorState::getProject)));
 
         form = new Form<>("form", CompoundPropertyModel.of(modelPreferences));
         form.setOutputMarkupId(true);
@@ -150,13 +147,13 @@ public class RecommendationSidebar
                 .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                         _target -> _target.add(form))));
 
-        form.add(new LambdaAjaxButton<>("save",
-                (_target, _form) -> aAnnotationPage.actionRefreshDocument(_target)));
+        form.add(new LambdaAjaxButton<>("save", (_target, _form) -> getActiveContext().orElseThrow()
+                .actionRefreshDocument(_target)));
         form.add(visibleWhen(() -> !recommenders.isEmpty()));
 
         add(form);
 
-        recommenderInfos = new RecommenderInfoPanel("recommenders", aAnnotationPage.getModel());
+        recommenderInfos = new RecommenderInfoPanel("recommenders", getModel());
         recommenderInfos.add(visibleWhen(() -> !recommenders.isEmpty()));
         mainContainer.add(recommenderInfos);
 
@@ -239,7 +236,7 @@ public class RecommendationSidebar
 
     private void actionRetrain(AjaxRequestTarget aTarget)
     {
-        var state = getModelObject();
+        var state = getActiveContext().orElseThrow().getAnnotatorState();
         var sessionOwner = userRepository.getCurrentUsername();
         var dataOwner = state.getUser().getUsername();
 
@@ -248,7 +245,7 @@ public class RecommendationSidebar
                 state.getProject(), "User request via sidebar", state.getDocument(), dataOwner);
 
         info("Annotation state cleared - re-training from scratch...");
-        getAnnotationPage().actionRefreshDocument(aTarget);
+        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
         aTarget.add(recommenderInfos);
         aTarget.addChildren(getPage(), IFeedback.class);
     }

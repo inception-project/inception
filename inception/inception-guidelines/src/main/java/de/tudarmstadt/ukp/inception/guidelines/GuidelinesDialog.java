@@ -27,6 +27,11 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 /**
  * Dialog providing access to the annotation guidelines.
  */
+/**
+ * @deprecated Part of the action bar guidelines UI, retained only for the legacy curation page. See
+ *             {@link GuidelinesActionBarExtension}.
+ */
+@Deprecated
 public class GuidelinesDialog
     extends BootstrapModalDialog
 {

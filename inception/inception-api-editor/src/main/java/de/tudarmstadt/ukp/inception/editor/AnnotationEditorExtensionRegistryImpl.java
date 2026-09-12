@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.ClassUtils;
-import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,9 +34,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 
 import de.tudarmstadt.ukp.inception.editor.config.AnnotationEditorAutoConfiguration;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
 
@@ -106,15 +105,15 @@ public class AnnotationEditorExtensionRegistryImpl
     }
 
     @Override
-    public void fireAction(AnnotationActionHandler aActionHandler, AnnotatorState aModelObject,
-            AjaxRequestTarget aTarget, CAS aCas, VID aParamId, String aAction)
+    public void fireAction(DiamContext aContext, AjaxRequestTarget aTarget, VID aParamId,
+            String aAction)
         throws IOException, AnnotationException
     {
         for (var ext : getExtensions()) {
             if (!ext.getBeanName().equals(aParamId.getExtensionId())) {
                 continue;
             }
-            ext.handleAction(aActionHandler, aModelObject, aTarget, aCas, aParamId, aAction);
+            ext.handleAction(aContext, aTarget, aParamId, aAction);
         }
     }
 

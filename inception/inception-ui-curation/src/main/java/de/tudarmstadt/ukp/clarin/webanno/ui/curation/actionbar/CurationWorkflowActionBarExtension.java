@@ -22,9 +22,9 @@ import static java.lang.Integer.MAX_VALUE;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 import de.tudarmstadt.ukp.inception.workload.extension.WorkloadManagerExtension;
 
 @Order(ActionBarExtension.ORDER_WORKFLOW)
@@ -44,14 +44,18 @@ public class CurationWorkflowActionBarExtension
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
-        return aPage instanceof LegacyCurationPage;
+        if (!aContext.hasDocument()) {
+            return false;
+        }
+
+        return aContext.page() instanceof CuratableDocumentPage;
     }
 
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new CuratorWorkflowActionBarItemGroup(aId, aPage);
+        return new CuratorWorkflowActionBarItemGroup(aId, aContext);
     }
 }

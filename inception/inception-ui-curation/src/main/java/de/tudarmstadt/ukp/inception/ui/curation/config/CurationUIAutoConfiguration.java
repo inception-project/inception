@@ -22,10 +22,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.ui.curation.editor.SplitCurationEditorFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.curation.page.SplitCurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.overview.CurationUnitOverviewSidebarFactory;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
@@ -36,9 +38,25 @@ public class CurationUIAutoConfiguration
     public CurationPageMenuItem curationPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, ServletContext aServletContext,
             PreferencesService aPreferencesService,
-            LegacyCurationPageMenuItem aLegacyCurationPageMenuItem)
+            SplitCurationPageMenuItem aSplitCurationPageMenuItem)
     {
         return new CurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
-                aPreferencesService, aLegacyCurationPageMenuItem);
+                aPreferencesService, aSplitCurationPageMenuItem);
+    }
+
+    /**
+     * The bean name has to be {@link SplitCurationEditorFactory#ID} - editor factories are looked
+     * up by bean name, and the split-curation page pins this one by that id.
+     */
+    @Bean(name = SplitCurationEditorFactory.ID)
+    public SplitCurationEditorFactory splitCurationEditorFactory()
+    {
+        return new SplitCurationEditorFactory();
+    }
+
+    @Bean
+    public CurationUnitOverviewSidebarFactory curationUnitOverviewSidebarFactory()
+    {
+        return new CurationUnitOverviewSidebarFactory();
     }
 }

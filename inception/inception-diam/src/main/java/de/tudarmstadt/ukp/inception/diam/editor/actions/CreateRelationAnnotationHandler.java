@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.request.IRequestParameters;
-import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.IllegalPlacementException;
@@ -37,7 +36,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.layer.chain.api.ChainAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.CreateRelationAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationAdapter;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
@@ -82,11 +81,10 @@ public class CreateRelationAnnotationHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public DefaultAjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
         try {
-            actionArc(aBehavior, aTarget, aRequest.getRequestParameters());
+            actionArc(aRequest, aTarget, aRequest.getRequestParameters());
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {
@@ -94,19 +92,19 @@ public class CreateRelationAnnotationHandler
         }
     }
 
-    private void actionArc(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
+    private void actionArc(DiamRequest aRequest, AjaxRequestTarget aTarget,
             IRequestParameters aParams)
         throws IOException, AnnotationException
     {
         var originSpan = VID.parse(aParams.getParameterValue(PARAM_ORIGIN_SPAN_ID).toString());
         var targetSpan = VID.parse(aParams.getParameterValue(PARAM_TARGET_SPAN_ID).toString());
 
-        var cm = aBehavior.getContextMenu();
+        var cm = aRequest.getContextMenuLookup().getContextMenu();
         var clientX = cm.getClientX().getAsInt();
         var clientY = cm.getClientY().getAsInt();
 
-        actionArc(aBehavior.getContext(), aBehavior, aTarget, originSpan, targetSpan, clientX,
-                clientY);
+        actionArc(aRequest.getContext(), aRequest.getContextMenuLookup(), aTarget, originSpan,
+                targetSpan, clientX, clientY);
     }
 
     public void actionArc(DiamContext aContext, ContextMenuLookup aBehavior,

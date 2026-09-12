@@ -1601,6 +1601,31 @@
       </build>
     </profile>
     <profile>
+      <id>test-scenarios</id>
+      <dependencies>
+        <dependency>
+          <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+          <artifactId>inception-test-scenarios</artifactId>
+          <version>${project.version}</version>
+        </dependency>
+      </dependencies>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-dependency-plugin</artifactId>
+              <configuration>
+                <usedDependencies combine.children="append">
+                  <usedDependency>de.tudarmstadt.ukp.inception.app:inception-test-scenarios</usedDependency>
+                </usedDependencies>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
       <id>doc-only</id>
       <properties>
         <maven.install.skip>true</maven.install.skip>

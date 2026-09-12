@@ -27,7 +27,16 @@
   <packaging>pom</packaging>
 
   <properties>
-    <maven.surefire.heap>6g</maven.surefire.heap>
+    <!--
+      Per-fork test heap, inherited from dkpro-parent-pom and applied by its
+      maven-surefire-plugin argLine (as both -Xmx and -Xms). `-T 1C` runs one reactor
+      thread per core, so this is multiplied by the core count and all forks together
+      must fit in RAM: 8 cores x 1g = 8 GB. Measured: the heaviest ordinary module
+      (inception-kb) peaks at a ~85 MB post-GC live set, so 1g is generous for normal
+      tests. Modules with deliberate scale tests override this locally - see
+      inception-recommendation-api, whose PredictionsTest builds 10k x 1k suggestions.
+    -->
+    <maven.surefire.heap>1g</maven.surefire.heap>
     <maven.surefire.argLine>-XX:+EnableDynamicAgentLoading</maven.surefire.argLine>
     <maven.compiler.release>21</maven.compiler.release>
     <maven.compiler.target>${maven.compiler.release}</maven.compiler.target>
@@ -165,6 +174,7 @@
     <module>inception-project-initializers-sentencelabeling</module>
     <module>inception-project-initializers-ud</module>
     <module>inception-project-initializers-wikidatalinking</module>
+    <module>inception-test-scenarios</module>
     <module>inception-project-export</module>
     <module>inception-remote</module>
     <module>inception-security</module>

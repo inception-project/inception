@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <!--
+    Header layout tweaks for a panel that may be embedded somewhere narrow (e.g. a sidebar); a
+    full-width editor header is unaffected.
+
+    The header keeps the main editor's horizontal "name | position+toggle" row so the position
+    label stays inline to the right of the name instead of consuming an extra line. The name block
+    is allowed to shrink (min-width:0) and its badges truncate with an ellipsis (via .project-name
+    / .document-name in DocumentNamePanel), so a long document name no longer squashes the position
+    label - the name yields space to it instead.
+
+    The position label is a PositionInfoPanel: the unit position ("N-M / K sentences") and the
+    document position ("[doc i / n]") are separate spans. We keep each part intact (no mid-phrase
+    break) but allow a break *between* them, so in a narrow container the "[doc i / n]" part drops
+    to a second line only when it genuinely does not fit rather than the whole label wrapping
+    mid-word.
+  -->
+  <style>
+    .document-editor-panel-document-name {
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    /* Keeps documentNamePanel's badges in the same visual run as the status badges beside it. */
+    .document-editor-panel-badge-run {
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.25rem;
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+    <div class="flex-content flex-v-container card overflow-hidden">
+      <div class="card-header d-flex justify-content-between border-bottom-0 pt-2">
+        <div class="document-editor-panel-document-name">
+          <div wicket:id="documentNamePanel" class="document-editor-panel-badge-run"></div>
+          <wicket:container wicket:id="documentStatusBadges"></wicket:container>
+        </div>
+        <div class="d-flex document-editor-panel-header-meta">
+          <span wicket:id="substitutedEditor"
+                class="badge text-bg-warning align-self-center me-1">
+            <i class="fas fa-triangle-exclamation"></i>
+            Substitute editor
+          </span>
+          <div wicket:id="numberOfPages" class="small text-muted align-self-center"></div>
+          <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
+            <i wicket:id="toggleActionBarIcon"/>
+          </button>
+        </div>
+      </div>
+      <div class="card-body flex-v-container" style="padding: 0px;">
+        <nav wicket:id="actionBar" class="action-bar">
+          <wicket:container wicket:id="actionBarGroups"></wicket:container>
+          <div wicket:id="ownActionBarGroup" class="action-bar-group">
+            <wicket:container wicket:id="actionBarItemsBefore"></wicket:container>
+            <wicket:container wicket:id="actionBarItemsAfter"></wicket:container>
+          </div>
+          <div wicket:id="actionBarItems" class="action-bar-items"></div>
+        </nav>
+        <div wicket:id="editorContainer" class="flex-content flex-v-container" style="padding: 0px;">
+          <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</wicket:panel>
+</html>

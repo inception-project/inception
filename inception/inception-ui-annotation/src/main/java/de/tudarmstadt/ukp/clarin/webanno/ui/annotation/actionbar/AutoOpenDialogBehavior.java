@@ -29,7 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocume
 /**
  * Opens the "Open document" dialog if the page is loaded and no document has been selected yet.
  */
-class AutoOpenDialogBehavior
+public class AutoOpenDialogBehavior
     extends AbstractDefaultAjaxBehavior
 {
     private static final long serialVersionUID = 5700114110001447912L;

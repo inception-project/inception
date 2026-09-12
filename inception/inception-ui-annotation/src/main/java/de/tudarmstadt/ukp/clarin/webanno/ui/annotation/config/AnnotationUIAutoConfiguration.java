@@ -23,9 +23,11 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.closesession.CloseSessionActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.closesession.CloseSessionSidebarFooterItemFactory;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.preferences.PreferencesSidebarFooterItemFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.undo.AnnotationUndoActionBarExtension;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import jakarta.servlet.ServletContext;
 
@@ -47,14 +49,21 @@ public class AnnotationUIAutoConfiguration
     }
 
     @Bean
-    public CloseSessionActionBarExtension closeSessionActionBarExtension()
-    {
-        return new CloseSessionActionBarExtension();
-    }
-
-    @Bean
     public LayerVisibilitySidebarFactory layerVisibilitySidebarFactory()
     {
         return new LayerVisibilitySidebarFactory();
+    }
+
+    @Bean
+    public CloseSessionSidebarFooterItemFactory closeSessionSidebarFooterItemFactory()
+    {
+        return new CloseSessionSidebarFooterItemFactory();
+    }
+
+    @Bean
+    public PreferencesSidebarFooterItemFactory preferencesSidebarFooterItemFactory(
+            PreferencesService aPreferencesService)
+    {
+        return new PreferencesSidebarFooterItemFactory(aPreferencesService);
     }
 }

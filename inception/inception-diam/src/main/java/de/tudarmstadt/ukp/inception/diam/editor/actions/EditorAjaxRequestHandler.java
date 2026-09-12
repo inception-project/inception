@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.Request;
 
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.AjaxResponse;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
@@ -69,5 +68,5 @@ public interface EditorAjaxRequestHandler
                 .getParameterValue(PARAM_ACTION).toOptionalString());
     }
 
-    AjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget, Request aRequest);
+    AjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget);
 }

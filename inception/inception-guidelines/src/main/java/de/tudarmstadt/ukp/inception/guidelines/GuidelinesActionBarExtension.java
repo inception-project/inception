@@ -19,36 +19,55 @@ package de.tudarmstadt.ukp.inception.guidelines;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
+import de.tudarmstadt.ukp.inception.curation.settings.LegacySplitCurationPageProperties;
 
+/**
+ * Provides access to the annotation guidelines from the action bar of the
+ * {@link LegacyCurationPage}.
+ *
+ * @deprecated Every other page offers guidelines through the sidebar instead. The legacy curation
+ *             page has no sidebar to host that tab, so it keeps the action bar button until the
+ *             page itself is removed - at which point this extension goes with it.
+ */
+@Deprecated
 @Order(ActionBarExtension.ORDER_GUIDELINES)
-@Component
 public class GuidelinesActionBarExtension
     implements ActionBarExtension
 {
     private final GuidelinesService guidelinesService;
+    private final LegacySplitCurationPageProperties curationPageProperties;
 
-    public GuidelinesActionBarExtension(GuidelinesService aGuidelinesService)
+    public GuidelinesActionBarExtension(GuidelinesService aGuidelinesService,
+            LegacySplitCurationPageProperties aCurationPageProperties)
     {
-        super();
         guidelinesService = aGuidelinesService;
+        curationPageProperties = aCurationPageProperties;
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
+        if (!curationPageProperties.isEnabled()) {
+            return false;
+        }
+
+        if (!(aContext.page() instanceof LegacyCurationPage)) {
+            return false;
+        }
+
         // Hide the guidelines item if there are no guidelines
-        return ActionBarExtension.super.accepts(aPage)
-                && aPage.getModelObject().getProject() != null
-                && guidelinesService.hasGuidelines(aPage.getModelObject().getProject());
+        return ActionBarExtension.super.accepts(aContext)
+                && aContext.page().getModelObject().getProject() != null
+                && guidelinesService.hasGuidelines(aContext.page().getModelObject().getProject());
     }
 
     @Override
-    public Panel createActionBarItem(String aId, AnnotationPageBase aPage)
+    public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new GuidelinesActionBarItem(aId, aPage);
+        return new GuidelinesActionBarItem(aId, aContext.page());
     }
 }

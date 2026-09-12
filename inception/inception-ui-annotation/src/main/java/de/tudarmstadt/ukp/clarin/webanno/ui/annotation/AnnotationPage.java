@@ -27,6 +27,9 @@ import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.wicketstuff.annotation.mount.MountPath;
 
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.AutoOpenDialogBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
@@ -44,6 +47,10 @@ public class AnnotationPage
     public AnnotationPage(PageParameters aPageParameters)
     {
         super(aPageParameters);
+
+        add(new AutoOpenDialogBehavior());
+        addToFooter(new OpenDocumentDialog(ApplicationPageBase.CID_FOOTER_ITEM, getModel(),
+                this::listAccessibleDocuments));
     }
 
     @Override

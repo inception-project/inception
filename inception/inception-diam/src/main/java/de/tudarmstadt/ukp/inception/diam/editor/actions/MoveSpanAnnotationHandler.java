@@ -23,12 +23,11 @@ import java.io.IOException;
 
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
-import org.apache.wicket.request.Request;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.MoveSpanAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanAdapter;
-import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.diam.editor.DiamRequest;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
@@ -64,11 +63,10 @@ public class MoveSpanAnnotationHandler
     }
 
     @Override
-    public DefaultAjaxResponse handle(DiamAjaxBehavior aBehavior, AjaxRequestTarget aTarget,
-            Request aRequest)
+    public DefaultAjaxResponse handle(DiamRequest aRequest, AjaxRequestTarget aTarget)
     {
         try {
-            var context = aBehavior.getContext();
+            var context = aRequest.getContext();
 
             context.getActionHandler().ensureIsEditable();
             context.activate(aTarget);
@@ -79,7 +77,7 @@ public class MoveSpanAnnotationHandler
             var range = getRangeFromRequest(state, aRequest.getRequestParameters(), cas);
             moveSpan(context, aTarget, cas, vid, range);
 
-            context.getActionHandler().writeEditorCas();
+            context.getActionHandler().writeEditorCas(cas);
             return new DefaultAjaxResponse(getAction(aRequest));
         }
         catch (Exception e) {

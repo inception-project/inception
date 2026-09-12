@@ -25,15 +25,18 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationUndoActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CloseSessionActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.UserPreferencesActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRendererImpl;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPageMenuItem;
+import de.tudarmstadt.ukp.inception.curation.settings.LegacySplitCurationPageProperties;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
+import de.tudarmstadt.ukp.inception.ui.curation.page.SplitCurationPageMenuItem;
 import jakarta.servlet.ServletContext;
 
 @ConditionalOnWebApplication
@@ -41,12 +44,13 @@ import jakarta.servlet.ServletContext;
 public class LegacyCurationUIAutoConfiguration
 {
     @Bean
-    public LegacyCurationPageMenuItem legacyCurationPageMenuItem(UserDao aUserRepo,
+    public SplitCurationPageMenuItem splitCurationPageMenuItem(UserDao aUserRepo,
             ProjectService aProjectService, ServletContext aServletContext,
-            PreferencesService aPreferencesService)
+            PreferencesService aPreferencesService,
+            LegacySplitCurationPageProperties aCurationPageProperties)
     {
-        return new LegacyCurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
-                aPreferencesService);
+        return new SplitCurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
+                aPreferencesService, aCurationPageProperties);
     }
 
     @Bean
@@ -65,6 +69,21 @@ public class LegacyCurationUIAutoConfiguration
     public CurationWorkflowActionBarExtension curationWorkflowActionBarExtension()
     {
         return new CurationWorkflowActionBarExtension();
+    }
+
+    @SuppressWarnings("deprecation")
+    @Bean
+    public CloseSessionActionBarExtension closeSessionActionBarExtension()
+    {
+        return new CloseSessionActionBarExtension();
+    }
+
+    @SuppressWarnings("deprecation")
+    @Bean
+    public UserPreferencesActionBarExtension userPreferencesActionBarExtension(
+            PreferencesService aPreferencesService)
+    {
+        return new UserPreferencesActionBarExtension(aPreferencesService);
     }
 
     @Bean

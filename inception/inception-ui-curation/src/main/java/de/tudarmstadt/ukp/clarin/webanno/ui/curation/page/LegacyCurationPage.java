@@ -18,14 +18,11 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.LOAD_ONLY;
-import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.CurationMergeMode.RECREATE;
+import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.LOAD_ONLY;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -40,14 +37,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.AttributeModifier;
-import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.head.IHeaderResponse;
@@ -67,22 +63,23 @@ import org.wicketstuff.event.annotation.OnEvent;
 import org.wicketstuff.jquery.core.Options;
 import org.wicketstuff.kendo.ui.widget.splitter.SplitterAdapter;
 import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
+import org.springframework.security.access.AccessDeniedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
-import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.UndoKeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.DetailPanelHostingPage;
@@ -93,10 +90,10 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationEditingService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorRegistry;
@@ -106,6 +103,9 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -114,22 +114,32 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
-import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 import de.tudarmstadt.ukp.inception.ui.curation.readiness.CurationReadinessBadgePanel;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import static java.util.Collections.emptyMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.flow.RedirectToUrlException;
+import de.tudarmstadt.ukp.inception.support.wicket.UrlFragmentBehavior;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
  * between user annotations for a specific document. The interface provides a tool for merging these
  * annotations and storing them as a new annotation.
  */
-@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}/curate-split/#{" + PAGE_PARAM_DOCUMENT
-        + "}")
+@MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}" + LegacyCurationPage.PAGE_PATH + "/#{"
+        + PAGE_PARAM_DOCUMENT + "}")
 public class LegacyCurationPage
     extends AnnotationPageBase
-    implements DetailPanelHostingPage
+    implements DetailPanelHostingPage, DiamContext, DocumentEditorManager, CuratableDocumentPage
 {
+    public static final String PAGE_PATH = "/curate-split-legacy";
+
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
+    private static final String MID_UNDO_KEY_BINDINGS = "undoKeyBindings";
 
     private final static Logger LOG = LoggerFactory.getLogger(LegacyCurationPage.class);
 
@@ -141,11 +151,15 @@ public class LegacyCurationPage
     private @SpringBean ConstraintsService constraintsService;
     private @SpringBean AnnotationSchemaService annotationService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean DocumentAccess documentAccess;
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationService curationService;
-    private @SpringBean CurationMergeService curationMergeService;
+    private @SpringBean CurationEditingService curationEditingService;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
+
+    private LoadableDetachableModel<String> annotationNotEditableReason = LoadableDetachableModel
+            .of(this::loadAnnotationNotEditableReason);
 
     private long currentprojectId;
 
@@ -167,6 +181,22 @@ public class LegacyCurationPage
     public LegacyCurationPage(final PageParameters aPageParameters)
     {
         super(aPageParameters);
+
+        // If the page was accessed using an URL form ending in a document ID, move the document ID
+        // into the fragment and redirect to the form without it, so that links on the page do not
+        // carry the document ID and we can switch documents via AJAX freely.
+        //
+        // This has to happen before anything else, because it restarts the request by throwing. It
+        // used to live in AnnotationPageBase, where it ran during the super constructor call - i.e.
+        // also before this point.
+        //
+        // This page always curates as the CURATION_USER, so unlike AnnotationPageBase2 it has no
+        // data owner parameter to push.
+        var params = getPageParameters();
+        var documentParameter = params.get(PAGE_PARAM_DOCUMENT);
+        if (!documentParameter.isEmpty()) {
+            pushParametersIntoUrl(params, documentParameter);
+        }
 
         LOG.debug("Setting up curation page with parameters: {}", aPageParameters);
 
@@ -205,9 +235,9 @@ public class LegacyCurationPage
         splitter.setOutputMarkupId(true);
         centerArea.add(splitter);
 
-        splitter.add(new DocumentNamePanel("documentNamePanel", getModel()));
+        splitter.add(new DocumentNamePanel("documentNamePanel", getModel(), () -> isEditable()));
         splitter.add(new CurationReadinessBadgePanel("documentStatusBadges", getModel()));
-        splitter.add(new ActionBar("actionBar"));
+        splitter.add(new ActionBar("actionBar", this));
 
         splitter.add(new SplitterBehavior("#" + splitter.getMarkupId(),
                 new Options("orientation", Options.asString("vertical")), new SplitterAdapter()));
@@ -218,7 +248,7 @@ public class LegacyCurationPage
         annotatorSegment.setAnnotatorState(getModelObject());
         segments.add(annotatorSegment);
 
-        annotatorsPanel = new AnnotatorsPanel("annotatorsPanel", new ListModel<>(segments));
+        annotatorsPanel = new AnnotatorsPanel("annotatorsPanel", this, new ListModel<>(segments));
         annotatorsPanel.setOutputMarkupPlaceholderTag(true);
         annotatorsPanel.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         splitter.add(annotatorsPanel);
@@ -237,6 +267,14 @@ public class LegacyCurationPage
         leftSidebar.add(curationUnitOverview);
         leftSidebar.add(new LambdaAjaxLink("refresh", this::actionRefresh));
         add(leftSidebar);
+
+        add(new UndoKeyBindingsPanel(MID_UNDO_KEY_BINDINGS));
+    }
+
+    @Override
+    public IModel<AnnotatorState> getStateModel()
+    {
+        return getModel();
     }
 
     private AnnotationEditorBase createAnnotationEditor(String aId)
@@ -257,7 +295,7 @@ public class LegacyCurationPage
         }
 
         state.setEditorFactoryId(factory.getBeanName());
-        var editor = factory.create(aId, getModel(), this, this::getEditorCas);
+        var editor = factory.create(aId, getModel(), this, this, this::getEditorCas);
         editor.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         editor.setOutputMarkupPlaceholderTag(true);
 
@@ -369,34 +407,6 @@ public class LegacyCurationPage
     }
 
     @Override
-    public IModel<List<DecoratedObject<Project>>> getAllowedProjects()
-    {
-        return new LoadableDetachableModel<List<DecoratedObject<Project>>>()
-        {
-            private static final long serialVersionUID = -2518743298741342852L;
-
-            @Override
-            protected List<DecoratedObject<Project>> load()
-            {
-                var user = userRepository.getCurrentUser();
-                var allowedProject = new ArrayList<DecoratedObject<Project>>();
-                var projectsWithFinishedAnnos = projectService.listProjectsWithFinishedAnnos();
-                for (var project : projectService.listProjectsWithUserHavingRole(user, CURATOR)) {
-                    var dp = DecoratedObject.of(project);
-                    if (projectsWithFinishedAnnos.contains(project)) {
-                        dp.setColor("green");
-                    }
-                    else {
-                        dp.setColor("red");
-                    }
-                    allowedProject.add(dp);
-                }
-                return allowedProject;
-            }
-        };
-    }
-
-    @Override
     public void setModel(IModel<AnnotatorState> aModel)
     {
         setDefaultModel(aModel);
@@ -487,7 +497,69 @@ public class LegacyCurationPage
     }
 
     @Override
-    public AnnotationActionHandler getAnnotationActionHandler()
+    public Optional<DiamContext> getActiveContext()
+    {
+        return Optional.of(this);
+    }
+
+    @Override
+    public boolean hasEditor()
+    {
+        return getModelObject().getDocument() != null;
+    }
+
+    @Override
+    public void setActiveContext(AjaxRequestTarget aTarget, DiamContext aContext)
+    {
+        // The context is fixed to this page, so there is nothing to switch to.
+    }
+
+    @Override
+    public void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument, int aBegin,
+            int aEnd, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        ensureIsAccessible(aDocument);
+
+        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, aAdditionalPingRanges);
+    }
+
+    @Override
+    public void ensureIsAccessible(SourceDocument aDocument) throws AnnotationException
+    {
+        if (!getListOfDocs().contains(aDocument)) {
+            throw new AnnotationException(
+                    "Document [" + aDocument.getName() + "] is not accessible.");
+        }
+    }
+
+    @Override
+    public Optional<DiamContext> findEditorFor(SourceDocument aDocument, AnnotationSet aDataOwner)
+    {
+        // Page is its own single editor - it is either showing the document or nothing is.
+        var state = getModelObject();
+        if (!Objects.equals(state.getDocument(), aDocument)
+                || !Objects.equals(state.getDataOwner(), aDataOwner)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(this);
+    }
+
+    @Override
+    public DiamContext resolveEditorFor(SourceDocument aDocument)
+    {
+        return this;
+    }
+
+    @Override
+    public DocumentEditorManager getDocumentEditorManager()
+    {
+        return this;
+    }
+
+    @Override
+    public AnnotationActionHandler getActionHandler()
     {
         return this;
     }
@@ -508,7 +580,15 @@ public class LegacyCurationPage
     public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
         throws AnnotationException
     {
-        actionShowDocument(aTarget, aDocument);
+        var docs = getListOfDocs();
+        if (!docs.contains(aDocument)) {
+            throw new AnnotationException(
+                    "Document [" + aDocument.getName() + "] is not accessible.");
+        }
+
+        // Keep the full list on the state so the position label stays "[doc i / n]"-consistent.
+        getModelObject().setDocument(aDocument, docs);
+        actionLoadDocument(aTarget);
     }
 
     @Override
@@ -550,8 +630,8 @@ public class LegacyCurationPage
                 currentprojectId = project.getId();
             }
 
-            var mergeCas = readOrCreateCurationCas(curationService.getDefaultMergeStrategy(project),
-                    LOAD_ONLY);
+            var mergeCas = readOrCreateCurationCas(state.getDocument(),
+                    curationService.getDefaultMergeStrategy(project), LOAD_ONLY);
 
             // Initialize timestamp in state
             curationDocumentService.getCurationCasTimestamp(state.getDocument())
@@ -578,122 +658,10 @@ public class LegacyCurationPage
         LOG.trace("END LOAD_DOCUMENT_ACTION");
     }
 
-    public CAS readOrCreateCurationCas(MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
-        throws IOException, UIMAException, ClassNotFoundException, AnnotationException
+    @Override
+    public CurationEditingService getCurationEditingService()
     {
-        var state = getModelObject();
-        var document = state.getDocument();
-
-        var curatableUsers = curationDocumentService.listCuratableUsers(document);
-
-        if (!curationDocumentService.isDocumentCuratable(document)) {
-            refuseCuration(document);
-        }
-
-        // If there is no curation CAS set and there are no users from whom a template could be
-        // created
-        // we refuse curation.
-        if (curatableUsers.isEmpty() && !curationDocumentService.existsCurationCas(document)) {
-            refuseCuration(document);
-        }
-
-        // A re-merge deletes the existing curation CAS and rebuilds it from the annotation data of
-        // the curatable users. Without any curatable users that would destroy the curator's work
-        // without being able to produce anything in its place.
-        if (aMergeMode == RECREATE && curatableUsers.isEmpty()) {
-            throw new AnnotationException("Cannot re-create the curation document for ["
-                    + document.getName() + "]: there are no finished annotation documents to merge "
-                    + "from. Re-creating it would irrevocably discard the existing curation "
-                    + "results. Set at least one annotation document back to "
-                    + AnnotationDocumentState.FINISHED + " first.");
-        }
-
-        var casses = documentService.readAllCasesSharedNoUpgrade(document, curatableUsers);
-
-        var templateUser = curatableUsers.isEmpty() ? null : curatableUsers.get(0).getUsername();
-        var curationCas = readCurationCas(state, document, casses, templateUser, true,
-                aMergeStrategy, aMergeMode);
-
-        curationDocumentService.markCurationInProgress(document);
-
-        return curationCas;
-    }
-
-    private void refuseCuration(SourceDocument aDocument)
-    {
-        getSession().error("Document [" + aDocument.getName() + "] has the state "
-                + aDocument.getState()
-                + " and is not ready for curation. By default, a document can "
-                + "only be curated once annotation on it is complete (the document has reached the "
-                + AnnotationDocumentState.FINISHED + " state) - depending on the workload regime, "
-                + "this may require more than a single annotator to finish. This can also happen "
-                + "when curation on a document was already started and afterwards all annotators "
-                + "were removed from the project, disabled or put back into "
-                + AnnotationDocumentState.IN_PROGRESS
-                + " mode, or after importing a project without "
-                + "importing/enabling its users. To curate incomplete data on purpose, an "
-                + "administrator can enable the legacy curatable-documents strategy in the "
-                + "application configuration. Otherwise, use the monitoring page to reset the "
-                + "curation state of this document.");
-
-        var pageParameters = new PageParameters();
-        setProjectPageParameter(pageParameters, getProject());
-
-        // Skip to the next curatable document rather than ejecting the curator to the project page
-        var nextDocument = findNextCuratableDocument(aDocument);
-        if (nextDocument.isPresent()) {
-            pageParameters.set(PAGE_PARAM_DOCUMENT, nextDocument.get().getId());
-        }
-
-        throw new RestartResponseException(LegacyCurationPage.class, pageParameters);
-    }
-
-    /**
-     * @return the first document after the given one that can actually be opened for curation, if
-     *         any (skipping any that are not openable).
-     */
-    private Optional<SourceDocument> findNextCuratableDocument(SourceDocument aDocument)
-    {
-        try {
-            var docs = getListOfDocs();
-            var index = docs.indexOf(aDocument);
-            if (index < 0) {
-                return Optional.empty();
-            }
-
-            for (var candidate : docs.subList(index + 1, docs.size())) {
-                if (isOpenableForCuration(candidate)) {
-                    return Optional.of(candidate);
-                }
-            }
-        }
-        catch (Exception e) {
-            LOG.warn("Unable to determine the next curatable document after {}", aDocument, e);
-        }
-
-        return Optional.empty();
-    }
-
-    /**
-     * @return whether the given document may be opened for curation. Mirrors the refusal condition
-     *         in {@link #readOrCreateCurationCas} - see
-     *         {@link CurationDocumentService#isDocumentCuratable}.
-     */
-    private boolean isOpenableForCuration(SourceDocument aDocument)
-    {
-        if (!curationDocumentService.isDocumentCuratable(aDocument)) {
-            return false;
-        }
-
-        try {
-            return !curationDocumentService.listCuratableUsers(aDocument).isEmpty()
-                    || curationDocumentService.existsCurationCas(aDocument);
-        }
-        catch (IOException e) {
-            LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
-                    aDocument, e);
-            return true;
-        }
+        return curationEditingService;
     }
 
     @Override
@@ -710,7 +678,6 @@ public class LegacyCurationPage
         }
     }
 
-    @Override
     protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
             StringValue aUser)
     {
@@ -753,7 +720,6 @@ public class LegacyCurationPage
         }
     }
 
-    @Override
     protected void updateDocumentView(AjaxRequestTarget aTarget, SourceDocument aPreviousDocument,
             User aPreviousUser, StringValue aFocusParameter)
     {
@@ -808,8 +774,12 @@ public class LegacyCurationPage
         var casses = documentService.readAllCasesSharedNoUpgrade(aState.getDocument(),
                 curatableUsers);
 
-        var editorCas = readCurationCas(aState, aState.getDocument(), casses, null, false,
+        var editorCas = curationEditingService.readCurationCas(document,
+                aState.getUser().getUsername(), casses, null, false, aState.getAnnotationLayers(),
                 curationService.getDefaultMergeStrategy(getProject()), LOAD_ONLY);
+
+        curationDocumentService.getCurationCasTimestamp(document)
+                .ifPresent(aState::setAnnotationDocumentTimestamp);
 
         casses.put(CURATION_USER, editorCas);
 
@@ -838,92 +808,146 @@ public class LegacyCurationPage
         return curationUnitList;
     }
 
-    /**
-     * Fetches the CAS that the user will be able to edit. In AUTOMATION/CORRECTION mode, this is
-     * the CAS for the CORRECTION_USER and in CURATION mode it is the CAS for the CURATION user.
-     *
-     * @param aState
-     *            the model.
-     * @param aDocument
-     *            the source document.
-     * @param aCasses
-     *            the CASes.
-     * @param aTemplateUser
-     *            an annotation document which is used as a template for the new merge CAS.
-     * @return the CAS.
-     * @throws UIMAException
-     *             hum?
-     * @throws IOException
-     *             if an I/O error occurs.
-     */
-    private CAS readCurationCas(AnnotatorState aState, SourceDocument aDocument,
-            Map<String, CAS> aCasses, String aTemplateUser, boolean aUpgrade,
-            MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
-        throws UIMAException, IOException
-    {
-        CAS mergeCas;
-
-        var curationCasExists = curationDocumentService.existsCurationCas(aDocument);
-
-        // If no curation CAS exists yet, there is nothing to load or merge into, so we always have
-        // to recreate it from the annotators - regardless of the requested merge mode.
-        var effectiveMergeMode = curationCasExists ? aMergeMode : RECREATE;
-
-        switch (effectiveMergeMode) {
-        case RECREATE:
-            if (aTemplateUser == null) {
-                throw new IllegalStateException("Cannot create a curation document for ["
-                        + aDocument.getName() + "] without a template annotation document");
-            }
-
-            // We need a modifiable copy of some annotation document which we can use to initialize
-            // the curation CAS. This is an exceptional case where UNMANAGED_ACCESS is the correct
-            // choice
-            mergeCas = documentService.readAnnotationCas(aDocument,
-                    AnnotationSet.forUser(aTemplateUser), FORCE_CAS_UPGRADE, UNMANAGED_ACCESS);
-            curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
-                    mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), true);
-            curationDocumentService.deleteCurationCas(aDocument);
-            curationDocumentService.writeCurationCas(mergeCas, aDocument, false);
-            break;
-        case FILL_ONLY:
-            // Merge into the existing curation CAS without clearing it first, so that annotations
-            // already present in the curation document (e.g. curator decisions) are preserved. As
-            // we mutate and persist the target CAS, it must be upgraded to the current type system
-            // first - just like in the LOAD_ONLY case below.
-            mergeCas = curationDocumentService.readCurationCas(aDocument);
-
-            if (aUpgrade) {
-                curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
-            }
-
-            curationMergeService.mergeCasses(aState.getDocument(), aState.getUser().getUsername(),
-                    mergeCas, aCasses, aMergeStrategy, aState.getAnnotationLayers(), false);
-            curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
-            break;
-        case LOAD_ONLY:
-            // Load the existing curation CAS as-is without merging anything into it.
-            mergeCas = curationDocumentService.readCurationCas(aDocument);
-
-            if (aUpgrade) {
-                curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
-                curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
-            }
-            break;
-        default:
-            throw new IllegalArgumentException(
-                    "Unsupported curation merge mode [" + effectiveMergeMode + "]");
-        }
-
-        curationDocumentService.getCurationCasTimestamp(aState.getDocument())
-                .ifPresent(aState::setAnnotationDocumentTimestamp);
-
-        return mergeCas;
-    }
-
     @Override
     public Optional<ContextMenuLookup> getContextMenuLookup()
     {
         return annotationEditor.getContextMenuLookup();
+    }
+
+    private void pushParametersIntoUrl(PageParameters aParams, StringValue aDocumentParameter)
+    {
+        var requestCycle = getRequestCycle();
+
+        aParams.remove(PAGE_PARAM_DOCUMENT);
+
+        var url = Url.parse(requestCycle.urlFor(this.getClass(), aParams));
+        var finalUrl = requestCycle.getUrlRenderer().renderFullUrl(url) + "#!"
+                + format("%s=%s", PAGE_PARAM_DOCUMENT, aDocumentParameter.toString());
+        LOG.trace("Pushing parameter for document [{}] into fragment: {} (URL redirect)",
+                aDocumentParameter, finalUrl);
+        throw new RedirectToUrlException(finalUrl.toString());
+    }
+
+    /**
+     * Create the behavior which reacts to URL fragment changes.
+     * <p>
+     * Note this page does <em>not</em> push state back into the URL fragment - it never called the
+     * inherited {@code updateUrlFragment}, so switching documents in the page leaves the fragment
+     * showing the document it was opened with. Preserved as-is; see the note on independent
+     * evolution of the URL handling.
+     *
+     * @return the behavior. It has not been added to the page yet.
+     */
+    protected UrlFragmentBehavior createUrlFragmentBehavior()
+    {
+        return new UrlFragmentBehavior(this::getUrlFragmentParameters,
+                this::onUrlFragmentParameterArrival);
+    }
+
+    private void onUrlFragmentParameterArrival(IRequestParameters aRequestParameters,
+            AjaxRequestTarget aTarget)
+    {
+        var document = aRequestParameters.getParameterValue(PAGE_PARAM_DOCUMENT);
+        var focus = aRequestParameters.getParameterValue(PAGE_PARAM_FOCUS);
+
+        if (document.isEmpty() && focus.isEmpty()) {
+            return;
+        }
+
+        LOG.trace("URL fragment update: {} focus {}", document, focus);
+
+        var previousDoc = getModelObject().getDocument();
+        var previousUser = getModelObject().getUser();
+
+        handleParameters(document, focus, null);
+
+        updateDocumentView(aTarget, previousDoc, previousUser, focus);
+    }
+
+    /**
+     * @return the parameters that the URL fragment should carry for the current state. Parameters
+     *         mapped to {@code null} are removed from the URL fragment. The data owner is always
+     *         the CURATION_USER on this page, so it is never put into the fragment.
+     */
+    protected Map<String, Object> getUrlFragmentParameters()
+    {
+        var state = getModelObject();
+
+        if (state.getDocument() == null) {
+            return emptyMap();
+        }
+
+        var parameters = new LinkedHashMap<String, Object>();
+
+        parameters.put(PAGE_PARAM_DOCUMENT, state.getDocument().getId());
+
+        parameters.put(PAGE_PARAM_FOCUS,
+                state.getFocusUnitIndex() > 0 ? state.getFocusUnitIndex() : null);
+
+        return parameters;
+    }
+
+    private String loadAnnotationNotEditableReason()
+    {
+        try {
+            var state = getModelObject();
+            var sessionOwner = userRepository.getCurrentUser();
+            documentAccess.assertCanEditAnnotationDocument(sessionOwner, state.getDocument(),
+                    state.getUser().getUsername());
+            return null;
+        }
+        catch (AccessDeniedException e) {
+            return e.getMessage();
+        }
+    }
+
+    /**
+     * @deprecated The page should no longer know about editors. Use {@link #getActiveContext()}
+     *             instead.
+     */
+    @Deprecated
+    public void ensureIsEditable() throws NotEditableException
+    {
+        var state = getModelObject();
+
+        if (state.getDocument() == null) {
+            throw new NotEditableException("No document selected");
+        }
+
+        var notEditableReason = annotationNotEditableReason.getObject();
+        if (notEditableReason != null) {
+            throw new NotEditableException(notEditableReason);
+        }
+    }
+
+    /**
+     * Discard the cached editability verdict so that the next {@link #isEditable()} or
+     * {@link #ensureIsEditable()} re-evaluates it.
+     * 
+     * @deprecated The page should no longer know about editors. Use {@link #getActiveContext()}
+     *             instead.
+     */
+    @Deprecated
+    protected void clearIsEditableCache()
+    {
+        annotationNotEditableReason.detach();
+    }
+
+    public boolean isEditable()
+    {
+        try {
+            ensureIsEditable();
+            return true;
+        }
+        catch (NotEditableException e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void detachModels()
+    {
+        super.detachModels();
+        annotationNotEditableReason.detach();
     }
 }

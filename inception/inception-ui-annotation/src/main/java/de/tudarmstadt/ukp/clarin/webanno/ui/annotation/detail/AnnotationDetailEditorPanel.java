@@ -64,10 +64,8 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
@@ -78,15 +76,16 @@ import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.diam.editing.AnnotationEditingService;
 import de.tudarmstadt.ukp.inception.diam.editing.PartialDeleteException;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
@@ -124,14 +123,14 @@ public class AnnotationDetailEditorPanel
 
     // Components
     private final BootstrapModalDialog confirmationDialog;
-    private final AnnotationPageBase editorPage;
+    private final DocumentEditorManager editorPage;
 
-    public AnnotationDetailEditorPanel(String id, AnnotationPageBase aPage,
+    public AnnotationDetailEditorPanel(String id, DocumentEditorManager aManager,
             IModel<AnnotatorState> aModel)
     {
-        super(id, new CompoundPropertyModel<>(new ActiveStateModel(aPage, aModel)));
+        super(id, new CompoundPropertyModel<>(new ActiveStateModel(aManager, aModel)));
 
-        editorPage = aPage;
+        editorPage = aManager;
 
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
@@ -149,7 +148,7 @@ public class AnnotationDetailEditorPanel
         queue(new AnnotationInfoPanel("infoContainer", getModel(), this));
         queue(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
                 getModel(), this));
-        queue(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aPage,
+        queue(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aManager,
                 getModel()));
         relationListPanel.setOutputMarkupPlaceholderTag(true);
 
@@ -308,19 +307,22 @@ public class AnnotationDetailEditorPanel
         activeActionHandler().ensureIsEditable();
     }
 
-    private boolean isActiveEditorEditable()
+    boolean isActiveEditorEditable()
     {
-        return activeActionHandler().isEditable();
+        return editorPage.getActiveContext() //
+                .map(DiamContext::getActionHandler) //
+                .map(AnnotationActionHandler::isEditable) //
+                .orElse(false);
     }
 
     AnnotationActionHandler activeActionHandler()
     {
-        return editorPage.getActiveContext().getActionHandler();
+        return editorPage.getActiveContext().orElseThrow().getActionHandler();
     }
 
     CAS activeEditorCas() throws IOException
     {
-        return editorPage.getActiveContext().getEditorCas();
+        return editorPage.getActiveContext().orElseThrow().getEditorCas();
     }
 
     /**
@@ -356,31 +358,6 @@ public class AnnotationDetailEditorPanel
         actionLoadSelectionDetails(aTarget);
     }
 
-    public void actionJump(AjaxRequestTarget aTarget, int aBegin, int aEnd)
-        throws IOException, AnnotationException
-    {
-        editorPage.getActiveContext().actionShowSelectedDocument(aTarget,
-                getModelObject().getDocument(), aBegin, aEnd);
-    }
-
-    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
-        throws IOException, AnnotationException
-    {
-        // The main editor is hosted by a page that can switch documents. Unlike actionJump (which
-        // stays in the current document), honor the requested target document so a cross-document
-        // scroll-to (search hit / cross-document link) opens that document before centering.
-        editorPage.actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
-    }
-
-    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
-        throws IOException, AnnotationException
-    {
-        editorPage.actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd,
-                aAdditionalPingRanges);
-    }
-
     private void actionSelectAndJump(AjaxRequestTarget aTarget, AnnotationFS annoFs)
         throws IOException, AnnotationException
     {
@@ -389,7 +366,7 @@ public class AnnotationDetailEditorPanel
         var state = getModelObject();
         var doc = state.getDocument();
 
-        var context = editorPage.getActiveContext();
+        var context = editorPage.getActiveContext().orElseThrow();
 
         // Resolve the ping ranges in the active context's CAS - that is where the selection's
         // origin/target addresses come from.
@@ -759,12 +736,15 @@ public class AnnotationDetailEditorPanel
             return;
         }
 
+        var context = aEvent.getContext();
+        if (context == null) {
+            // No active editor - re-render panel to hide it
+            refresh(target);
+            return;
+        }
+
         try {
-            // Follow the newly activated editor: show what it has selected, or clear if it has
-            // nothing selected. An editor switch is not the prelude to creating an annotation, so
-            // "nothing selected" means "nothing to show" here rather than "a new annotation is
-            // being started".
-            if (getModelObject().getSelection().getAnnotation().isNotSet()) {
+            if (context.getAnnotatorState().getSelection().getAnnotation().isNotSet()) {
                 reset(target);
             }
             else {
@@ -989,33 +969,32 @@ public class AnnotationDetailEditorPanel
     {
         private static final long serialVersionUID = -7069428645365760907L;
 
-        private final AnnotationPageBase page;
-        private final IModel<AnnotatorState> mainEditorState;
+        private final DocumentEditorManager manager;
+        private final IModel<AnnotatorState> activeEditorState;
 
-        ActiveStateModel(AnnotationPageBase aPage, IModel<AnnotatorState> aMainEditorState)
+        ActiveStateModel(DocumentEditorManager aManager, IModel<AnnotatorState> aActiveEditorState)
         {
-            page = aPage;
-            mainEditorState = aMainEditorState;
+            manager = aManager;
+            activeEditorState = aActiveEditorState;
         }
 
         @Override
         public AnnotatorState getObject()
         {
-            return page.getActiveContext().getAnnotatorState();
+            return manager.getActiveContext() //
+                    .map(DiamContext::getAnnotatorState) //
+                    .orElse(null);
         }
 
         @Override
         public void detach()
         {
-            // Detach both: the main editor's model is what we were constructed with, while the
-            // active context may be a secondary editor (e.g. the reference document sidebar) whose
-            // state model is a plain field that no component detaches for us.
-            mainEditorState.detach();
+            activeEditorState.detach();
 
-            var activeState = page.getActiveContext().getStateModel();
-            if (activeState != mainEditorState) {
-                activeState.detach();
-            }
+            manager.getActiveContext() //
+                    .map(DiamContext::getStateModel) //
+                    .filter(activeState -> activeState != activeEditorState) //
+                    .ifPresent(IModel::detach);
         }
     }
 

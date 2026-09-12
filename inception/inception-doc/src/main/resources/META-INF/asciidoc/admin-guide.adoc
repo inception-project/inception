@@ -153,3 +153,5 @@ include::{include-dir}settings_versioning.adoc[leveloffset=+1]
 include::{include-dir}settings_websocket.adoc[leveloffset=+1]
 
 include::{include-dir}settings_assistant.adoc[leveloffset=+1]
+
+include::{include-dir}settings_reference_document.adoc[leveloffset=+1]

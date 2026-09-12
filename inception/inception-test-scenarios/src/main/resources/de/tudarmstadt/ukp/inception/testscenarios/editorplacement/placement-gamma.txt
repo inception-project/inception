@@ -1,0 +1,5 @@
+Gamma document. Reporters from the BBC and Le Monde covered the meeting.
+The talks continued in Paris through the following week.
+This is the third of three documents in the editor-placement scenario.
+Its distinctive marker word is GAMMAMARKER, so a test can tell which document
+is currently shown in a given editor without relying on the document title.

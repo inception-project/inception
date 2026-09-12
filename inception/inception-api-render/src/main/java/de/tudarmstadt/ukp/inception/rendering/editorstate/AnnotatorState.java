@@ -26,6 +26,7 @@ import java.util.Set;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.model.ParsedConstraints;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -56,6 +57,12 @@ public interface AnnotatorState
      *            might invalidate the VIDs).
      */
     void setAnnotationDocumentTimestamp(long aTimeStamp);
+
+    /**
+     * Clear the annotation document timestamp. This would be used e.g. when loading read-only
+     * documents which require no concurrent modification detection.
+     */
+    void clearAnnotationDocumentTimestamp();
 
     // ---------------------------------------------------------------------------------------------
     // Annotation behavior
@@ -101,6 +108,8 @@ public interface AnnotatorState
     User getUser();
 
     void setUser(User aUser);
+
+    AnnotationSet getDataOwner();
 
     /**
      * @param aCurrentUserName

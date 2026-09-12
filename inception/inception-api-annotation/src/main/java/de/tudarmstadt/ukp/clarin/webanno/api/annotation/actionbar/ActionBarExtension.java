@@ -19,11 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 
 import org.apache.wicket.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.Extension;
 
 public interface ActionBarExtension
-    extends Extension<AnnotationPageBase>
+    extends Extension<ActionBarContext>
 {
     public static final int ORDER_DOCUMENT_NAVIGATOR = 0;
     public static final int ORDER_UNDO = 1000;
@@ -37,6 +36,9 @@ public interface ActionBarExtension
 
     public static final String ROLE_NAVIGATOR = "navigator";
 
+    public static final int PRIORITY_GLOBAL = 1000;
+    public static final int PRIORITY_LOCAL = 2000;
+
     @Override
     default String getId()
     {
@@ -44,7 +46,7 @@ public interface ActionBarExtension
     }
 
     @Override
-    default boolean accepts(AnnotationPageBase aPage)
+    default boolean accepts(ActionBarContext aContext)
     {
         return true;
     }
@@ -68,25 +70,24 @@ public interface ActionBarExtension
         return 0;
     }
 
-    Component createActionBarItem(String aId, AnnotationPageBase aPage);
+    Component createActionBarItem(String aId, ActionBarContext aContext);
 
     /**
-     * Called when the {@link ActionBar} is added to the page or when its contents change based on
-     * the page state and the {@link #accepts(AnnotationPageBase)} method. This allows the action
-     * bar extensions e.g. to inject behaviors into the page before their items are even visible on
-     * screen.
+     * Called when the {@link ActionBar} is added or when its contents change based on the state and
+     * the {@link #accepts(ActionBarContext)} method. This allows the action bar extensions e.g. to
+     * inject behaviors before their items are even visible on screen. by whichever action bar
+     * initializes first.
      */
-    default void onInitialize(AnnotationPageBase aPage)
+    default void onInitialize(ActionBarContext aContext)
     {
         // Do nothing by default
     }
 
     /**
-     * Called when the {@link ActionBar} contents change based on the page state and the
-     * {@link #accepts(AnnotationPageBase)} method. This allows the action bar extensions e.g. to
-     * inject behaviors into the page before their items are even visible on screen.
+     * Called when the {@link ActionBar} contents change based on the state and the
+     * {@link #accepts(ActionBarContext)} method.
      */
-    default void onRemove(AnnotationPageBase aPage)
+    default void onRemove(ActionBarContext aContext)
     {
         // Do nothing by default
     }

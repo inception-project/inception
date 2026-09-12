@@ -49,7 +49,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -59,7 +58,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar
 import de.tudarmstadt.ukp.inception.app.ui.search.Formats;
 import de.tudarmstadt.ukp.inception.app.ui.search.sidebar.options.StatisticsOptions;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.Granularities;
@@ -129,10 +127,9 @@ public class StatisticsAnnotationSidebar
 
     private StatisticsProvider statsProvider;
 
-    public StatisticsAnnotationSidebar(String aId, AnnotationActionHandler aActionHandler,
-            CasProvider aCasProvider, AnnotationPageBase2 aAnnotationPage)
+    public StatisticsAnnotationSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
     {
-        super(aId, aActionHandler, aCasProvider, aAnnotationPage);
+        super(aId, aAnnotationPage);
 
         setOutputMarkupId(true);
         setOutputMarkupPlaceholderTag(true);
@@ -155,17 +152,6 @@ public class StatisticsAnnotationSidebar
         withoutProblematicStats = null;
 
         layerStatsList = null;
-
-        /*
-         * //userPreferencesService.loadPreferences(aModel.getObject(), currentUser.getUsername())
-         * //layers = aModel.getObject().getAnnotationLayers(); //layers =
-         * aModel.getObject().getSelectableLayers(); hiddenLayerIds =
-         * aModel.getObject().getPreferences().getHiddenAnnotationLayerIds();
-         * //userPreferencesService.loadPreferences(projectModel,currentUser.getUsername(),)
-         * features = new ArrayList<AnnotationFeature>(); for (AnnotationFeature feature:
-         * annotationService.listAnnotationFeature(projectModel.getObject())) { if
-         * (!hiddenLayerIds.contains(feature.getLayer().getId())) { features.add(feature); } }
-         */
 
         features = annotationService.listSupportedFeatures(projectModel.getObject());
 

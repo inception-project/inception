@@ -31,7 +31,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
 import static org.apache.commons.collections4.CollectionUtils.isEmpty;
 
-import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -77,6 +76,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer_;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -127,6 +127,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -580,7 +581,8 @@ public class RecommendationServiceImpl
         // suggestions that need to be processed (in particular ones that may have been generated
         // by the non-trainable recommenders triggered above or from already existing predictions
         if (aEvent.getStateBeforeOpening() == AnnotationDocumentState.NEW) {
-            autoAcceptOnDocumentOpen(aEvent.getRequestTarget().orElse(null), sessionOwner, doc,
+            autoAcceptOnDocumentOpen(aEvent.getSource(), aEvent.getRequestTarget().orElse(null),
+                    sessionOwner, doc, AnnotationSet.forUser(dataOwner), aEvent.getCas(),
                     ON_FIRST_ACCESS);
         }
 
@@ -661,21 +663,28 @@ public class RecommendationServiceImpl
         return true;
     }
 
-    private void autoAcceptOnDocumentOpen(AjaxRequestTarget aTarget, User aSessionOwner,
-            SourceDocument aDocument, AutoAcceptMode aAutoAcceptMode)
+    private void autoAcceptOnDocumentOpen(DocumentEditorManager aManager, AjaxRequestTarget aTarget,
+            User aSessionOwner, SourceDocument aDocument, AnnotationSet aDataOwner, CAS aCas,
+            AutoAcceptMode aAutoAcceptMode)
     {
+        if (!(aManager instanceof AnnotationPage page)) {
+            LOG.trace("Not auto-accepting when not triggered through AnnotationPage");
+            return;
+        }
+
         if (aTarget == null) {
             LOG.trace("Not auto-accepting outside AJAX requests");
             return;
         }
 
-        if (!(aTarget.getPage() instanceof AnnotationPage)) {
-            LOG.trace("Not auto-accepting when not triggered through AnnotationPage");
+        var context = aManager.findEditorFor(aDocument, aDataOwner).orElse(null);
+        if (context == null) {
+            LOG.trace("Not auto-accepting because no editor holds the opened document");
             return;
         }
 
-        var page = (AnnotationPage) aTarget.getPage();
-        if (!page.isEditable()) {
+        var handler = context.getActionHandler();
+        if (!handler.isEditable()) {
             return;
         }
 
@@ -685,20 +694,11 @@ public class RecommendationServiceImpl
             return;
         }
 
-        CAS cas;
-        try {
-            cas = page.getEditorCas();
-        }
-        catch (IOException e) {
-            LOG.error("Not auto-accepting because editor CAS could not be loaded", e);
-            return;
-        }
-
-        var accepted = autoAccept(aSessionOwner, aDocument, aAutoAcceptMode, predictions, cas);
+        var accepted = autoAccept(aSessionOwner, aDocument, aAutoAcceptMode, predictions, aCas);
 
         if (accepted > 0) {
             try {
-                page.writeEditorCas(cas);
+                handler.writeEditorCas(aCas);
             }
             catch (Exception e) {
                 WicketExceptionUtil.handleException(LOG, page, aTarget, e);

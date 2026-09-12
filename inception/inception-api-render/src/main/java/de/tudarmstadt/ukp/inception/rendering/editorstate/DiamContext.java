@@ -19,10 +19,9 @@ package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
-import org.apache.wicket.Component;
-import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 
@@ -32,23 +31,8 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 
 /**
- * Editor-scoped context through which DIAM AJAX request handlers resolve the annotator state, the
- * editor CAS and the action handler of the editor they are serving.
- * <p>
- * Handlers used to resolve all of these via {@code getPage()}, which always returned the
- * <i>main</i> editor's page regardless of which editor's {@code DiamAjaxBehavior} received the
- * request. By going through a context held on the behavior instead, handlers can serve alternative
- * editors (e.g. a read-only editor embedded in a sidebar) without leaking actions into the main
- * editor.
- * <p>
- * Editability is <i>not</i> part of this context: it is a property of the
- * {@link AnnotationActionHandler} (which performs the writes), so mutating handlers fail closed via
- * {@code getActionHandler().ensureIsEditable()}.
- * <p>
- * A context is mandatory: every {@code DiamAjaxBehavior} is constructed with one and handlers
- * dereference it unconditionally. {@code AnnotationPageBase} implements this interface, so the main
- * editor simply supplies its page as the context, reproducing the historic {@code getPage()}
- * behavior.
+ * Editor context through which DIAM AJAX request handlers resolve the annotator state, the editor
+ * CAS and the action handler of the editor they are serving.
  */
 public interface DiamContext
 {
@@ -79,7 +63,20 @@ public interface DiamContext
     AnnotationActionHandler getActionHandler();
 
     /**
-     * Activate this context. Best-effort going through the page.
+     * @return whether this editor is a true editor or rather a permanently read-only viewer.
+     */
+    default boolean isEditor()
+    {
+        return true;
+    }
+
+    /**
+     * @return the manager that owns the editor served by this context.
+     */
+    DocumentEditorManager getDocumentEditorManager();
+
+    /**
+     * Make the editor served by this context the active one.
      *
      * @param aTarget
      *            the AJAX target, so consumers can be refreshed. May be {@code null} outside a
@@ -87,16 +84,7 @@ public interface DiamContext
      */
     default void activate(AjaxRequestTarget aTarget)
     {
-        if (!(this instanceof Component component)) {
-            return;
-        }
-
-        var page = component.findParent(Page.class);
-        page = page != null ? page : component.getPage();
-
-        if (page instanceof ActiveEditorContextHolder holder) {
-            holder.setActiveContext(aTarget, this);
-        }
+        getDocumentEditorManager().setActiveContext(aTarget, this);
     }
 
     /**
@@ -210,4 +198,14 @@ public interface DiamContext
      *            the AJAX target
      */
     void actionRefreshDocument(AjaxRequestTarget aTarget);
+
+    /**
+     * @return the markup id under which the editor served by this context registers with the host
+     *         page's viewport-sync hub, or {@link Optional#empty()} if it has no editor yet or the
+     *         editor does not participate in cross-editor scroll synchronization.
+     */
+    default Optional<String> getViewportSyncClientId()
+    {
+        return Optional.empty();
+    }
 }

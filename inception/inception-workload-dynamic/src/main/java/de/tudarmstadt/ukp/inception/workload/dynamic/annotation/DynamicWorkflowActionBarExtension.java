@@ -24,8 +24,8 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.workload.dynamic.config.DynamicWorkloadManagerAutoConfiguration;
@@ -68,10 +68,17 @@ public class DynamicWorkflowActionBarExtension
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aPage)
+    public boolean accepts(ActionBarContext aContext)
     {
-        // Issue #1813 fix
-        var project = aPage.getModelObject().getProject();
+        if (!aContext.hasDocument()) {
+            return false;
+        }
+
+        if (!aContext.editorContext().isEditor()) {
+            return false;
+        }
+
+        var project = aContext.page().getModelObject().getProject();
         if (project == null) {
             return false;
         }
@@ -85,8 +92,8 @@ public class DynamicWorkflowActionBarExtension
     }
 
     @Override
-    public Panel createActionBarItem(String aID, AnnotationPageBase aAnnotationPageBase)
+    public Panel createActionBarItem(String aID, ActionBarContext aContext)
     {
-        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aAnnotationPageBase);
+        return new DynamicAnnotatorWorkflowActionBarItemGroup(aID, aContext);
     }
 }

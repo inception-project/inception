@@ -43,7 +43,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
@@ -256,9 +256,9 @@ public class RecommenderInfoPanel
         var sessionOwner = userService.getCurrentUser();
         var state = getModelObject();
 
-        var page = findParent(AnnotationPageBase.class);
+        var context = findParent(DocumentEditorManager.class).getActiveContext().orElseThrow();
 
-        var cas = page.getEditorCas();
+        var cas = context.getEditorCas();
 
         var predictions = recommendationService.getPredictions(sessionOwner, state.getProject(),
                 RECOMMENDER_SOURCE);
@@ -326,7 +326,7 @@ public class RecommenderInfoPanel
         }
 
         // Save CAS after annotations have been created
-        page.writeEditorCas(cas);
+        context.getActionHandler().writeEditorCas(cas);
 
         if (accepted > 0) {
             success(String.format("Accepted %d suggestions", accepted));
@@ -345,6 +345,6 @@ public class RecommenderInfoPanel
             aTarget.addChildren(getPage(), IFeedback.class);
         }
 
-        page.actionRefreshDocument(aTarget);
+        context.actionRefreshDocument(aTarget);
     }
 }

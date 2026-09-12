@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvide
 import de.tudarmstadt.ukp.inception.recogitojseditor.config.RecogitoHtmlAnnotationEditorSupportAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 
@@ -70,9 +71,10 @@ public class RecogitoHtmlAnnotationEditorFactory
 
     @Override
     public AnnotationEditorBase create(String aId, IModel<AnnotatorState> aModel,
-            AnnotationActionHandler aActionHandler, CasProvider aCasProvider)
+            DocumentEditorManager aManager, AnnotationActionHandler aActionHandler,
+            CasProvider aCasProvider)
     {
-        return new RecogitoHtmlAnnotationEditor(aId, aModel, aActionHandler, aCasProvider,
+        return new RecogitoHtmlAnnotationEditor(aId, aModel, aManager, aActionHandler, aCasProvider,
                 getBeanName());
     }
 

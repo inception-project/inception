@@ -26,6 +26,7 @@ import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.cycle.RequestCycle;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,21 +51,60 @@ public class DiamAjaxBehavior
 
     private boolean globalHandlersEnabled = true;
 
-    private DiamContext context;
+    private final SerializableSupplier<DiamContext> editorContextSupplier;
 
     private final ContextMenu contextMenu;
 
+    /**
+     * @param aContext
+     *            the editor context.
+     * @deprecated Use {@link DiamAjaxBehavior#DiamAjaxBehavior(SerializableSupplier)} instead
+     */
+    @Deprecated
     public DiamAjaxBehavior(DiamContext aContext)
     {
         this(aContext, null);
     }
 
+    /**
+     * @param aContext
+     *            the editor context.
+     * @param aContextMenu
+     *            the context menu to use, may be {@code null}.
+     * @deprecated Use {@link DiamAjaxBehavior#DiamAjaxBehavior(SerializableSupplier, ContextMenu)}
+     *             instead
+     */
+    @Deprecated
     public DiamAjaxBehavior(DiamContext aContext, ContextMenu aContextMenu)
     {
         Validate.notNull(aContext, "DiamContext must be set");
 
         contextMenu = aContextMenu;
-        context = aContext;
+        editorContextSupplier = () -> aContext;
+    }
+
+    /**
+     * @param aContextSupplier
+     *            resolves the editor context.
+     */
+    public DiamAjaxBehavior(SerializableSupplier<DiamContext> aContextSupplier)
+    {
+        this(aContextSupplier, null);
+    }
+
+    /**
+     * @param aContextSupplier
+     *            resolves the editor context.
+     * @param aContextMenu
+     *            the context menu to use, may be {@code null}.
+     */
+    public DiamAjaxBehavior(SerializableSupplier<DiamContext> aContextSupplier,
+            ContextMenu aContextMenu)
+    {
+        Validate.notNull(aContextSupplier, "A DiamContext supplier must be set");
+
+        contextMenu = aContextMenu;
+        editorContextSupplier = aContextSupplier;
     }
 
     public DiamAjaxBehavior addPriorityHandler(EditorAjaxRequestHandler aHandler)
@@ -80,11 +120,14 @@ public class DiamAjaxBehavior
     }
 
     /**
-     * @return the editor-scoped context through which handlers resolve state, CAS, action handler
-     *         and editability. Never {@code null} — it is mandatory and set at construction.
+     * @return the editor context.
      */
     public DiamContext getContext()
     {
+        var context = editorContextSupplier.get();
+
+        Validate.notNull(context, "No DiamContext available - there is no active editor");
+
         return context;
     }
 
@@ -97,29 +140,35 @@ public class DiamAjaxBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        var diamRequest = new DiamRequest(context, RequestCycle.get().getRequest());
+        var context = editorContextSupplier.get();
+        if (context == null) {
+            LOG.debug("Ignoring DIAM request: there is no active editor");
+            return;
+        }
+
+        var diamRequest = new DiamRequest(context, this, RequestCycle.get().getRequest());
 
         var priorityHandler = priorityHandlers.stream() //
                 .filter(handler -> handler.accepts(diamRequest)) //
                 .findFirst();
 
         if (priorityHandler.isPresent()) {
-            call(aTarget, priorityHandler.get());
+            call(aTarget, priorityHandler.get(), diamRequest);
             return;
         }
 
         if (globalHandlersEnabled) {
             handlers.getHandler(diamRequest) //
-                    .ifPresent(h -> call(aTarget, h));
+                    .ifPresent(h -> call(aTarget, h, diamRequest));
         }
     }
 
-    private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler)
+    private void call(AjaxRequestTarget aTarget, EditorAjaxRequestHandler aHandler,
+            DiamRequest aRequest)
     {
         LOG.trace("AJAX request received for {}", aHandler.getClass().getName());
-        var request = RequestCycle.get().getRequest();
         try (var watch = new ServerTimingWatch("diam", "diam (" + aHandler.getCommand() + ")")) {
-            aHandler.handle(this, aTarget, request);
+            aHandler.handle(aRequest, aTarget);
             return;
         }
     }

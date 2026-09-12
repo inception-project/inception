@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 
 public class ActionBar
     extends Panel
@@ -43,9 +44,19 @@ public class ActionBar
 
     private final Set<String> activeExtensions = new HashSet<>();
 
-    public ActionBar(String aId)
+    private final DiamContext editorContext;
+
+    /**
+     * @param aId
+     *            the component id.
+     * @param aEditorContext
+     *            the editor this action bar belongs to.
+     */
+    public ActionBar(String aId, DiamContext aEditorContext)
     {
         super(aId);
+
+        editorContext = aEditorContext;
 
         add(new ListView<ActionBarExtension>("items",
                 LoadableDetachableModel.of(this::getExtensions))
@@ -55,10 +66,15 @@ public class ActionBar
             @Override
             protected void populateItem(ListItem<ActionBarExtension> aItem)
             {
-                aItem.add(aItem.getModelObject().createActionBarItem("item",
-                        (AnnotationPageBase) getPage()));
+                aItem.add(
+                        aItem.getModelObject().createActionBarItem("item", newActionBarContext()));
             }
         });
+    }
+
+    private ActionBarContext newActionBarContext()
+    {
+        return new ActionBarContext((AnnotationPageBase) getPage(), editorContext);
     }
 
     @Override
@@ -66,22 +82,22 @@ public class ActionBar
     {
         super.onInitialize();
 
-        var page = (AnnotationPageBase) getPage();
+        var context = newActionBarContext();
         for (var ext : getExtensions()) {
-            ext.onInitialize(page);
+            ext.onInitialize(context);
             activeExtensions.add(ext.getId());
         }
     }
 
     public void refresh()
     {
-        var page = (AnnotationPageBase) getPage();
+        var context = newActionBarContext();
 
         // Notify removed extensions
         var extensions = getExtensions();
         for (var extId : new HashSet<>(activeExtensions)) {
             if (extensions.stream().noneMatch(ext -> extId.equals(ext.getId()))) {
-                actionBarExtensionPoint.getExtension(extId).ifPresent($ -> $.onRemove(page));
+                actionBarExtensionPoint.getExtension(extId).ifPresent($ -> $.onRemove(context));
                 activeExtensions.remove(extId);
                 LOG.debug("Removed footer extension: {}", extId);
             }
@@ -90,7 +106,7 @@ public class ActionBar
         // Notify added extensions
         for (var ext : extensions) {
             if (!activeExtensions.contains(ext.getId())) {
-                ext.onInitialize(page);
+                ext.onInitialize(context);
                 activeExtensions.add(ext.getId());
                 LOG.debug("Added footer extension: {}", ext.getId());
             }
@@ -99,6 +115,6 @@ public class ActionBar
 
     private List<ActionBarExtension> getExtensions()
     {
-        return actionBarExtensionPoint.getExtensions((AnnotationPageBase) getPage());
+        return actionBarExtensionPoint.getExtensions(newActionBarContext());
     }
 }

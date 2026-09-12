@@ -17,10 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface ActionBarExtensionPoint
-    extends ExtensionPoint<AnnotationPageBase, ActionBarExtension>
+    extends ExtensionPoint<ActionBarContext, ActionBarExtension>
 {
 }
