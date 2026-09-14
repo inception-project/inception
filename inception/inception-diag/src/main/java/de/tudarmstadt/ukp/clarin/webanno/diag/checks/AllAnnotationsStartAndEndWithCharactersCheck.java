@@ -23,6 +23,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeJava;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.springframework.util.CollectionUtils.isEmpty;
+import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.safeCoveredText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,18 @@ public class AllAnnotationsStartAndEndWithCharactersCheck
             }
 
             var docText = aCas.getDocumentText();
+            if (docText == null) {
+                continue;
+            }
+
             for (var ann : select(aCas, type)) {
+                if (ann.getEnd() > docText.length() || ann.getBegin() > docText.length()) {
+                    // Annotations reaching beyond the end of the document text are reported by
+                    // AllAnnotationsWithinDocumentTextCheck. Trimming them would fail, and the
+                    // clipping would look like whitespace being trimmed, so we skip them here.
+                    continue;
+                }
+
                 var offsets = new int[] { ann.getBegin(), ann.getEnd() };
                 TrimUtils.trim(docText, offsets);
 
@@ -96,7 +108,7 @@ public class AllAnnotationsStartAndEndWithCharactersCheck
 
                 aMessages.add(LogMessage.error(this, "[%s] [%s]@[%d-%d] %s with whitespace",
                         ann.getType().getName(),
-                        escapeJava(abbreviateMiddle(ann.getCoveredText(), "…", 20)), ann.getBegin(),
+                        escapeJava(abbreviateMiddle(safeCoveredText(ann), "…", 20)), ann.getBegin(),
                         ann.getEnd(), join(" and ", locations)));
 
                 ok = false;

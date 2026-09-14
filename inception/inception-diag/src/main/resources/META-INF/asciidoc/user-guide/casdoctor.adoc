@@ -229,6 +229,14 @@ Checks if all annotations start and end with a character (i.e. not a whitespace)
 Annotations that start or end with a whitespace character can cause problems during rendering. 
 Trimming whitespace at the begin and end is typically as  harmless procedure.
 
+[[check_AllAnnotationsWithinDocumentTextCheck]]
+=== All annotations within the document text
+[horizontal]
+ID:: `AllAnnotationsWithinDocumentTextCheck`
+Related repairs:: <<repair_ClampAnnotationsToDocumentTextRepair>>
+
+Checks if all annotations lie within the boundaries of the document.
+
 [[check_DocumentTextStartsWithBomCheck]]
 === Document text starts with Byte Order Mark
 [horizontal]
@@ -418,6 +426,21 @@ NOTE: Run the checks again after applying this repair as certain annotations can
       to a length of zero. It may be necessary to apply another repair such as <<repair_RemoveZeroSizeTokensAndSentencesRepair>>
       to remove these annotations.
 
+[[repair_ClampAnnotationsToDocumentTextRepair]]
+=== Clamp annotations to the document text
+
+[horizontal]
+ID:: `ClampAnnotationsToDocumentTextRepair`
+
+This repair clamps annotations that are longer than the document text.
+Annotations that are entire after end of the document text are collapsed into a zero-width
+annotation at the end of the text.
+The document text itself is not modified - only the offsets of the affected annotations are.
+
+NOTE: Run the checks again after applying this repair as certain annotations can become invalid if
+      they get clamped down to a length of zero. It may be necessary to apply another repair such as
+      <<repair_RemoveZeroSizeTokensAndSentencesRepair>> to remove these annotations.
+
 [[repair_RemoveBomRepair]]
 === Remove Byte Order Mark
 
@@ -425,6 +448,11 @@ NOTE: Run the checks again after applying this repair as certain annotations can
 ID:: `RemoveBomRepair`
 
 This repair removes the Byte Order Mark at the start of the document and adjusts all annotation offsets accordingly.
+
+NOTE: Run the checks again after applying this repair. The document text becomes one character
+      shorter, so any annotation whose offsets were not adjusted now reaches beyond the end of the
+      document text - see <<check_AllAnnotationsWithinDocumentTextCheck>> and
+      <<repair_ClampAnnotationsToDocumentTextRepair>>.
 
 [[repair_RemovePdfStructureFromNonInitialCasRepair]]
 === Remove PDF structure from non-initial CASes
