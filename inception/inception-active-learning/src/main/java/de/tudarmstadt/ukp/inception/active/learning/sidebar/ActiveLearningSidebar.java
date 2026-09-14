@@ -1158,10 +1158,10 @@ public class ActiveLearningSidebar
     private void deleteAnnotationByHistory(AjaxRequestTarget aTarget, LearningRecord aRecord)
         throws IOException, AnnotationException
     {
-        AnnotatorState state = getModelObject();
+        var state = getModelObject();
 
-        CAS cas = this.getCasProvider().get();
-        Optional<AnnotationFS> anno = getMatchingAnnotation(cas, aRecord);
+        var cas = this.getCasProvider().get();
+        var anno = getMatchingAnnotation(cas, aRecord);
         if (anno.isPresent()) {
             state.getSelection().selectSpan(anno.get());
             getActionHandler().actionDelete(aTarget);
