@@ -432,9 +432,10 @@ NOTE: Run the checks again after applying this repair as certain annotations can
 [horizontal]
 ID:: `ClampAnnotationsToDocumentTextRepair`
 
-This repair clamps annotations that are longer than the document text.
-Annotations that are entire after end of the document text are collapsed into a zero-width
-annotation at the end of the text.
+This repair clamps annotations whose offsets lie outside the document text back into it.
+Annotations that lie entirely after the end of the document text are collapsed into a zero-width
+annotation at the end of the text. Annotations starting before the beginning of the text are
+clamped to start at zero.
 The document text itself is not modified - only the offsets of the affected annotations are.
 
 NOTE: Run the checks again after applying this repair as certain annotations can become invalid if

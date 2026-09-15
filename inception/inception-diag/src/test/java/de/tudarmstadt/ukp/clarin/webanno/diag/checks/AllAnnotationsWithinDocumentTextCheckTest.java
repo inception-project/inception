@@ -95,6 +95,24 @@ class AllAnnotationsWithinDocumentTextCheckTest
     }
 
     @Test
+    void thatAnnotationsWithNegativeOffsetsAreReported()
+    {
+        // A negative begin breaks getCoveredText() exactly like an end beyond the text does, and
+        // NegativeSizeAnnotationsCheck does not catch it - that one only looks for begin > end.
+        var ann = new Annotation(jCas, -1, 5);
+        ann.addToIndexes();
+
+        var messages = new ArrayList<LogMessage>();
+
+        var result = sut.check(document, dataOwner, jCas.getCas(), messages);
+
+        assertThat(result).isFalse();
+        assertThat(messages).hasSize(1);
+        assertThat(messages.get(0).getMessage()) //
+                .contains("[uima.tcas.Annotation] at [-1-5] has a negative offset");
+    }
+
+    @Test
     void thatAnnotationsBeyondTheDocumentTextAreReported()
     {
         // This is the #6246 situation - the annotation ends one character beyond the text
