@@ -175,8 +175,7 @@ public class ImageSidebar
 
             var layer = annotationService.findLayer(state.getProject(), fs);
             if (SpanLayerSupport.TYPE.equals(layer.getType())) {
-                state.getSelection().selectSpan(aHandle.getVid(), cas, aHandle.getBegin(),
-                        aHandle.getEnd());
+                state.getSelection().selectSpan(fs);
             }
             else if (RelationLayerSupport.TYPE.equals(layer.getType())) {
                 var adapter = (RelationAdapter) annotationService.getAdapter(layer);

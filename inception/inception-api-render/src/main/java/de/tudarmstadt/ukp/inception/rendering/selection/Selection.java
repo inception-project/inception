@@ -20,7 +20,10 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
+import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.Serializable;
@@ -36,8 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
-import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
-import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 public class Selection
     implements Serializable
@@ -91,7 +92,7 @@ public class Selection
     {
         if (aVid.isSet()) {
             try {
-                ICasUtil.selectAnnotationByAddr(aOriginFs.getCAS(), aVid.getId());
+                selectAnnotationByAddr(aOriginFs.getCAS(), aVid.getId());
             }
             catch (Exception e) {
                 LOG.error("While selecting an arc the VID does not point to a valid annotation", e);
@@ -121,31 +122,76 @@ public class Selection
         fireSelectionChanged();
     }
 
+    /**
+     * Selects the given annotation.
+     *
+     * @param aFS
+     *            the annotation to select.
+     */
     public void selectSpan(AnnotationFS aFS)
     {
-        selectSpan(VID.builder().forAnnotation(aFS).build(), aFS.getCAS(), aFS.getBegin(),
+        doSelectSpan(VID.builder().forAnnotation(aFS).build(), aFS.getCAS(), aFS.getBegin(),
                 aFS.getEnd());
     }
 
-    public void selectSpan(VID aVid, CAS aCAS, int aBegin, int aEnd)
+    /**
+     * Selects the annotation the given VID points to.
+     *
+     * @param aVid
+     *            the VID of the annotation to select.
+     * @param aCas
+     *            the CAS containing the annotation.
+     */
+    public void selectSpan(VID aVid, CAS aCas)
     {
-        if (aVid.isSet()) {
-            try {
-                ICasUtil.selectAnnotationByAddr(aCAS, aVid.getId());
-            }
-            catch (Exception e) {
-                LOG.error("While selecting a span the VID does not point to a valid annotation", e);
-                clear();
-                return;
-            }
+        AnnotationFS fs;
+        try {
+            fs = selectAnnotationByAddr(aCas, aVid.getId());
+        }
+        catch (Exception e) {
+            LOG.error("While selecting a span the VID does not point to a valid annotation", e);
+            clear();
+            return;
         }
 
-        var clippedRange = Range.rangeClippedToDocument(aCAS, aBegin, aEnd);
+        doSelectSpan(aVid, aCas, fs.getBegin(), fs.getEnd());
+    }
+
+    /**
+     * Selects a span of text (without an associated annotation).
+     *
+     * @param aCas
+     *            the CAS the offsets refer to.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
+     */
+    public void selectSpan(CAS aCas, int aBegin, int aEnd)
+    {
+        doSelectSpan(VID.NONE_ID, aCas, aBegin, aEnd);
+    }
+
+    private void doSelectSpan(VID aVid, CAS aCas, int aBegin, int aEnd)
+    {
+        // The offsets may be out of bounds: they can come from an annotation that reaches beyond
+        // the end of the document text. We clamp them ourselves rather than using
+        // rangeClippedToDocument, because that throws for ranges lying fully outside the document
+        // text - and selecting a broken annotation must not break the editor. See #6246.
+        var documentText = aCas.getDocumentText();
+        var documentTextLength = documentText.length();
+        var clippedBegin = max(0, min(min(aBegin, aEnd), documentTextLength));
+        var clippedEnd = max(clippedBegin, min(max(aBegin, aEnd), documentTextLength));
+
+        if (clippedBegin != aBegin || clippedEnd != aEnd) {
+            LOG.warn("Selected range [{}-{}] clipped to [{}-{}] to fit the document text [{}]",
+                    aBegin, aEnd, clippedBegin, clippedEnd, documentTextLength);
+        }
 
         selectedAnnotationId = aVid;
-        text = aCAS.getDocumentText().substring(aBegin, aEnd);
-        beginOffset = clippedRange.getBegin();
-        endOffset = clippedRange.getEnd();
+        text = documentText.substring(clippedBegin, clippedEnd);
+        beginOffset = clippedBegin;
+        endOffset = clippedEnd;
 
         // Properties used when an arc is selected
         originSpanId = -1;
@@ -156,11 +202,6 @@ public class Selection
         LOG.trace("Span selected: {}", this);
 
         fireSelectionChanged();
-    }
-
-    public void selectSpan(CAS aCas, int aBegin, int aEnd)
-    {
-        selectSpan(VID.NONE_ID, aCas, aBegin, aEnd);
     }
 
     public void clear()
@@ -276,6 +317,10 @@ public class Selection
 
     private void fireSelectionChanged()
     {
+        if (RequestCycle.get() == null) {
+            return;
+        }
+
         Optional<IPageRequestHandler> handler = RequestCycle.get().find(IPageRequestHandler.class);
         if (handler.isPresent() && handler.get().isPageInstanceCreated()) {
             Page page = (Page) handler.get().getPage();
