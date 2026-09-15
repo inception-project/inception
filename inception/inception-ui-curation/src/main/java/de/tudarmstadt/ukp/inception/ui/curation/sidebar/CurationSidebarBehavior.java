@@ -19,12 +19,9 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
-import static de.tudarmstadt.ukp.inception.support.wicket.WicketExceptionUtil.handleException;
 import static java.lang.invoke.MethodHandles.lookup;
-import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import org.apache.wicket.Component;
@@ -38,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.events.PreparingToOpenDocumentEvent;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -54,6 +52,7 @@ public class CurationSidebarBehavior
 
     private @SpringBean DocumentService documentService;
     private @SpringBean DocumentAccess documentAccess;
+    private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CurationService curationService;
     private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean CurationSidebarService curationSidebarService;
@@ -118,32 +117,36 @@ public class CurationSidebarBehavior
         var doc = aEvent.getDocument();
         var project = doc.getProject();
 
+        var editable = documentAccess.canEditAnnotationDocument(sessionOwner,
+                String.valueOf(project.getId()), doc.getId(), aEvent.getDocumentOwner());
+        if (!editable || !curationDocumentService.isInitialMergeRequired(doc)) {
+            return;
+        }
+
         try {
-            var editable = documentAccess.canEditAnnotationDocument(sessionOwner,
-                    String.valueOf(project.getId()), doc.getId(), aEvent.getDocumentOwner());
-            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(doc.getState())
-                    && editable) {
-                var state = page.getModelObject();
-                // We need to force upgrade the editor CAS here already so the merge can succeed
-                // The annotation page will do this again in the actionLoadDocument, but I don't
-                // currently see a good way to avoid this duplication. At least we only do it twice
-                // if an initial merge is required.
-                documentService.readAnnotationCas(state.getDocument(),
-                        AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
-                var selectedDataOwners = curationSessionService
-                        .listDataOwnersReadyForCuration(sessionOwner, project, doc);
+            var state = page.getModelObject();
+            // We need to force upgrade the editor CAS here already so the merge can succeed
+            // The annotation page will do this again in the actionLoadDocument, but I don't
+            // currently see a good way to avoid this duplication. At least we only do it twice
+            // if an initial merge is required.
+            documentService.readAnnotationCas(state.getDocument(),
+                    AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
+            var selectedDataOwners = curationSessionService
+                    .listDataOwnersReadyForCuration(sessionOwner, project, doc);
 
-                var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
-                var mergeStrategyFactory = curationSidebarService.merge(state, workflow,
-                        selectedDataOwners, true);
+            var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
+            var mergeStrategyFactory = curationSidebarService.merge(state, workflow,
+                    selectedDataOwners, true);
 
-                page.success(
-                        "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");
-                aEvent.getRequestTarget().ifPresent($ -> $.addChildren(page, IFeedback.class));
-            }
+            page.success(
+                    "Performed initial merge using [" + mergeStrategyFactory.getLabel() + "].");
+            aEvent.getRequestTarget().ifPresent($ -> $.addChildren(page, IFeedback.class));
         }
         catch (Exception e) {
-            handleException(LOG, page, e);
+            // This exception needs to go to AnnotationPageBase2.actionLoadDocument and abort
+            // the loading of the document before the state transition happens
+            throw new RuntimeException("Unable to perform initial merge for [" + doc.getName()
+                    + "]: " + getRootCauseMessage(e), e);
         }
     }
 }

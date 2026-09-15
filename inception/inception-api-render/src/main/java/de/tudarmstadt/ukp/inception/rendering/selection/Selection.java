@@ -21,7 +21,8 @@ import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_SOURCE;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.FEAT_REL_TARGET;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
-import static de.tudarmstadt.ukp.inception.support.uima.Range.rangeClippedToDocument;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static java.util.Collections.emptyList;
 
 import java.io.Serializable;
@@ -35,7 +36,6 @@ import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
-import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 /**
  * An immutable snapshot of what an editor has selected. Instances are created through the static
@@ -122,35 +122,75 @@ public class Selection
             }
         }
 
-        var clippedRange = rangeClippedToDocument(aOriginFs.getCAS(),
-                Math.min(aOriginFs.getBegin(), aTargetFs.getBegin()),
-                Math.max(aOriginFs.getEnd(), aTargetFs.getEnd()));
+        var clippedRange = clipToDocument(aOriginFs.getCAS(),
+                min(aOriginFs.getBegin(), aTargetFs.getBegin()),
+                max(aOriginFs.getEnd(), aTargetFs.getEnd()));
 
-        var selection = new Selection(aVid, clippedRange.getBegin(), clippedRange.getEnd(),
-                "[" + aOriginFs.getCoveredText() + "] - [" + aTargetFs.getCoveredText() + "]",
-                getAddr(aOriginFs), getAddr(aTargetFs), aOriginFs.getCoveredText(),
-                aTargetFs.getCoveredText());
+        // The endpoints may themselves be broken, so we must not use getCoveredText() here - it
+        // would throw for an annotation reaching beyond the document text. See #6246.
+        var originText = clippedCoveredText(aOriginFs);
+        var targetText = clippedCoveredText(aTargetFs);
+
+        var selection = new Selection(aVid, clippedRange[0], clippedRange[1],
+                "[" + originText + "] - [" + targetText + "]", getAddr(aOriginFs),
+                getAddr(aTargetFs), originText, targetText);
 
         LOG.trace("Arc selected: {}", selection);
 
         return selection;
     }
 
+    /**
+     * @param aFS
+     *            the annotation to select.
+     * @return a selection covering the given annotation.
+     */
     public static Selection span(AnnotationFS aFS)
     {
         return span(VID.of(aFS), aFS.getCAS(), aFS.getBegin(), aFS.getEnd());
     }
 
+    /**
+     * @param aCas
+     *            the CAS the offsets refer to.
+     * @param aBegin
+     *            the begin offset.
+     * @param aEnd
+     *            the end offset.
+     * @return a selection covering the given span of text (without an associated annotation).
+     */
     public static Selection span(CAS aCas, int aBegin, int aEnd)
     {
         return span(VID.NONE_ID, aCas, aBegin, aEnd);
     }
 
-    public static Selection span(VID aVid, CAS aCAS, int aBegin, int aEnd)
+    /**
+     * @param aVid
+     *            the VID of the annotation to select.
+     * @param aCas
+     *            the CAS containing the annotation.
+     * @return a selection covering the annotation the given VID points to. The offsets are taken
+     *         from the annotation itself.
+     */
+    public static Selection span(VID aVid, CAS aCas)
+    {
+        AnnotationFS fs;
+        try {
+            fs = selectAnnotationByAddr(aCas, aVid.getId());
+        }
+        catch (Exception e) {
+            LOG.error("While selecting a span the VID does not point to a valid annotation", e);
+            return unselected();
+        }
+
+        return span(aVid, aCas, fs.getBegin(), fs.getEnd());
+    }
+
+    public static Selection span(VID aVid, CAS aCas, int aBegin, int aEnd)
     {
         if (aVid.isSet()) {
             try {
-                selectAnnotationByAddr(aCAS, aVid.getId());
+                selectAnnotationByAddr(aCas, aVid.getId());
             }
             catch (Exception e) {
                 LOG.error("While selecting a span the VID does not point to a valid annotation", e);
@@ -158,15 +198,51 @@ public class Selection
             }
         }
 
-        var clippedRange = Range.rangeClippedToDocument(aCAS, aBegin, aEnd);
+        var clippedRange = clipToDocument(aCas, aBegin, aEnd);
 
         // Properties used when an arc is selected (origin/target) are cleared for a span
-        var selection = new Selection(aVid, clippedRange.getBegin(), clippedRange.getEnd(),
-                aCAS.getDocumentText().substring(aBegin, aEnd), -1, -1, null, null);
+        var selection = new Selection(aVid, clippedRange[0], clippedRange[1],
+                aCas.getDocumentText().substring(clippedRange[0], clippedRange[1]), -1, -1, null,
+                null);
 
         LOG.trace("Span selected: {}", selection);
 
         return selection;
+    }
+
+    /**
+     * Clamps the given offsets to the document text.
+     * <p>
+     * The offsets may be out of bounds: they can come from an annotation that reaches beyond the
+     * end of the document text. We clamp them here rather than using
+     * {@code Range.rangeClippedToDocument}, because that throws for ranges lying fully outside the
+     * document text - and selecting a broken annotation must not break the editor. See #6246.
+     *
+     * @return the clamped begin offset at index 0 and the clamped end offset at index 1.
+     */
+    private static int[] clipToDocument(CAS aCas, int aBegin, int aEnd)
+    {
+        var documentTextLength = aCas.getDocumentText().length();
+        var clippedBegin = max(0, min(min(aBegin, aEnd), documentTextLength));
+        var clippedEnd = max(clippedBegin, min(max(aBegin, aEnd), documentTextLength));
+
+        if (clippedBegin != aBegin || clippedEnd != aEnd) {
+            LOG.warn("Selected range [{}-{}] clipped to [{}-{}] to fit the document text [{}]",
+                    aBegin, aEnd, clippedBegin, clippedEnd, documentTextLength);
+        }
+
+        return new int[] { clippedBegin, clippedEnd };
+    }
+
+    /**
+     * @return the text covered by the given annotation, with its offsets clamped to the document
+     *         text. Unlike {@code AnnotationFS.getCoveredText()}, this does not throw if the
+     *         annotation reaches beyond the end of the document text.
+     */
+    private static String clippedCoveredText(AnnotationFS aFS)
+    {
+        var range = clipToDocument(aFS.getCAS(), aFS.getBegin(), aFS.getEnd());
+        return aFS.getCAS().getDocumentText().substring(range[0], range[1]);
     }
 
     public boolean isSet()

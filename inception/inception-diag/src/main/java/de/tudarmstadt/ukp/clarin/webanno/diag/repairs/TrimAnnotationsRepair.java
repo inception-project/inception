@@ -23,6 +23,7 @@ import static org.apache.commons.text.StringEscapeUtils.escapeJava;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
 import static org.springframework.util.CollectionUtils.isEmpty;
+import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.safeCoveredText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -72,9 +73,19 @@ public class TrimAnnotationsRepair
             }
 
             var docText = aCas.getDocumentText();
+            if (docText == null) {
+                continue;
+            }
+
             for (var ann : select(aCas, type)) {
                 var oldBegin = ann.getBegin();
                 var oldEnd = ann.getEnd();
+
+                if (oldEnd > docText.length() || oldBegin > docText.length()) {
+                    // Annotations reaching beyond the end of the document text cannot be trimmed -
+                    // ClampAnnotationsToDocumentTextRepair takes care of those.
+                    continue;
+                }
 
                 TrimUtils.trim(docText, (Annotation) ann);
 
@@ -94,7 +105,7 @@ public class TrimAnnotationsRepair
 
                 aMessages.add(LogMessage.info(this, "Trimmed whitespace of [%s] [%s]@[%d-%d] at %s",
                         ann.getType().getName(),
-                        escapeJava(abbreviateMiddle(ann.getCoveredText(), "…", 20)), ann.getBegin(),
+                        escapeJava(abbreviateMiddle(safeCoveredText(ann), "…", 20)), ann.getBegin(),
                         ann.getEnd(), join(" and ", locations)));
             }
         }

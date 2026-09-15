@@ -78,6 +78,13 @@ public interface CurationDocumentService
     boolean isDocumentCuratable(SourceDocument aDocument);
 
     /**
+     * @param aDocument
+     *            the source document.
+     * @return whether an initial merge has to be performed.
+     */
+    boolean isInitialMergeRequired(SourceDocument aDocument);
+
+    /**
      * @param aSourceDocument
      *            the source document.
      * @return the users that have curatable annotation data for the given document. A user is
