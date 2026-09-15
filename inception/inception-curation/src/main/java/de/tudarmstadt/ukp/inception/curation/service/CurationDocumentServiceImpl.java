@@ -297,6 +297,39 @@ public class CurationDocumentServiceImpl
         return !listCuratableUsers(aDocument).isEmpty();
     }
 
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean isInitialMergeRequired(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Document must be specified");
+
+        // Make sure we know the latest state from the DB - just in case the given document is stale
+        var state = getCurrentState(aDocument);
+
+        if (!CURATION_IN_PROGRESS.equals(state) && !CURATION_FINISHED.equals(state)) {
+            return true;
+        }
+
+        // CURATION_FINISHED is only ever reached through an explicit curator action, so a missing
+        // curation CAS there is somebody having reset the curation on purpose - not a failed merge.
+        if (CURATION_FINISHED.equals(state)) {
+            return false;
+        }
+
+        try {
+            // A document claiming to be in curation but without a curation CAS to back that claim
+            // is the result of a failed initial merge - retry it instead of locking the document
+            // up.
+            return !existsCurationCas(aDocument);
+        }
+        catch (IOException e) {
+            // If we cannot tell, assume it is there - that avoids re-merging over curation work
+            LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
+                    aDocument, e);
+            return false;
+        }
+    }
+
     /**
      * @deprecated To be removed when the legacy curatable document startegy is removed.
      */
