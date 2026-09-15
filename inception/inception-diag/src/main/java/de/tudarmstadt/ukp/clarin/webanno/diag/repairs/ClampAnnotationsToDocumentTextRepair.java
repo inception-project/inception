@@ -17,7 +17,6 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.diag.repairs;
 
-import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.collectIndexed;
 import static de.tudarmstadt.ukp.inception.support.logging.LogMessage.info;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.findAllFeatureStructures;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
@@ -34,7 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
- * Clamps annotations that extend beyond the end of the document text back into the document text.
+ * Clamps annotations whose offsets lie outside the document text - beyond its end or before its
+ * beginning - back into the document text.
  * <p>
  * Counterpart to {@code AllAnnotationsWithinDocumentTextCheck}. The document text is not modified -
  * only the offsets of the affected annotations are.
@@ -66,47 +66,39 @@ public class ClampAnnotationsToDocumentTextRepair
 
         var documentTextLength = documentText.length();
 
-        var indexedFses = collectIndexed(aCas);
+        aCas.protectIndexes(() -> {
+            // Use the same traversal as RemoveBomRepair: annotations that are reachable but not
+            // indexed can be left behind out of bounds just as well, and they break rendering all
+            // the same.
+            for (var fs : findAllFeatureStructures(getRealCas(aCas))) {
+                if (!(fs instanceof Annotation ann)) {
+                    continue;
+                }
 
-        // Use the same traversal as RemoveBomRepair: annotations that are reachable but not indexed
-        // can be left behind out of bounds just as well, and they break rendering all the same.
-        for (var fs : findAllFeatureStructures(getRealCas(aCas))) {
-            if (!(fs instanceof Annotation ann)) {
-                continue;
+                var oldBegin = ann.getBegin();
+                var oldEnd = ann.getEnd();
+
+                if (oldBegin >= 0 && oldEnd >= 0 && oldBegin <= documentTextLength
+                        && oldEnd <= documentTextLength) {
+                    continue;
+                }
+
+                // Clamp into [0, documentTextLength] - a negative offset breaks getCoveredText()
+                // just as much as one beyond the end of the text does.
+                var newBegin = max(0, min(oldBegin, documentTextLength));
+                // Keep end >= begin. Negative-size annotations are SwitchBeginAndEndOnNegative-
+                // SizedAnnotationsRepair's business, but clamping must not newly introduce or
+                // worsen one.
+                var newEnd = max(newBegin, min(oldEnd, documentTextLength));
+
+                ann.setBegin(newBegin);
+                ann.setEnd(newEnd);
+
+                aMessages.add(info(this,
+                        "Clamped [%s] at [%d-%d] to [%d-%d] to fit the document text [%d]",
+                        ann.getType().getName(), oldBegin, oldEnd, newBegin, newEnd,
+                        documentTextLength));
             }
-
-            var oldBegin = ann.getBegin();
-            var oldEnd = ann.getEnd();
-
-            if (oldBegin <= documentTextLength && oldEnd <= documentTextLength) {
-                continue;
-            }
-
-            var newBegin = min(oldBegin, documentTextLength);
-            // Keep end >= begin. Negative-size annotations are SwitchBeginAndEndOnNegativeSized-
-            // AnnotationsRepair's business, but clamping must not newly introduce or worsen one.
-            var newEnd = max(newBegin, min(oldEnd, documentTextLength));
-
-            // Offsets are part of the index key, so an indexed annotation has to be removed from
-            // the indexes before they are changed and re-added afterwards. Annotations that are
-            // only reachable but not indexed must stay unindexed - re-adding them here would
-            // silently change what the CAS contains.
-            var indexed = indexedFses.contains(ann);
-            if (indexed) {
-                aCas.removeFsFromIndexes(ann);
-            }
-
-            ann.setBegin(newBegin);
-            ann.setEnd(newEnd);
-
-            if (indexed) {
-                aCas.addFsToIndexes(ann);
-            }
-
-            aMessages.add(
-                    info(this, "Clamped [%s] at [%d-%d] to [%d-%d] to fit the document text [%d]",
-                            ann.getType().getName(), oldBegin, oldEnd, newBegin, newEnd,
-                            documentTextLength));
-        }
+        });
     }
 }

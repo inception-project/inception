@@ -30,7 +30,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 
 /**
- * Checks that no annotation extends beyond the end of the document text.
+ * Checks that no annotation lies outside the document text - neither extending beyond its end nor
+ * starting before its beginning.
  * <p>
  * This should not be possible - the sofa string is write-once - but it can happen where we bypass
  * that using {@code ICasUtil.forceOverwriteSofa} and replace the document text with a shorter one
@@ -62,9 +63,15 @@ public class AllAnnotationsWithinDocumentTextCheck
                 continue;
             }
 
-            // Negative-size annotations are reported by NegativeSizeAnnotationsCheck - here we only
-            // care about annotations reaching beyond the end of the document text.
-            if (ann.getEnd() > documentTextLength || ann.getBegin() > documentTextLength) {
+            // Negative-size annotations (begin > end) are reported by NegativeSizeAnnotationsCheck
+            // - here we care about offsets lying outside the document text, in either direction. A
+            // negative begin breaks getCoveredText() just as much as an end beyond the text does.
+            if (ann.getBegin() < 0 || ann.getEnd() < 0) {
+                aMessages.add(error(this, "[%s] at [%d-%d] has a negative offset",
+                        ann.getType().getName(), ann.getBegin(), ann.getEnd()));
+                ok = false;
+            }
+            else if (ann.getEnd() > documentTextLength || ann.getBegin() > documentTextLength) {
                 aMessages.add(error(this,
                         "[%s] at [%d-%d] extends beyond the end of the document text [%d]",
                         ann.getType().getName(), ann.getBegin(), ann.getEnd(), documentTextLength));

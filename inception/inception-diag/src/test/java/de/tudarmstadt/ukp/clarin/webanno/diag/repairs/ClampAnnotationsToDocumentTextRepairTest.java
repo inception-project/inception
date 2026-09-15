@@ -121,6 +121,23 @@ class ClampAnnotationsToDocumentTextRepairTest
     }
 
     @Test
+    void thatAnnotationsWithNegativeOffsetsAreClamped()
+    {
+        // A negative begin breaks getCoveredText() exactly like an end beyond the text does.
+        var ann = new Token(jCas, -1, 5);
+        ann.addToIndexes();
+
+        var messages = new ArrayList<LogMessage>();
+
+        sut.repair(null, null, jCas.getCas(), messages);
+
+        assertThat(ann.getBegin()).isZero();
+        assertThat(ann.getEnd()).isEqualTo(5);
+        assertThatNoException().isThrownBy(() -> ann.getCoveredText());
+        assertThat(messages).hasSize(1);
+    }
+
+    @Test
     void thatClampedAnnotationsCanBeRenderedAfterwards()
     {
         var ann = new Token(jCas, 10, 16);
