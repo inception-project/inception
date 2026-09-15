@@ -29,9 +29,36 @@ import org.apache.uima.cas.Feature;
 import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.cas.TypeSystem;
 import org.apache.uima.cas.impl.LowLevelCAS;
+import org.apache.uima.cas.text.AnnotationFS;
 
 public class CasDoctorUtils
 {
+    /**
+     * Returns the text covered by the given annotation, clipped to the document text.
+     * <p>
+     * {@code AnnotationFS.getCoveredText()} is a plain {@code substring} and therefore throws if
+     * the annotation extends beyond the end of the document text. CasDoctor must be able to render
+     * a message <b>about</b> such a broken annotation without failing itself, so use this method
+     * instead of {@code getCoveredText()} when building check/repair messages. See #6246.
+     *
+     * @param aAnnotation
+     *            the annotation.
+     * @return the covered text, clipped to the document text, or an empty string if the annotation
+     *         lies entirely outside the document text.
+     */
+    public static String safeCoveredText(AnnotationFS aAnnotation)
+    {
+        var text = aAnnotation.getCAS().getDocumentText();
+        if (text == null) {
+            return "";
+        }
+
+        var begin = Math.max(0, Math.min(aAnnotation.getBegin(), text.length()));
+        var end = Math.max(begin, Math.min(aAnnotation.getEnd(), text.length()));
+
+        return text.substring(begin, end);
+    }
+
     public static Set<FeatureStructure> collectIndexed(CAS aCas)
     {
         LowLevelCAS llcas = aCas.getLowLevelCAS();

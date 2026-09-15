@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.commons.text.StringEscapeUtils.escapeJava;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.safeCoveredText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -95,7 +96,7 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
 
                 aMessages.add(LogMessage.error(this, "[%s] [%s]@[%d-%d] %s outside any sentence",
                         ann.getType().getName(),
-                        escapeJava(abbreviateMiddle(ann.getCoveredText(), "…", 20)), ann.getBegin(),
+                        escapeJava(abbreviateMiddle(safeCoveredText(ann), "…", 20)), ann.getBegin(),
                         ann.getEnd(), String.join(" and ", outsides.toArray(String[]::new))));
 
                 ok = false;
