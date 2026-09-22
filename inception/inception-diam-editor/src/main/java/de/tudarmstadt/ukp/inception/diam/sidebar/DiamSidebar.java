@@ -19,10 +19,11 @@ package de.tudarmstadt.ukp.inception.diam.sidebar;
 
 import org.wicketstuff.event.annotation.OnEvent;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 
 public class DiamSidebar
     extends AnnotationSidebar_ImplBase
@@ -34,22 +35,46 @@ public class DiamSidebar
     private DiamAnnotationBrowser browser;
     private ContextMenu contextMenu;
 
-    public DiamSidebar(String aId, AnnotationPageBase2 aAnnotationPage, String aUserPreferencesKey)
+    public DiamSidebar(String aId, SidebarContext aContext, String aUserPreferencesKey)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
 
         userPreferencesKey = aUserPreferencesKey;
 
         contextMenu = new ContextMenu("contextMenu");
         add(contextMenu);
 
-        add(browser = new DiamAnnotationBrowser("vis", userPreferencesKey, contextMenu));
+        add(browser = new DiamAnnotationBrowser("vis", userPreferencesKey, contextMenu,
+                getDocumentEditorManager()));
     }
 
     @OnEvent
-    public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
+    public void onEditorContentReplaced(EditorContentReplacedEvent aEvent)
     {
-        browser = (DiamAnnotationBrowser) browser
-                .replaceWith(new DiamAnnotationBrowser("vis", userPreferencesKey, contextMenu));
+        replaceBrowser();
+
+        if (aEvent.getRequestHandler() != null) {
+            aEvent.getRequestHandler().add(this);
+        }
+    }
+
+    @OnEvent
+    public void onActiveEditorChanged(ActiveEditorChangedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() == null) {
+            return;
+        }
+
+        replaceBrowser();
+
+        // The replacement has to be rendered, or the sidebar goes blank: the old component is gone
+        // from the hierarchy and the new one has never been written to the response.
+        aEvent.getRequestHandler().add(this);
+    }
+
+    private void replaceBrowser()
+    {
+        browser = (DiamAnnotationBrowser) browser.replaceWith(new DiamAnnotationBrowser("vis",
+                userPreferencesKey, contextMenu, getDocumentEditorManager()));
     }
 }

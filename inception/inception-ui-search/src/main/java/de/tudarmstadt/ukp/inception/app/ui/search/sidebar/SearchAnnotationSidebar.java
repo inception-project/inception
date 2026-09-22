@@ -81,6 +81,7 @@ import org.springframework.security.access.AccessDeniedException;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagingNavigator.Size;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
@@ -89,7 +90,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
@@ -106,6 +106,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
@@ -121,6 +122,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHold
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class SearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -188,9 +190,9 @@ public class SearchAnnotationSidebar
     private LambdaAjaxButton<Void> annotateButton;
     private LambdaAjaxLink deleteOptionsLink;
 
-    public SearchAnnotationSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public SearchAnnotationSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
     }
 
     @Override
@@ -206,7 +208,7 @@ public class SearchAnnotationSidebar
 
         var historyState = preferencesService.loadTraitsForUserAndProject(
                 SearchHistoryState.KEY_SEARCH_HISTORY, userRepository.getCurrentUser(),
-                getModelObject().getProject());
+                getProject());
         history.setObject(historyState.getHistoryItems());
 
         mainContainer = new WebMarkupContainer(MID_MAIN_CONTAINER);
@@ -225,10 +227,9 @@ public class SearchAnnotationSidebar
                 .setCheckedTitle(Model.of("Search in current document"))
                 .setUncheckedIcon(FontAwesome7IconType.copy_s)
                 .setUncheckedTitle(Model.of("Search in all documents"))
-                .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
-                .add(visibleWhen(() -> workloadService
-                        .getWorkloadManagerExtension(getModelObject().getProject())
-                        .isDocumentRandomAccessAllowed(getModelObject().getProject())))
+                .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT)).add(visibleWhen( //
+                        () -> workloadService.getWorkloadManagerExtension(getProject())
+                                .isDocumentRandomAccessAllowed(getProject())))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior()));
 
         resultsTable = new WebMarkupContainer(MID_RESULTS_TABLE);
@@ -405,7 +406,7 @@ public class SearchAnnotationSidebar
     {
         var searchOptionsForm = new Form<>(aId, searchOptions);
         searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
-                schemaService.listAnnotationLayer(getModelObject().getProject())));
+                schemaService.listAnnotationLayer(getProject())));
 
         groupingFeatureChoice = new DropDownChoice<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
@@ -425,7 +426,7 @@ public class SearchAnnotationSidebar
     {
         super.onConfigure();
 
-        setChangeAnnotationsElementsEnabled(getActiveContext() //
+        setChangeAnnotationsElementsEnabled(getActiveEditor() //
                 .map(DiamContext::getActionHandler) //
                 .map(AnnotationActionHandler::isEditable) //
                 .orElse(false));
@@ -634,7 +635,7 @@ public class SearchAnnotationSidebar
         aTarget.add(mainContainer);
 
         // Need to re-render because we want to highlight the match
-        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
+        getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private void executeSearch(AjaxRequestTarget aTarget, SearchRequest aRequest)
@@ -650,7 +651,7 @@ public class SearchAnnotationSidebar
             aTarget.addChildren(getPage(), IFeedback.class);
 
             // Need to re-render because we want to highlight the match
-            getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
+            getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
 
             updateSearchHistory(aTarget, aRequest);
 
@@ -716,7 +717,7 @@ public class SearchAnnotationSidebar
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget, Operation aConsumer)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
-        var context = getActiveContext().orElseThrow();
+        var context = getActiveEditor().orElseThrow();
         if (VID.NONE_ID.equals(context.getAnnotatorState().getSelection().getAnnotation())) {
             error("No annotation selected. Please select an annotation first");
             context.actionRefreshDocument(aTarget);
@@ -728,7 +729,7 @@ public class SearchAnnotationSidebar
         var layer = getModelObject().getSelectedAnnotationLayer();
 
         // Editors whose CAS we modified - they need to re-render to show the changes
-        var dirtyEditors = new ArrayList<DiamContext>();
+        var dirtyEditors = new ArrayList<DocumentEditor>();
 
         try {
             var adapter = (SpanAdapter) schemaService.getAdapter(layer);
@@ -816,7 +817,7 @@ public class SearchAnnotationSidebar
         // The active editor always refreshes - the selection may have changed even if no
         // annotations did. Any other editor we wrote to needs to refresh as well, otherwise it
         // keeps displaying the state from before the bulk operation.
-        getActiveContext().ifPresent(activeEditor -> {
+        getActiveEditor().ifPresent(activeEditor -> {
             activeEditor.actionRefreshDocument(aTarget);
             dirtyEditors.remove(activeEditor);
         });
@@ -931,7 +932,7 @@ public class SearchAnnotationSidebar
         }
     }
 
-    private void writeJCasAndUpdateTimeStamp(Optional<DiamContext> aEditor,
+    private void writeJCasAndUpdateTimeStamp(Optional<DocumentEditor> aEditor,
             SourceDocument aSourceDoc, CAS aCas)
         throws IOException, AnnotationException
     {
@@ -983,7 +984,7 @@ public class SearchAnnotationSidebar
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, SearchHistoryItem aItem)
     {
         var opt = searchOptions.getObject();
-        var project = getModelObject().getProject();
+        var project = getProject();
 
         var layer = aItem.groupingLayer() != null
                 ? schemaService.findLayer(project, aItem.groupingLayer())
@@ -1019,7 +1020,7 @@ public class SearchAnnotationSidebar
         var historyState = new SearchHistoryState();
         historyState.setHistoryItems(history.getObject());
         var sessionOwner = userRepository.getCurrentUser();
-        var project = getModelObject().getProject();
+        var project = getProject();
         preferencesService.saveTraitsForUserAndProject(SearchHistoryState.KEY_SEARCH_HISTORY,
                 sessionOwner, project, historyState);
     }
@@ -1106,11 +1107,13 @@ public class SearchAnnotationSidebar
                     var selectedResult = aItem.getModelObject();
                     searchOptions.getObject().setSelectedResult(selectedResult, AnnotationSet
                             .forUser(SearchAnnotationSidebar.this.getModelObject().getUser()));
-                    var context = getActiveContext().orElseThrow();
+                    var context = getActiveEditor().orElseThrow();
                     context.actionShowSelectedDocument(t,
                             documentService.getSourceDocument(currentProject,
                                     selectedResult.getDocumentTitle()),
-                            selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
+                            AnnotationSet.forUser(
+                                    SearchAnnotationSidebar.this.getModelObject().getUser()),
+                            new Range(selectedResult));
                     // Need to re-render because we want to highlight the match
                     context.actionRefreshDocument(t);
                 }

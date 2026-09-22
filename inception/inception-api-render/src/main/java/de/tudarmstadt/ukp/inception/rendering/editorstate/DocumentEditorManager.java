@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,46 +27,71 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 
 /**
- * Manages document display and editor lifecycle within a page. Handles routing of document-show
- * requests to the appropriate editor context, tracking the active editor, and potentially creating
- * new editors or switching between existing ones. On a single-editor page, this is straightforward.
- * On a multi-editor page, this handles the logic to decide which editor should display the document
+ * Manages document display and editor life-cycle within a page. Handles routing of document-show
+ * requests to the appropriate editor, tracking the active editor, and potentially creating new
+ * editors or switching between existing ones. On a single-editor page, this is straightforward. On
+ * a multi-editor page, this handles the logic to decide which editor should display the document
  * and manages editor state transitions.
  */
 public interface DocumentEditorManager
+    extends Serializable
 {
     /**
      * @return the editor the user is currently working in, or {@link Optional#empty()} if the page
      *         currently has no editor at all.
      */
-    Optional<DiamContext> getActiveContext();
+    Optional<DocumentEditor> getActiveEditor();
 
     /**
-     * @return whether there is an editor with a document in it. This is the direct question the
-     *         page's region-visibility gates want to ask, replacing the proxy of "does the page's
-     *         {@code AnnotatorState} have a document" - which is only equivalent today because the
-     *         page hands its main editor its own state instance.
-     *         <p>
-     *         Asks the editor's <b>state</b>, not its hierarchy visibility: gates call this during
-     *         the render pass that is still deciding those very visibilities, so
-     *         {@code isVisibleInHierarchy()} is unstable there (observed alternating within a
-     *         single pass). Hierarchy visibility remains the right question for post-render cleanup
-     *         such as dropping an active context that is no longer on screen.
+     * @return whether there is any editor with a document in it.
      */
-    boolean hasEditor();
+    boolean hasOpenDocument();
 
     /**
-     * Set the active context.
+     * @param aEditor
+     *            the editor in question.
+     * @return whether that editor may be closed.
+     */
+    boolean canCloseEditor(DocumentEditor aEditor);
+
+    /**
+     * @param aEditor
+     *            the editor in question.
+     * @return whether that editor should show that it is the active one (e.g. not necessary if
+     *         there is only a single editor).
+     */
+    default boolean isMarkedActiveEditor(DocumentEditor aEditor)
+    {
+        return false;
+    }
+
+    /**
+     * Close an editor, dropping the document it shows. Callers must check
+     * {@link #canCloseEditor(DocumentEditor)} first.
+     *
+     * @param aTarget
+     *            the AJAX target.
+     * @param aEditor
+     *            the editor to close.
+     */
+    default void closeEditor(AjaxRequestTarget aTarget, DocumentEditor aEditor)
+    {
+        throw new UnsupportedOperationException("This workspace cannot close editors");
+    }
+
+    /**
+     * Set the active editor.
      *
      * @param aTarget
      *            the AJAX target, so consumers can be refreshed. May be {@code null} outside a
      *            partial page update.
-     * @param aContext
-     *            the editor context that became active, or {@code null} to clear.
+     * @param aEditor
+     *            the editor that became active, or {@code null} to clear.
      */
-    void setActiveContext(AjaxRequestTarget aTarget, DiamContext aContext);
+    void setActiveEditor(AjaxRequestTarget aTarget, DocumentEditor aEditor);
 
     /**
      * Show the given document in an editor. Implementations should typically update their
@@ -75,15 +101,43 @@ public interface DocumentEditorManager
      *            the AJAX target
      * @param aDocument
      *            the document to show
+     * @param aDataOwner
+     *            whose annotations to show.
      * @throws IOException
      *             if there was an I/O-level problem
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    default void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    default void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner)
         throws IOException, AnnotationException
     {
-        actionShowDocument(aTarget, aDocument, 0, 0);
+        actionShowDocument(aTarget, aDocument, aDataOwner, Range.UNDEFINED);
+    }
+
+    /**
+     * Show the given document, preferably in the given editor.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aPreferredEditor
+     *            the editor the document should land in, or {@code null} for no preference. An
+     *            editor the manager does not host is ignored like {@code null}.
+     * @param aDocument
+     *            the document to show
+     * @param aDataOwner
+     *            whose annotations to show.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    default void actionShowDocument(AjaxRequestTarget aTarget, DocumentEditor aPreferredEditor,
+            SourceDocument aDocument, AnnotationSet aDataOwner)
+        throws IOException, AnnotationException
+    {
+        // Nothing to disambiguate when there is only one editor.
+        actionShowDocument(aTarget, aDocument, aDataOwner);
     }
 
     /**
@@ -93,20 +147,21 @@ public interface DocumentEditorManager
      *            the AJAX target
      * @param aDocument
      *            the document to show
-     * @param aBegin
-     *            the offset to scroll to
-     * @param aEnd
-     *            the corresponding end offset
+     * @param aDataOwner
+     *            whose annotations to show
+     * @param aRange
+     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
+     *            opening the document placed it.
      * @throws IOException
      *             if there was an I/O-level problem
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    default void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument, int aBegin,
-            int aEnd)
+    default void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange)
         throws IOException, AnnotationException
     {
-        actionShowDocument(aTarget, aDocument, aBegin, aEnd, null);
+        actionShowDocument(aTarget, aDocument, aDataOwner, aRange, null);
     }
 
     /**
@@ -117,10 +172,11 @@ public interface DocumentEditorManager
      *            the AJAX target
      * @param aDocument
      *            the document to show
-     * @param aBegin
-     *            the offset to scroll to
-     * @param aEnd
-     *            the corresponding end offset
+     * @param aDataOwner
+     *            whose annotations to show
+     * @param aRange
+     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
+     *            opening the document placed it.
      * @param aAdditionalPingRanges
      *            additional ranges that should ideally be visible. May be {@code null} or empty.
      * @throws IOException
@@ -128,19 +184,9 @@ public interface DocumentEditorManager
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument, int aBegin,
-            int aEnd, List<VRange> aAdditionalPingRanges)
+    void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
         throws IOException, AnnotationException;
-
-    /**
-     * Ensure an editor for the given source document is accessible.
-     *
-     * @param aDocument
-     *            the document that is about to be shown
-     * @throws AnnotationException
-     *             if the document is not accessible here
-     */
-    void ensureIsAccessible(SourceDocument aDocument) throws AnnotationException;
 
     /**
      * Find the editor currently showing the given document for the given data owner.
@@ -152,17 +198,10 @@ public interface DocumentEditorManager
      *            is a different editor for these purposes
      * @return the editor showing it, or {@link Optional#empty()} if none is
      */
-    Optional<DiamContext> findEditorFor(SourceDocument aDocument, AnnotationSet aDataOwner);
+    Optional<DocumentEditor> findEditorFor(SourceDocument aDocument, AnnotationSet aDataOwner);
 
     /**
-     * Decide which editor should show the given document, creating or reusing one as the page's
-     * placement policy requires.
-     *
-     * @param aDocument
-     *            the document to be shown
-     * @return the editor to show it in
-     * @throws AnnotationException
-     *             if no editor can be provided for it
+     * @return maximal number of editors that may be opened at the same time in this workspace.
      */
-    DiamContext resolveEditorFor(SourceDocument aDocument) throws AnnotationException;
+    int getMaxEditors();
 }

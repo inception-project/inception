@@ -50,7 +50,7 @@ public class CreateDocumentMetadataAnnotationAction
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.delete(getDocument(), getUser(), aCas, getVid());
+        adapter.delete(getDocument(), getDataOwner(), aCas, getVid());
         aMessages.add(LogMessage.info(this, "[%s] deleted", getLayer().getUiName()));
         return Optional.empty();
     }
@@ -61,7 +61,7 @@ public class CreateDocumentMetadataAnnotationAction
         throws AnnotationException
     {
         var adapter = (DocumentMetadataLayerAdapter) aSchemaService.getAdapter(getLayer());
-        adapter.restore(getDocument(), getUser(), aCas, getVid());
+        adapter.restore(getDocument(), getDataOwner(), aCas, getVid());
         aMessages.add(LogMessage.info(this, "[%s] restored", getLayer().getUiName()));
         return Optional.empty();
     }

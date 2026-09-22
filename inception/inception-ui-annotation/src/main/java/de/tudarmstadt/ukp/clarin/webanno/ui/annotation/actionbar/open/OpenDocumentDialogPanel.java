@@ -18,11 +18,13 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationNavigationUserPrefs.KEY_ANNOTATION_NAVIGATION_USER_PREFS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyMap;
@@ -30,6 +32,8 @@ import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.defaultIfEmpty;
 import static wicket.contrib.input.events.EventType.click;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -49,17 +53,16 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
+import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -68,11 +71,11 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchService;
-import org.danekja.java.util.function.serializable.SerializableConsumer;
-
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
@@ -82,7 +85,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.DecoratedObject;
  * and associated documents
  */
 public class OpenDocumentDialogPanel
-    extends GenericPanel<AnnotatorState>
+    extends GenericPanel<Project>
 {
     private static final long serialVersionUID = 1299869948010875439L;
 
@@ -103,29 +106,50 @@ public class OpenDocumentDialogPanel
 
     private final IModel<Boolean> finishedDocumentsSkippedByNavigation;
 
+    private final IModel<AnnotationSet> dataOwnerModel;
     private final SerializableBiFunction<Project, User, List<AnnotationDocument>> docListProvider;
-    private final SerializableConsumer<AjaxRequestTarget> onDocumentSelected;
+    private final DocumentSelectedCallback onDocumentSelected;
+    private final DocumentEditor requestingEditor;
 
-    public OpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
+    public OpenDocumentDialogPanel(String aId, IModel<Project> aProject,
+            IModel<AnnotationSet> aDataOwner,
             SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider)
     {
-        this(aId, aState, aDocListProvider, null);
+        this(aId, aProject, aDataOwner, aDocListProvider, null);
     }
 
     /**
+     * @param aDataOwner
+     *            whose annotations are pre-selected when the dialog opens. If {@code null} or
+     *            resolving to {@code null} the session owner is used.
      * @param aOnDocumentSelected
-     *            invoked after the chosen document has been set on the state model, to actually
-     *            load it into the host (page or sidebar). If {@code null}, the enclosing
-     *            {@link AnnotationPageBase} is loaded, reproducing the historic behavior.
+     *            callback to be invoked with the chosen document and data owner on selection. If
+     *            {@code null}, the document editor manager of the enclosing annotation page is
+     *            asked to show it.
      */
-    public OpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
+    public OpenDocumentDialogPanel(String aId, IModel<Project> aProject,
+            IModel<AnnotationSet> aDataOwner,
             SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider,
-            SerializableConsumer<AjaxRequestTarget> aOnDocumentSelected)
+            DocumentSelectedCallback aOnDocumentSelected)
     {
-        super(aId, aState);
+        this(aId, aProject, aDataOwner, aDocListProvider, aOnDocumentSelected, null);
+    }
 
+    /**
+     * @param aRequestingEditor
+     *            the editor that asked, or {@code null} for "no preference".
+     */
+    public OpenDocumentDialogPanel(String aId, IModel<Project> aProject,
+            IModel<AnnotationSet> aDataOwner,
+            SerializableBiFunction<Project, User, List<AnnotationDocument>> aDocListProvider,
+            DocumentSelectedCallback aOnDocumentSelected, DocumentEditor aRequestingEditor)
+    {
+        super(aId, aProject);
+
+        dataOwnerModel = aDataOwner;
         docListProvider = aDocListProvider;
         onDocumentSelected = aOnDocumentSelected;
+        requestingEditor = aRequestingEditor;
 
         queue(userListChoice = createUserListChoice(CID_USER));
 
@@ -135,20 +159,49 @@ public class OpenDocumentDialogPanel
         finishedDocumentsSkippedByNavigation = LambdaModel.of(
                 this::isFinishedDocumentsSkippedByNavigation,
                 this::setFinishedDocumentsSkippedByNavigation);
-        queue(new CheckBox(CID_FINISHED_DOCUMENTS_SKIPPED_BY_NAVIGATION,
-                finishedDocumentsSkippedByNavigation) //
-                        .add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT)));
+        var skipCheckBox = new CheckBox(CID_FINISHED_DOCUMENTS_SKIPPED_BY_NAVIGATION,
+                finishedDocumentsSkippedByNavigation);
+        // Navigation skips every TERMINAL state, i.e. FINISHED as well as IGNORE (locked). Only
+        // managers and curators ever get locked documents in their list, so only they are told
+        // about that half of the behaviour.
+        skipCheckBox.setLabel(new ResourceModel(
+                mayViewLocked() ? "finishedDocumentsSkippedByNavigation.withLocked"
+                        : "finishedDocumentsSkippedByNavigation"));
+        skipCheckBox.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT));
+        queue(skipCheckBox);
 
         table = new AnnotationDocumentTable(CID_TABLE,
-                LoadableDetachableModel.of(this::listDocuments));
+                LoadableDetachableModel.of(this::listDocuments), filterableStates());
         table.setOutputMarkupId(true);
         table.setStatisticsLoader(this::loadStatistics);
         queue(table);
     }
 
+    /**
+     * @return the states offered as filter chips. Locked (IGNORE) documents are listed for managers
+     *         and curators - {@code DocumentAccess} lets them view locked documents - so they also
+     *         get a chip to find them. Plain annotators never see locked documents of their own and
+     *         are not offered the filter.
+     */
+    private AnnotationDocumentState[] filterableStates()
+    {
+        if (mayViewLocked()) {
+            return new AnnotationDocumentState[] { NEW, IN_PROGRESS, FINISHED, IGNORE };
+        }
+
+        return new AnnotationDocumentState[] { NEW, IN_PROGRESS, FINISHED };
+    }
+
+    private boolean mayViewLocked()
+    {
+        var project = getModelObject();
+        return project != null && projectService.hasRole(userRepository.getCurrentUser(), project,
+                MANAGER, CURATOR);
+    }
+
     private Map<Long, DocumentStatistics> loadStatistics(Collection<SourceDocument> aDocuments)
     {
-        var project = getModelObject().getProject();
+        var project = getModelObject();
         var user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
 
         if (project == null || user == null || aDocuments == null || aDocuments.isEmpty()) {
@@ -168,7 +221,7 @@ public class OpenDocumentDialogPanel
 
     private boolean isFinishedDocumentsSkippedByNavigation()
     {
-        var project = getModelObject().getProject();
+        var project = getModelObject();
         var sessionOwner = userRepository.getCurrentUser();
         return preferencesService.loadTraitsForUserAndProject(KEY_ANNOTATION_NAVIGATION_USER_PREFS,
                 sessionOwner, project).isFinishedDocumentsSkippedByNavigation();
@@ -176,7 +229,7 @@ public class OpenDocumentDialogPanel
 
     private void setFinishedDocumentsSkippedByNavigation(boolean aBoolean)
     {
-        var project = getModelObject().getProject();
+        var project = getModelObject();
         var sessionOwner = userRepository.getCurrentUser();
         var prefs = preferencesService.loadTraitsForUserAndProject(
                 KEY_ANNOTATION_NAVIGATION_USER_PREFS, sessionOwner, project);
@@ -189,7 +242,7 @@ public class OpenDocumentDialogPanel
     {
         var sessionOwner = userRepository.getCurrentUser();
         var decoratedSessionOwner = DecoratedObject.of(sessionOwner);
-        var dataOwner = DecoratedObject.of(getModelObject().getUser());
+        var dataOwner = resolveDataOwner();
 
         var choice = new DropDownChoice<>(aId, Model.of(), listUsers());
         choice.setChoiceRenderer(new ChoiceRenderer<DecoratedObject<User>>()
@@ -208,8 +261,8 @@ public class OpenDocumentDialogPanel
             }
         });
         choice.setOutputMarkupId(true);
-        choice.add(visibleWhen(getModel().map(s -> s.getMode().equals(ANNOTATION)
-                && projectService.hasRole(sessionOwner, s.getProject(), MANAGER, CURATOR))));
+        choice.add(visibleWhen(
+                getModel().map(p -> projectService.hasRole(sessionOwner, p, MANAGER, CURATOR))));
         choice.add(OnChangeAjaxBehavior.onChange(this::actionSelectUser));
 
         if (choice.getChoices().contains(dataOwner)) {
@@ -228,6 +281,17 @@ public class OpenDocumentDialogPanel
         return choice;
     }
 
+    private DecoratedObject<User> resolveDataOwner()
+    {
+        var dataOwner = dataOwnerModel != null ? dataOwnerModel.getObject() : null;
+        if (dataOwner == null) {
+            return null;
+        }
+
+        var user = userRepository.getUserOrCurationUser(dataOwner.id());
+        return user != null ? DecoratedObject.of(user) : null;
+    }
+
     private void actionSelectUser(AjaxRequestTarget aTarget)
     {
         table.getDataProvider().getModel().setObject(listDocuments());
@@ -241,13 +305,12 @@ public class OpenDocumentDialogPanel
 
     private List<DecoratedObject<User>> listUsers()
     {
-        var project = getModelObject().getProject();
+        var project = getModelObject();
         var sessionOwner = userRepository.getCurrentUser();
 
         var users = new ArrayList<DecoratedObject<User>>();
-        // cannot select other user than themselves if curating or not admin
-        if (getModelObject().getMode().equals(Mode.CURATION)
-                || !projectService.hasRole(sessionOwner, project, MANAGER, CURATOR)) {
+
+        if (!projectService.hasRole(sessionOwner, project, MANAGER, CURATOR)) {
             var du = DecoratedObject.of(sessionOwner);
             du.setLabel(sessionOwner.getUiName());
             users.add(du);
@@ -292,7 +355,7 @@ public class OpenDocumentDialogPanel
 
     private List<AnnotationDocument> listDocuments()
     {
-        var project = getModelObject().getProject();
+        var project = getModelObject();
         var user = userListChoice.getModel().map(DecoratedObject::get).orElse(null).getObject();
 
         if (project == null || user == null) {
@@ -305,49 +368,45 @@ public class OpenDocumentDialogPanel
     @OnEvent
     public void onSourceDocumentOpenDocumentEvent(AnnotationDocumentOpenDocumentEvent aEvent)
     {
-        var documents = listDocuments().stream() //
-                .map(AnnotationDocument::getDocument) //
-                .collect(toList());
-
-        getModelObject().setDocument(aEvent.getAnnotationDocument().getDocument(), documents);
-
-        // for curation view in inception: when curating into CURATION_USER's CAS
-        // and opening new document it should also be from the CURATION_USER
-        if (getModelObject().getUser() != null
-                && !CURATION_USER.equals(getModelObject().getUser().getUsername())) {
-            getModelObject().setUser(userListChoice.getModelObject().get());
-        }
-
         if (onDocumentSelected != null) {
-            onDocumentSelected.accept(aEvent.getTarget());
+            var annDoc = aEvent.getAnnotationDocument();
+            var documents = listDocuments().stream() //
+                    .map(AnnotationDocument::getDocument) //
+                    .collect(toList());
+            onDocumentSelected.accept(aEvent.getTarget(), annDoc.getDocument(),
+                    annDoc.getAnnotationSet(), documents);
         }
         else {
             var page = (AnnotationPageBase) getPage();
-            if (page instanceof DocumentEditorManager manager) {
-                try {
-                    manager.resolveEditorFor(aEvent.getAnnotationDocument().getDocument());
-                }
-                catch (AnnotationException e) {
-                    error(e.getMessage());
-                    aEvent.getTarget().addChildren(getPage(), IFeedback.class);
-                    findParent(ModalDialog.class).close(aEvent.getTarget());
-                    return;
-                }
-            }
+            try {
+                var annDoc = aEvent.getAnnotationDocument();
+                var manager = page.getDocumentEditorManager();
 
-            page.actionLoadDocument(aEvent.getTarget());
+                manager.actionShowDocument(aEvent.getTarget(), requestingEditor,
+                        annDoc.getDocument(), annDoc.getAnnotationSet());
+            }
+            catch (IOException | AnnotationException e) {
+                error(e.getMessage());
+                aEvent.getTarget().addChildren(getPage(), IFeedback.class);
+                findParent(ModalDialog.class).close(aEvent.getTarget());
+                return;
+            }
         }
 
         findParent(ModalDialog.class).close(aEvent.getTarget());
+    }
+
+    private boolean hasDocumentOnScreen()
+    {
+        return getPage() instanceof AnnotationPageBase page
+                && page.getDocumentEditorManager().hasOpenDocument();
     }
 
     private void actionCancel(AjaxRequestTarget aTarget)
     {
         userListChoice.detach();
 
-        // If the dialog is aborted without choosing a document, return to a sensible
-        // location.
-        if (getModelObject().getProject() == null || getModelObject().getDocument() == null) {
+        if (!hasDocumentOnScreen()) {
             try {
                 var ppb = findParent(ProjectPageBase.class);
                 if (ppb != null) {
@@ -363,5 +422,20 @@ public class OpenDocumentDialogPanel
         }
 
         findParent(ModalDialog.class).close(aTarget);
+    }
+
+    @FunctionalInterface
+    public interface DocumentSelectedCallback
+        extends Serializable
+    {
+        /**
+         * @param aDocuments
+         *            the documents that were on offer for {@code aDataOwner}. Pass this to
+         *            {@link AnnotatorState#setDocument} as-is: it derives the document index and
+         *            count from it, and any other list would put the editor at a position the user
+         *            never saw.
+         */
+        void accept(AjaxRequestTarget aTarget, SourceDocument aDocument, AnnotationSet aDataOwner,
+                List<SourceDocument> aDocuments);
     }
 }

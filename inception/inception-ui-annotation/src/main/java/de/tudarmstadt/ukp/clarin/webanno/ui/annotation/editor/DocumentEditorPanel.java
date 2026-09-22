@@ -15,16 +15,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.multiedit;
+package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor;
 
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_down_s;
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.chevron_up_s;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.isUndefined;
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
+import static java.lang.String.format;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.wicket.event.Broadcast.BREADTH;
@@ -35,10 +38,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.text.AnnotationFS;
-import org.apache.commons.lang3.Validate;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.behavior.AttributeAppender;
 import org.apache.wicket.Component;
 import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -57,17 +62,23 @@ import org.springframework.security.access.AccessDeniedException;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.action.DocumentEditorActionHandler;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AnchoringModeChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
@@ -81,12 +92,17 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreferencesChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
+import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.DocumentStateChangedInEditorEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorSetChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
@@ -95,13 +111,16 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
  */
 public class DocumentEditorPanel
     extends GenericPanel<AnnotatorState>
-    implements DocumentEditorActionHandler
+    implements DocumentEditor
 {
     private static final long serialVersionUID = 4988739871189752144L;
 
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String MID_EDITOR = "editor";
+    private static final String MID_EDITOR_PANEL_ROOT = "editorPanelRoot";
+
+    private static final String CSS_ACTIVE_EDITOR = "active-editor";
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
     private static final String MID_ACTION_BAR_GROUPS = "actionBarGroups";
     private static final String MID_OWN_ACTION_BAR_GROUP = "ownActionBarGroup";
@@ -110,6 +129,9 @@ public class DocumentEditorPanel
     private static final String MID_ACTION_BAR_ITEMS_AFTER = "actionBarItemsAfter";
     private static final String MID_SUBSTITUTED_EDITOR = "substitutedEditor";
     private static final String MID_DOCUMENT_STATUS_BADGES = "documentStatusBadges";
+    private static final String MID_CLOSE_EDITOR = "closeEditor";
+    private static final String MID_NO_DOCUMENT_PROMPT = "noDocumentPrompt";
+    private static final String MID_OPEN_DOCUMENT_FROM_PROMPT = "openDocumentFromPrompt";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userRepository;
@@ -119,7 +141,9 @@ public class DocumentEditorPanel
     private @SpringBean UserPreferencesService userPreferencesService;
     private @SpringBean DocumentAccess documentAccess;
 
+    private final WebMarkupContainer editorPanelRoot;
     private final WebMarkupContainer editorContainer;
+    private final LambdaAjaxLink closeEditor;
     private final DocumentNamePanel documentNamePanel;
     private final WebMarkupContainer actionBar;
     private final LambdaAjaxLink actionBarToggle;
@@ -128,6 +152,8 @@ public class DocumentEditorPanel
     private boolean actionBarCollapsed = false;
 
     private AnnotationEditorBase editor;
+
+    private String loadedContentKey;
 
     private String substituteEditorFactoryName;
 
@@ -159,6 +185,12 @@ public class DocumentEditorPanel
 
         setOutputMarkupPlaceholderTag(true);
 
+        editorPanelRoot = new WebMarkupContainer(MID_EDITOR_PANEL_ROOT);
+        editorPanelRoot.setOutputMarkupId(true);
+        editorPanelRoot.add(new AttributeAppender("class",
+                LambdaModel.of(() -> isActiveEditorIndicated() ? CSS_ACTIVE_EDITOR : ""), " "));
+        add(editorPanelRoot);
+
         actionBarCollapsed = isActionBarCollapsed();
 
         // Document name/project info line, same component the main editor uses in its header.
@@ -166,7 +198,7 @@ public class DocumentEditorPanel
         // enclosing page.
         documentNamePanel = new DocumentNamePanel("documentNamePanel", getModel(),
                 this::isEditable);
-        add(documentNamePanel);
+        editorPanelRoot.add(documentNamePanel);
 
         // Warns that the editor on screen is not the configured one, because the configured editor
         // cannot display this document's format. Reads through a model rather than being toggled at
@@ -181,21 +213,21 @@ public class DocumentEditorPanel
                                 + ") cannot display "
                                 + "this document's format, so the most suitable editor is used "
                                 + "instead.")));
-        add(substitutedEditor);
+        editorPanelRoot.add(substitutedEditor);
 
         // Host-specific status badges (e.g. the curation readiness badge), shown next to the
         // document name. The default is an empty placeholder.
-        add(createDocumentStatusBadges(MID_DOCUMENT_STATUS_BADGES));
+        // Output markup id is forced here rather than left to the hosts: the badges are repainted
+        // on a document state change, and the default is a plain placeholder that no host has any
+        // reason to give an id of its own.
+        editorPanelRoot.add(createDocumentStatusBadges(MID_DOCUMENT_STATUS_BADGES, getModel())
+                .setOutputMarkupPlaceholderTag(true));
 
-        // Position info line ("N-M / K sentences [doc x / y]"); the concrete label is produced by
-        // the current paging strategy, so it is recreated whenever a document is (re)loaded.
-        // A freshly created state may not have a paging strategy yet - the editor establishes it -
-        // so fall back to the no-paging one here rather than requiring the caller to pre-set it.
         if (getModelObject().getPagingStrategy() == null) {
             getModelObject().setPagingStrategy(new NoPagingStrategy());
         }
-        add(getModelObject().getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES,
-                getModel()));
+        editorPanelRoot.add(getModelObject().getPagingStrategy()
+                .createPositionLabel(MID_NUMBER_OF_PAGES, getModel()));
 
         // The action bar can be collapsed via the toggle in the card header, mirroring the main
         // editor. Its children live inside this container so a single class swap hides them all at
@@ -204,13 +236,21 @@ public class DocumentEditorPanel
         actionBar.setOutputMarkupId(true);
         actionBar.add(AttributeModifier.append("class",
                 LambdaModel.of(() -> actionBarCollapsed ? " visually-hidden" : "")));
-        add(actionBar);
+        editorPanelRoot.add(actionBar);
 
         actionBarToggle = new LambdaAjaxLink("toggleActionBar", this::actionToggleActionBar);
         actionBarToggle.add(new Icon("toggleActionBarIcon",
                 LambdaModel.of(() -> actionBarCollapsed ? chevron_down_s : chevron_up_s)));
         actionBarToggle.setOutputMarkupId(true);
-        add(actionBarToggle);
+        editorPanelRoot.add(actionBarToggle);
+
+        // Closing is per-editor rather than "remove the second pane", so the user closes whichever
+        // pane they are done with. Asking the workspace rather than counting panes here keeps the
+        // "never leave the page without a document" invariant in one place - see canCloseEditor().
+        closeEditor = new LambdaAjaxLink(MID_CLOSE_EDITOR, this::actionCloseEditor);
+        closeEditor.setOutputMarkupPlaceholderTag(true);
+        closeEditor.add(visibleWhen(this::isCloseable));
+        editorPanelRoot.add(closeEditor);
 
         // Host-provided action bar groups, rendered as siblings of our own group.
         actionBar.add(createActionBarGroups(MID_ACTION_BAR_GROUPS));
@@ -236,7 +276,16 @@ public class DocumentEditorPanel
         editorContainer = new WebMarkupContainer("editorContainer");
         editorContainer.setOutputMarkupId(true);
         editorContainer.add(new EmptyPanel(MID_EDITOR).setOutputMarkupId(true));
-        add(editorContainer);
+
+        // A pane with no document renders an EmptyPanel, which is blank. Say what to do instead.
+        var noDocumentPrompt = new WebMarkupContainer(MID_NO_DOCUMENT_PROMPT);
+        noDocumentPrompt.setOutputMarkupPlaceholderTag(true);
+        noDocumentPrompt.add(visibleWhen(() -> getModelObject().getDocument() == null));
+        noDocumentPrompt
+                .add(new LambdaAjaxLink(MID_OPEN_DOCUMENT_FROM_PROMPT, this::actionOpenDocument));
+        editorContainer.add(noDocumentPrompt);
+
+        editorPanelRoot.add(editorContainer);
     }
 
     @Override
@@ -382,9 +431,11 @@ public class DocumentEditorPanel
      *
      * @param aId
      *            the component id to use.
+     * @param aState
+     *            the panel's state.
      * @return the component to add to the card header.
      */
-    protected Component createDocumentStatusBadges(String aId)
+    protected Component createDocumentStatusBadges(String aId, IModel<AnnotatorState> aState)
     {
         return new WebMarkupContainer(aId);
     }
@@ -397,7 +448,13 @@ public class DocumentEditorPanel
 
     /**
      * @return the accessible documents to page through, in the order the host wants them offered.
-     *         The default lists all documents of the state's project for the state's data owner.
+     *         <p>
+     *         Accessibility is a question about the data owner <b>and</b> the session owner: a
+     *         document locked (<code>IGNORE</code>) for the data owner is not theirs to page
+     *         through, while a session owner viewing someone else's annotations is a supported case
+     *         that must not be filtered by their own flags. Both panes of that question live in
+     *         {@link DocumentService#listAccessibleDocuments}, so ask it there rather than listing
+     *         all documents and filtering afterwards.
      */
     public List<SourceDocument> listAccessibleDocuments()
     {
@@ -408,8 +465,11 @@ public class DocumentEditorPanel
             return emptyList();
         }
 
-        return documentService.listAllDocuments(project, AnnotationSet.forUser(dataOwner)).keySet()
-                .stream().collect(toList());
+        return documentService
+                .listAccessibleDocuments(project, dataOwner, userRepository.getCurrentUser())
+                .stream() //
+                .map(AnnotationDocument::getDocument) //
+                .collect(toList());
     }
 
     /**
@@ -545,18 +605,232 @@ public class DocumentEditorPanel
         aTarget.add(actionBar, actionBarToggle);
     }
 
-    @Override
-    public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
-        throws AnnotationException
+    /**
+     * @return whether this pane offers a close button. Only a workspace that can host several
+     *         editors can answer this - a single-editor workspace has nothing to close, so the
+     *         button stays hidden there rather than each host having to suppress it.
+     */
+    protected boolean isCloseable()
     {
-        var documents = listAccessibleDocuments();
-        if (!documents.contains(aDocument)) {
-            throw new AnnotationException(
-                    "Document [" + aDocument.getName() + "] cannot be shown in this editor.");
+        return getDocumentEditorManager().canCloseEditor(this);
+    }
+
+    /**
+     * Repaint the close button when a pane appears or disappears, or when one is filled: whether
+     * <i>this</i> pane may be closed depends on how many OTHER panes hold a document, so the answer
+     * changes without anything happening to this pane at all.
+     * <p>
+     * The same two events also decide whether this pane is marked as the active one, which is
+     * handled by swapping a class rather than by repainting - see
+     * {@link #updateActiveEditorMarker}.
+     * <p>
+     * ⚠️ Overriding {@code onEvent} rather than using {@code @OnEvent}: the button is invisible in
+     * exactly the case that matters (it hid itself while it was the last editor with a document),
+     * and {@code @OnEvent} does not deliver to invisible components.
+     */
+    @Override
+    public void onEvent(IEvent<?> aEvent)
+    {
+        super.onEvent(aEvent);
+
+        if (aEvent.getPayload() instanceof EditorSetChangedEvent event
+                && event.getRequestHandler() != null) {
+            event.getRequestHandler().add(closeEditor);
+            updateActiveEditorMarker(event.getRequestHandler());
         }
 
-        // Keep the full list on the state so the position label stays "[doc i / n]"-consistent.
-        getModelObject().setDocument(aDocument, documents);
+        if (aEvent.getPayload() instanceof ActiveEditorChangedEvent event
+                && event.getRequestHandler() != null) {
+            updateActiveEditorMarker(event.getRequestHandler());
+        }
+
+        if (aEvent.getPayload() instanceof DefaultLayerChangedEvent event) {
+            onDefaultLayerChanged(event.getLayer());
+        }
+
+        if (aEvent.getPayload() instanceof AnchoringModeChangedEvent event) {
+            onAnchoringModeChanged(event);
+        }
+    }
+
+    /**
+     * Adopt an anchoring mode chosen elsewhere on the page.
+     * <p>
+     * Like the layer, the anchoring mode is persisted per user and project, so it describes the
+     * working session rather than one pane. An editor whose default layer is the one that changed
+     * has to pick the new mode up, or drawing in it would still use the old one.
+     *
+     * @param aEvent
+     *            the change.
+     */
+    private void onAnchoringModeChanged(AnchoringModeChangedEvent aEvent)
+    {
+        var state = getModelObject();
+
+        if (!Objects.equals(state.getDefaultAnnotationLayer(), aEvent.getLayer())) {
+            return;
+        }
+
+        state.syncAnchoringModeToDefaultLayer(aEvent.getPrefs());
+    }
+
+    /**
+     * Adopt a layer chosen elsewhere on the page.
+     * <p>
+     * The layer selection belongs to the user's working session rather than to one pane - every
+     * editor seeds it from the same user preference on load - so a choice made while another pane
+     * was active applies here too. Without this the states diverge as soon as there are two panes:
+     * drawing a span uses the state of the editor drawn in, not the active one, so the annotation
+     * would land on whatever layer this pane happened to be left on.
+     *
+     * @param aLayer
+     *            the newly chosen layer.
+     */
+    private void onDefaultLayerChanged(AnnotationLayer aLayer)
+    {
+        if (aLayer == null) {
+            return;
+        }
+
+        var state = getModelObject();
+
+        // Not every pane can honour it - one showing a document whose project or configuration does
+        // not offer this layer must keep the layer it has.
+        if (!state.getSelectableLayers().contains(aLayer)) {
+            return;
+        }
+
+        state.setDefaultAnnotationLayer(aLayer);
+        state.setSelectedAnnotationLayer(aLayer);
+    }
+
+    private void updateActiveEditorMarker(AjaxRequestTarget aTarget)
+    {
+        aTarget.appendJavaScript(wrapInTryCatch(format(
+                "document.getElementById('%s')?.classList.toggle('%s', %s);",
+                editorPanelRoot.getMarkupId(), CSS_ACTIVE_EDITOR, isActiveEditorIndicated())));
+    }
+
+    /**
+     * @return whether this pane should show that it is the one the user is working in. Asks the
+     *         manager rather than comparing against the active context here: whether the marker is
+     *         shown at all depends on how many editors the host has, which is the manager's
+     *         business - the same split of responsibilities as {@link #isCloseable()}.
+     */
+    protected boolean isActiveEditorIndicated()
+    {
+        return getDocumentEditorManager().isMarkedActiveEditor(this);
+    }
+
+    private void actionCloseEditor(AjaxRequestTarget aTarget)
+    {
+        getDocumentEditorManager().closeEditor(aTarget, this);
+    }
+
+    /**
+     * Show the open-document dialog for <b>this</b> pane. Mind that the dialog is a single
+     * component in the page footer: it is told which pane asked, so that the document lands where
+     * the user pressed the button rather than in whichever pane happens to be active.
+     */
+    protected void actionOpenDocument(AjaxRequestTarget aTarget)
+    {
+        getModelObject().clearSelection();
+
+        findParent(ApplicationPageBase.class).getFooterItems().getObject().stream()
+                .filter(component -> component instanceof OpenDocumentDialog)
+                .map(component -> (OpenDocumentDialog) component).findFirst()
+                .ifPresent(dialog -> dialog.show(aTarget, this));
+    }
+
+    /**
+     * Open the given document in the editor, scroll to the given location. Optionally highlight
+     * additional ranges during the scroll.
+     */
+    @Override
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        Validate.notNull(aDataOwner, "Data owner must be specified");
+
+        // A null document means "wherever we are" - callers default to the context's own document,
+        // which is itself null until the first one has been loaded.
+        var state = getAnnotatorState();
+        var switched = (aDocument != null && !aDocument.equals(state.getDocument()))
+                || (state.getDocument() != null && !aDataOwner.equals(state.getDataOwner()));
+        if (switched) {
+            openDocument(aTarget, aDocument != null ? aDocument : state.getDocument(), aDataOwner);
+        }
+
+        if (getAnnotatorState().getDocument() == null) {
+            return;
+        }
+
+        if (!isUndefined(aRange)) {
+            actionJump(aTarget, aRange.getBegin(), aRange.getEnd(), aAdditionalPingRanges);
+        }
+
+        if (switched) {
+            // A switch forces a refresh: the editor now shows different content, so the client
+            // cannot simply scroll to the new location.
+            actionRefreshDocument(aTarget);
+        }
+    }
+
+    private void openDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner)
+        throws AnnotationException
+    {
+        Validate.notNull(aDocument, "Document must be specified");
+        Validate.notNull(aDataOwner, "Data owner must be specified");
+
+        var state = getModelObject();
+        var previousUser = state.getUser();
+
+        // getUserOrCurationUser() rather than get(): the curation user has no database row - it is
+        // synthesized - so a plain lookup would come up empty for it.
+        var user = userRepository.getUserOrCurationUser(aDataOwner.id());
+        if (user == null) {
+            throw new IllegalArgumentException("No such user [" + aDataOwner + "]");
+        }
+
+        // The accessible documents depend on the data owner, so the owner has to be in place before
+        // the document can be validated. Should that validation fail, the owner is put back: an
+        // editor left holding a new owner and the old document would write one person's CAS under
+        // another person's name.
+        state.setUser(user);
+        try {
+            // Whether this document may be shown for this owner at all. Checked here rather than
+            // only on the routes into the panel, so that every caller - URL fragment, open dialog,
+            // sidebars - is covered by the same decision. The message is deliberately vague: it
+            // must not reveal whether the document exists to somebody not allowed to know.
+            try {
+                documentAccess.assertCanViewAnnotationDocument(userRepository.getCurrentUser(),
+                        aDocument, aDataOwner.id());
+            }
+            catch (AccessDeniedException e) {
+                LOG.debug("Access denied opening [{}] for [{}]: {}", aDocument, aDataOwner,
+                        e.getMessage());
+                throw new AnnotationException(
+                        "Requested document does not exist or you have no permissions to access it.");
+            }
+
+            var documents = listAccessibleDocuments();
+            if (!documents.contains(aDocument)) {
+                throw new AnnotationException("Document [" + aDocument.getName()
+                        + "] cannot be shown in this editor for [" + aDataOwner + "].");
+            }
+
+            LOG.trace("Opening [{}] for [{}] (was [{}])", aDocument, aDataOwner, previousUser);
+
+            // Keep the full list on the state so the position label stays "[doc i / n]"-consistent.
+            state.setDocument(aDocument, documents);
+        }
+        catch (RuntimeException | AnnotationException e) {
+            state.setUser(previousUser);
+            throw e;
+        }
+
         actionLoadDocument(aTarget);
     }
 
@@ -568,10 +842,11 @@ public class DocumentEditorPanel
      * @param aTarget
      *            the AJAX target (optional).
      */
-    public void actionLoadDocument(AjaxRequestTarget aTarget)
+    @Override
+    public void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
         try {
-            loadDocument();
+            loadDocument(aFocus);
 
             send(getPage(), BREADTH, new EditorContentReplacedEvent(getModelObject(), aTarget));
 
@@ -592,16 +867,66 @@ public class DocumentEditorPanel
 
     /**
      * Repaint everything that depends on which document is loaded.
+     * <p>
+     * Scoped to this pane. A host that overrides {@link #actionLoadDocument} to run its own load
+     * flow must still call this, or its pane keeps showing the previous document. Repainting a
+     * shared ancestor instead also works, but at the price of repainting every other pane with it.
      */
-    private void refreshAfterDocumentChange(AjaxRequestTarget aTarget)
+    protected void refreshAfterDocumentChange(AjaxRequestTarget aTarget)
     {
         if (aTarget == null) {
             return;
         }
 
         aTarget.add(editorContainer, documentNamePanel, actionBarItems,
-                actionBar.get(MID_OWN_ACTION_BAR_GROUP), get(MID_NUMBER_OF_PAGES),
-                get(MID_SUBSTITUTED_EDITOR));
+                actionBar.get(MID_OWN_ACTION_BAR_GROUP), editorPanelRoot.get(MID_NUMBER_OF_PAGES),
+                editorPanelRoot.get(MID_SUBSTITUTED_EDITOR));
+    }
+
+    /**
+     * Repaint everything in this pane that depends on the document <b>state</b> - which is almost
+     * everything {@link #refreshAfterDocumentChange} repaints, plus the status badges, because
+     * editability gates the action bar items, the lock icon and the editor itself alike.
+     * <p>
+     * The cached editability verdict is dropped first. Without that, everything repainted below
+     * would re-render against the verdict from before the transition that prompted this call - the
+     * caller has just changed the state, but within this request nothing has re-read it yet.
+     */
+    @Override
+    public void refreshAfterDocumentStateChange(AjaxRequestTarget aTarget)
+    {
+        clearIsEditableCache();
+
+        if (aTarget == null) {
+            return;
+        }
+
+        // Everything chrome-side that reads editability: the action bar items (undo appears and
+        // disappears outright), the lock icon on the name panel, the status badges.
+        aTarget.add(documentNamePanel, actionBarItems, actionBar.get(MID_OWN_ACTION_BAR_GROUP),
+                editorPanelRoot.get(MID_DOCUMENT_STATUS_BADGES));
+
+        // The editor re-renders in place rather than being replaced: the document shown is
+        // unchanged, only whether it may be edited. Repainting editorContainer instead would
+        // remount the editor the user is working in, which is the cost this method exists to avoid.
+        actionRefreshDocument(aTarget);
+
+        // Everything outside this pane that reads editability - the sidebars above all - is the
+        // page's, not ours. Announce the transition instead of reaching across to repaint it, so
+        // the panes stay independent and consumers can scope the update to the editor it came from.
+        send(getPage(), BREADTH, new DocumentStateChangedInEditorEvent(getModelObject(), aTarget));
+    }
+
+    @Override
+    public void actionUnloadDocument(AjaxRequestTarget aTarget)
+    {
+        unloadDocument();
+        clearIsEditableCache();
+        refreshAfterDocumentChange(aTarget);
+
+        if (aTarget != null) {
+            send(getPage(), BREADTH, new EditorContentReplacedEvent(getModelObject(), aTarget));
+        }
     }
 
     private void unloadDocument()
@@ -610,7 +935,38 @@ public class DocumentEditorPanel
         createEditorComponent();
     }
 
+    private static String contentKey(SourceDocument aDocument, AnnotationSet aDataOwner)
+    {
+        if (aDocument == null || aDocument.getId() == null || aDataOwner == null) {
+            return null;
+        }
+
+        return aDocument.getId() + "/" + aDataOwner.id();
+    }
+
+    /**
+     * @return whether this editor has already been built for the document <b>and</b> data owner its
+     *         state points at. False when no document is set, and while a switch is in flight - the
+     *         state names the new content but the editor still shows the old one.
+     */
+    public boolean isShowingLoadedDocument()
+    {
+        var key = contentKey(getModelObject().getDocument(), getModelObject().getDataOwner());
+        return key != null && key.equals(loadedContentKey);
+    }
+
     private void loadDocument() throws IOException
+    {
+        loadDocument(0);
+    }
+
+    /**
+     * Load the document on our state into a fresh editor and page to the given unit.
+     *
+     * @param aFocus
+     *            the unit index to show, aligned to the <b>top</b> of the window.
+     */
+    private void loadDocument(int aFocus) throws IOException
     {
         var state = getModelObject();
 
@@ -631,13 +987,15 @@ public class DocumentEditorPanel
         var cas = getEditorCas();
 
         state.getPagingStrategy().recalculatePage(state, cas);
-        state.moveToUnit(cas, 0, TOP);
+        state.moveToUnit(cas, aFocus, TOP);
     }
 
     public void createEditorComponent()
     {
         var state = getModelObject();
         var document = state.getDocument();
+
+        loadedContentKey = contentKey(document, state.getDataOwner());
 
         Component newEditor;
         if (document == null) {
@@ -666,7 +1024,7 @@ public class DocumentEditorPanel
         var positionLabel = state.getPagingStrategy().createPositionLabel(MID_NUMBER_OF_PAGES,
                 getModel());
         positionLabel.add(visibleWhen(() -> getModelObject().getDocument() != null));
-        addOrReplace(positionLabel);
+        editorPanelRoot.addOrReplace(positionLabel);
     }
 
     /**
@@ -741,7 +1099,7 @@ public class DocumentEditorPanel
 
     public Component getPositionLabel()
     {
-        return get(MID_NUMBER_OF_PAGES);
+        return editorPanelRoot.get(MID_NUMBER_OF_PAGES);
     }
 
     /**
@@ -749,19 +1107,11 @@ public class DocumentEditorPanel
      * {@link AnnotatorState} with its own snapshot of the preferences, and the dialog only updates
      * the state it was opened on - so unless we reload here, this panel would keep rendering with
      * the settings that were current when it was constructed.
-     * <p>
-     * The configured editor is itself a preference, so the editor component is rebuilt as well
-     * rather than only re-rendered.
      */
     @OnEvent
     public void onAnnotationPreferencesChanged(AnnotationPreferencesChangedEvent aEvent)
     {
         var state = getModelObject();
-
-        // The state the dialog was opened on has already been updated in place.
-        if (aEvent.isAlreadyApplied(state)) {
-            return;
-        }
 
         // Preferences are per user and project - ignore changes for a project we are not showing.
         if (state.getProject() == null || !state.getProject().equals(aEvent.getProject())) {
@@ -781,10 +1131,20 @@ public class DocumentEditorPanel
             return;
         }
 
-        // Rebuild rather than re-render: the configured editor may have changed, and the paging
-        // strategy that comes with it along with the window size.
-        if (state.getDocument() != null) {
+        if (state.getDocument() == null) {
+            return;
+        }
+
+        if (aEvent.isEditorStructureAffected()) {
+            // The configured editor has changed, or the paging strategy has - neither survives a
+            // re-render, so the component has to be built again even though that costs the
+            // reading position.
             actionLoadDocument(target);
+        }
+        else {
+            // Everything that changed is decided while rendering, so paint the existing editor
+            // again and leave the user where they were.
+            actionRefreshDocument(target);
         }
     }
 
@@ -1042,6 +1402,7 @@ public class DocumentEditorPanel
      * @throws AnnotationException
      *             if this editor does not accept mutations.
      */
+    @Override
     public void writeEditorCas(CAS aCas) throws IOException, AnnotationException
     {
         ensureIsEditable();

@@ -74,7 +74,7 @@ public class UpdateFeatureValueAnnotationAction
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
+        adapter.setFeatureValue(getDocument(), getDataOwner(), aCas, getVid().getId(), feature,
                 oldValue);
         aMessages.add(LogMessage.info(this, "[%s] feature value of [%s] restored",
                 feature.getLayer().getUiName(), feature.getUiName()));
@@ -87,7 +87,7 @@ public class UpdateFeatureValueAnnotationAction
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.setFeatureValue(getDocument(), getUser(), aCas, getVid().getId(), feature,
+        adapter.setFeatureValue(getDocument(), getDataOwner(), aCas, getVid().getId(), feature,
                 newValue);
         aMessages.add(LogMessage.info(this, "[%s] feature value of [%s] set",
                 feature.getLayer().getUiName(), feature.getUiName()));

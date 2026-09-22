@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
@@ -28,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.TOP
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.uima.Range.isUndefined;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -37,6 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -53,28 +56,32 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.util.ListModel;
+import org.apache.wicket.request.IRequestParameters;
+import org.apache.wicket.request.Url;
+import org.apache.wicket.request.flow.RedirectToUrlException;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.string.StringValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.access.AccessDeniedException;
 import org.wicketstuff.annotation.mount.MountPath;
 import org.wicketstuff.event.annotation.OnEvent;
 import org.wicketstuff.jquery.core.Options;
 import org.wicketstuff.kendo.ui.widget.splitter.SplitterAdapter;
 import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
-import org.springframework.security.access.AccessDeniedException;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratLineOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratSentenceOrientedAnnotationEditorFactory;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
-import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -82,7 +89,8 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.UndoKeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.component.DocumentNamePanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.DetailPanelHostingPage;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.url.EditorUrlParameterStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.url.SingleDocumentEditorUrlParameterStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.AnnotatorsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
@@ -102,28 +110,25 @@ import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreferencesChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
-import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequestedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
+import de.tudarmstadt.ukp.inception.support.wicket.UrlFragmentBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 import de.tudarmstadt.ukp.inception.ui.curation.readiness.CurationReadinessBadgePanel;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
-import static java.util.Collections.emptyMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import org.apache.wicket.request.IRequestParameters;
-import org.apache.wicket.request.Url;
-import org.apache.wicket.request.flow.RedirectToUrlException;
-import de.tudarmstadt.ukp.inception.support.wicket.UrlFragmentBehavior;
 
 /**
  * This is the main class for the curation page. It contains an interface which displays differences
@@ -134,7 +139,7 @@ import de.tudarmstadt.ukp.inception.support.wicket.UrlFragmentBehavior;
         + PAGE_PARAM_DOCUMENT + "}")
 public class LegacyCurationPage
     extends AnnotationPageBase
-    implements DetailPanelHostingPage, DiamContext, DocumentEditorManager, CuratableDocumentPage
+    implements DiamContext, DocumentEditorManager, CuratableDocumentPage, DocumentEditor
 {
     public static final String PAGE_PATH = "/curate-split-legacy";
 
@@ -144,6 +149,9 @@ public class LegacyCurationPage
     private final static Logger LOG = LoggerFactory.getLogger(LegacyCurationPage.class);
 
     private static final long serialVersionUID = 1378872465851908515L;
+
+    private final EditorUrlParameterStrategy urlParameterStrategy = //
+            new SingleDocumentEditorUrlParameterStrategy(null, true);
 
     private @SpringBean DocumentService documentService;
     private @SpringBean CurationDocumentService curationDocumentService;
@@ -157,6 +165,7 @@ public class LegacyCurationPage
     private @SpringBean CurationEditingService curationEditingService;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
     private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
+    private @SpringBean UserPreferencesService userPreferenceService;
 
     private LoadableDetachableModel<String> annotationNotEditableReason = LoadableDetachableModel
             .of(this::loadAnnotationNotEditableReason);
@@ -268,7 +277,7 @@ public class LegacyCurationPage
         leftSidebar.add(new LambdaAjaxLink("refresh", this::actionRefresh));
         add(leftSidebar);
 
-        add(new UndoKeyBindingsPanel(MID_UNDO_KEY_BINDINGS));
+        add(new UndoKeyBindingsPanel(MID_UNDO_KEY_BINDINGS, this));
     }
 
     @Override
@@ -355,7 +364,7 @@ public class LegacyCurationPage
 
     private AnnotationDetailEditorPanel createDetailEditor(String aId)
     {
-        var panel = new AnnotationDetailEditorPanel(aId, this, getModel());
+        var panel = new AnnotationDetailEditorPanel(aId, this);
         panel.add(enabledWhen(() -> getModelObject() != null //
                 && getModelObject().getDocument() != null
                 && !documentService
@@ -371,12 +380,61 @@ public class LegacyCurationPage
         actionRefreshDocument(aEvent.getRequestTarget().orElse(null));
     }
 
-    /**
-     * Re-render the document when the selection has changed.
-     * 
-     * @param aEvent
-     *            the event.
-     */
+    @OnEvent
+    public void onEditorContentReplaced(EditorContentReplacedEvent aEvent)
+    {
+        // The event is broadcast across the whole page, so ignore ones belonging to another
+        // editor's state.
+        if (aEvent.getSource() != getModelObject()) {
+            return;
+        }
+
+        try {
+            annotatorsPanel.init(aEvent.getRequestHandler(), getModelObject());
+        }
+        catch (IOException e) {
+            LOG.error("Unable to load the annotator's documents", e);
+            error("Unable to load the annotator's documents: " + e.getMessage());
+        }
+    }
+
+    @OnEvent
+    public void onAnnotationPreferencesChanged(AnnotationPreferencesChangedEvent aEvent)
+    {
+        var state = getModelObject();
+
+        // Preferences are per user and project - ignore changes for a project we are not showing.
+        if (state.getProject() == null || !state.getProject().equals(aEvent.getProject())) {
+            return;
+        }
+
+        try {
+            loadPreferences(state);
+        }
+        catch (IOException e) {
+            LOG.error("Unable to reload annotation preferences", e);
+            return;
+        }
+
+        var target = aEvent.getRequestHandler();
+        if (target == null) {
+            return;
+        }
+
+        if (state.getDocument() == null) {
+            return;
+        }
+
+        if (aEvent.isEditorStructureAffected()) {
+            // A changed editor or paging strategy does not survive a re-render.
+            actionLoadDocument(target);
+        }
+        else {
+            // Everything else is applied while rendering, so keep the reading position.
+            actionRefreshDocument(target);
+        }
+    }
+
     @OnEvent
     public void onSelectionChangedEvent(SelectionChangedEvent aEvent)
     {
@@ -406,40 +464,20 @@ public class LegacyCurationPage
         }
     }
 
-    @Override
     public void setModel(IModel<AnnotatorState> aModel)
     {
         setDefaultModel(aModel);
     }
 
-    @Override
     @SuppressWarnings("unchecked")
-    public IModel<AnnotatorState> getModel()
+    private IModel<AnnotatorState> getModel()
     {
         return (IModel<AnnotatorState>) getDefaultModel();
     }
 
-    @Override
-    public void setModelObject(AnnotatorState aModel)
-    {
-        setDefaultModelObject(aModel);
-    }
-
-    @Override
     public AnnotatorState getModelObject()
     {
         return (AnnotatorState) getDefaultModelObject();
-    }
-
-    @Override
-    public List<SourceDocument> getListOfDocs()
-    {
-        var state = getModelObject();
-        // Since the curatable documents depend on the document state, let's make sure the document
-        // state is up-to-date
-        workloadManagementService.getWorkloadManagerExtension(state.getProject())
-                .freshenStatus(state.getProject());
-        return curationDocumentService.listCuratableSourceDocuments(state.getProject());
     }
 
     /**
@@ -497,44 +535,70 @@ public class LegacyCurationPage
     }
 
     @Override
-    public Optional<DiamContext> getActiveContext()
+    public Optional<DocumentEditor> getActiveEditor()
     {
         return Optional.of(this);
     }
 
     @Override
-    public boolean hasEditor()
+    public boolean hasOpenDocument()
     {
         return getModelObject().getDocument() != null;
     }
 
     @Override
-    public void setActiveContext(AjaxRequestTarget aTarget, DiamContext aContext)
+    public void setActiveEditor(AjaxRequestTarget aTarget, DocumentEditor aContext)
     {
         // The context is fixed to this page, so there is nothing to switch to.
     }
 
     @Override
-    public void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument, int aBegin,
-            int aEnd, List<VRange> aAdditionalPingRanges)
+    public void actionShowDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
         throws IOException, AnnotationException
     {
         ensureIsAccessible(aDocument);
 
-        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, aAdditionalPingRanges);
+        actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange, aAdditionalPingRanges);
     }
 
-    @Override
     public void ensureIsAccessible(SourceDocument aDocument) throws AnnotationException
     {
-        if (!getListOfDocs().contains(aDocument)) {
+        if (!listCuratableDocuments().contains(aDocument)) {
             throw new AnnotationException(
                     "Document [" + aDocument.getName() + "] is not accessible.");
         }
     }
 
     @Override
-    public Optional<DiamContext> findEditorFor(SourceDocument aDocument, AnnotationSet aDataOwner)
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        var state = getAnnotatorState();
+        var switched = (aDocument != null && !aDocument.equals(state.getDocument()))
+                || (state.getDocument() != null && !aDataOwner.equals(state.getDataOwner()));
+        if (switched) {
+            actionOpenDocument(aTarget, aDocument != null ? aDocument : state.getDocument(),
+                    aDataOwner);
+        }
+
+        if (getAnnotatorState().getDocument() == null) {
+            return;
+        }
+
+        if (!isUndefined(aRange)) {
+            actionJump(aTarget, aRange.getBegin(), aRange.getEnd(), aAdditionalPingRanges);
+        }
+
+        if (switched) {
+            actionRefreshDocument(aTarget);
+        }
+    }
+
+    @Override
+    public Optional<DocumentEditor> findEditorFor(SourceDocument aDocument,
+            AnnotationSet aDataOwner)
     {
         // Page is its own single editor - it is either showing the document or nothing is.
         var state = getModelObject();
@@ -544,12 +608,6 @@ public class LegacyCurationPage
         }
 
         return Optional.of(this);
-    }
-
-    @Override
-    public DiamContext resolveEditorFor(SourceDocument aDocument)
-    {
-        return this;
     }
 
     @Override
@@ -565,22 +623,21 @@ public class LegacyCurationPage
     }
 
     @Override
-    public AnnotationDetailEditorPanel getDetailEditor()
-    {
-        return detailEditor;
-    }
-
-    @Override
     public Selection selectionFor(VID aVid, AnnotationFS aAnnotation)
     {
         return annotationService.findAdapter(getProject(), aAnnotation).select(aVid, aAnnotation);
     }
 
-    @Override
-    public void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    private void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner)
         throws AnnotationException
     {
-        var docs = getListOfDocs();
+        if (!CURATION_SET.equals(aDataOwner)) {
+            throw new IllegalArgumentException(
+                    "This page can only show [" + CURATION_SET + "], not [" + aDataOwner + "]");
+        }
+
+        var docs = listCuratableDocuments();
         if (!docs.contains(aDocument)) {
             throw new AnnotationException(
                     "Document [" + aDocument.getName() + "] is not accessible.");
@@ -601,7 +658,8 @@ public class LegacyCurationPage
      * Open a document. This method should be used only the first time that a document is accessed.
      * It resets the editor state and upgrades the CAS.
      */
-    private void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
+    @Override
+    public void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
     {
         LOG.trace("BEGIN LOAD_DOCUMENT_ACTION at focus " + aFocus);
 
@@ -622,7 +680,7 @@ public class LegacyCurationPage
             state.setConstraints(constraintsService.getMergedConstraints(project));
 
             // Load user preferences
-            loadPreferences();
+            loadPreferences(state);
 
             // if project is changed, reset some project specific settings
             if (currentprojectId != project.getId()) {
@@ -630,7 +688,7 @@ public class LegacyCurationPage
                 currentprojectId = project.getId();
             }
 
-            var mergeCas = readOrCreateCurationCas(state.getDocument(),
+            var mergeCas = readOrCreateCurationCas(state.getDocument(), state,
                     curationService.getDefaultMergeStrategy(project), LOAD_ONLY);
 
             // Initialize timestamp in state
@@ -643,8 +701,6 @@ public class LegacyCurationPage
             curationUnits.setObject(buildUnitOverview(state));
 
             send(this, BREADTH, new EditorContentReplacedEvent(state, aTarget));
-
-            annotatorsPanel.init(aTarget, getModelObject());
 
             // Re-render whole page as sidebar size preference may have changed
             if (aTarget != null) {
@@ -662,6 +718,30 @@ public class LegacyCurationPage
     public CurationEditingService getCurationEditingService()
     {
         return curationEditingService;
+    }
+
+    @Override
+    public CurationDocumentService getCurationDocumentService()
+    {
+        return curationDocumentService;
+    }
+
+    @Override
+    public WorkloadManagementService getWorkloadManagementService()
+    {
+        return workloadManagementService;
+    }
+
+    @Override
+    public void refreshAfterDocumentStateChange(AjaxRequestTarget aTarget)
+    {
+        annotationNotEditableReason.detach();
+
+        if (aTarget == null) {
+            return;
+        }
+
+        refreshPage(aTarget, getPage());
     }
 
     @Override
@@ -710,7 +790,7 @@ public class LegacyCurationPage
         // If we arrive here and the document is not null, then we have a change of document
         // or a change of focus (or both)
         if (document != null && !document.equals(state.getDocument())) {
-            state.setDocument(document, getListOfDocs());
+            state.setDocument(document, listCuratableDocuments());
 
             if (state.getDocumentIndex() == -1) {
                 getSession().error("The document [" + document.getName() + "] is not curatable");
@@ -808,7 +888,6 @@ public class LegacyCurationPage
         return curationUnitList;
     }
 
-    @Override
     public Optional<ContextMenuLookup> getContextMenuLookup()
     {
         return annotationEditor.getContextMenuLookup();
@@ -871,20 +950,7 @@ public class LegacyCurationPage
      */
     protected Map<String, Object> getUrlFragmentParameters()
     {
-        var state = getModelObject();
-
-        if (state.getDocument() == null) {
-            return emptyMap();
-        }
-
-        var parameters = new LinkedHashMap<String, Object>();
-
-        parameters.put(PAGE_PARAM_DOCUMENT, state.getDocument().getId());
-
-        parameters.put(PAGE_PARAM_FOCUS,
-                state.getFocusUnitIndex() > 0 ? state.getFocusUnitIndex() : null);
-
-        return parameters;
+        return urlParameterStrategy.getUrlFragmentParameters(getModelObject());
     }
 
     private String loadAnnotationNotEditableReason()
@@ -902,9 +968,10 @@ public class LegacyCurationPage
     }
 
     /**
-     * @deprecated The page should no longer know about editors. Use {@link #getActiveContext()}
+     * @deprecated The page should no longer know about editors. Use {@link #getActiveEditor()}
      *             instead.
      */
+    @Override
     @Deprecated
     public void ensureIsEditable() throws NotEditableException
     {
@@ -920,19 +987,7 @@ public class LegacyCurationPage
         }
     }
 
-    /**
-     * Discard the cached editability verdict so that the next {@link #isEditable()} or
-     * {@link #ensureIsEditable()} re-evaluates it.
-     * 
-     * @deprecated The page should no longer know about editors. Use {@link #getActiveContext()}
-     *             instead.
-     */
-    @Deprecated
-    protected void clearIsEditableCache()
-    {
-        annotationNotEditableReason.detach();
-    }
-
+    @Override
     public boolean isEditable()
     {
         try {
@@ -949,5 +1004,80 @@ public class LegacyCurationPage
     {
         super.detachModels();
         annotationNotEditableReason.detach();
+    }
+
+    /**
+     * Load the user preferences. A side-effect of this method is that the active annotation layer
+     * is refreshed based on the visibility preferences and based on the project to which the
+     * document being edited belongs.
+     */
+    /**
+     * Load the user preferences into the given state.
+     *
+     * @param aState
+     *            the state to load into.
+     * @throws IOException
+     *             if the preferences cannot be read.
+     */
+    private void loadPreferences(AnnotatorState aState) throws IOException
+    {
+        userPreferenceService.loadPreferences(aState, userRepository.getCurrentUsername());
+    }
+
+    @Override
+    public void actionLoadSelectedAnnotationDetails(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        detailEditor.actionLoadSelectionDetails(aTarget);
+    }
+
+    @Override
+    public void actionDelete(AjaxRequestTarget aTarget) throws IOException, AnnotationException
+    {
+        detailEditor.actionDelete(aTarget);
+    }
+
+    @Override
+    public void actionReverse(AjaxRequestTarget aTarget) throws IOException, AnnotationException
+    {
+        detailEditor.actionReverse(aTarget);
+    }
+
+    @Override
+    public void actionFillSlot(AjaxRequestTarget aTarget, int aSlotFillerBegin, int aSlotFillerEnd)
+        throws IOException, AnnotationException
+    {
+        detailEditor.actionFillSlot(aTarget, aSlotFillerBegin, aSlotFillerEnd);
+    }
+
+    @Override
+    public void actionFillSlot(AjaxRequestTarget aTarget, VID aExistingSlotFillerId)
+        throws IOException, AnnotationException
+    {
+        detailEditor.actionFillSlot(aTarget, aExistingSlotFillerId);
+    }
+
+    @Override
+    public void actionClear(AjaxRequestTarget aTarget)
+    {
+        detailEditor.actionClear(aTarget);
+    }
+
+    @Override
+    public void actionUnloadDocument(AjaxRequestTarget aTarget)
+    {
+        // Not relevant
+    }
+
+    @Override
+    public boolean canCloseEditor(DocumentEditor aEditor)
+    {
+        return false;
+    }
+
+    @Override
+    public int getMaxEditors()
+    {
+        return 1;
     }
 }

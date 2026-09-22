@@ -21,11 +21,11 @@ import org.apache.wicket.Component;
 import org.apache.wicket.model.IModel;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.search.config.SearchServiceUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 /**
  * <p>
@@ -56,8 +56,8 @@ public class SearchAnnotationSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, SidebarContext aContext)
     {
-        return new SearchAnnotationSidebar(aId, aAnnotationPage);
+        return new SearchAnnotationSidebar(aId, aContext);
     }
 }

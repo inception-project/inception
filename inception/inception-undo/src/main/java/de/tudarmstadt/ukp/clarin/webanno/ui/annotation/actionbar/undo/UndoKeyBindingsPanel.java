@@ -30,6 +30,7 @@ import org.danekja.java.util.function.serializable.SerializableSupplier;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyCombo;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -45,9 +46,13 @@ public class UndoKeyBindingsPanel
     private @SpringBean KeyBindingsProperties keyBindings;
     private @SpringBean AnnotationSchemaService schemaService;
 
-    public UndoKeyBindingsPanel(String aId)
+    private final DocumentEditorManager manager;
+
+    public UndoKeyBindingsPanel(String aId, DocumentEditorManager aManager)
     {
         super(aId);
+
+        manager = aManager;
 
         setOutputMarkupId(true);
 
@@ -77,10 +82,9 @@ public class UndoKeyBindingsPanel
         aAction.apply(aTarget, context);
     }
 
-    private Optional<DiamContext> getActiveContext()
+    private Optional<DocumentEditor> getActiveContext()
     {
-        var manager = findParent(DocumentEditorManager.class);
-        return manager != null ? manager.getActiveContext() : Optional.empty();
+        return manager.getActiveEditor();
     }
 
     private UndoRedoActionExecutor executor()

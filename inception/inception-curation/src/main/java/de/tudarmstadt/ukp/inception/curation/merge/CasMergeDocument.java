@@ -37,7 +37,7 @@ import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 class CasMergeDocument
 {
     static CasMergeOperationResult mergeDocumentAnnotation(CasMergeContext aContext,
-            SourceDocument aDocument, String aDataOwner, AnnotationLayer aAnnotationLayer,
+            SourceDocument aDocument, String aTargetDataOwner, AnnotationLayer aAnnotationLayer,
             CAS aTargetCas, AnnotationBase aSourceFs)
         throws AnnotationException
     {
@@ -61,18 +61,18 @@ class CasMergeDocument
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
             var mergedAnn = adapter.handle(CreateDocumentAnnotationRequest.builder() //
-                    .withDocument(aDocument, aDataOwner, aTargetCas) //
+                    .withDocument(aDocument, aTargetDataOwner, aTargetCas) //
                     .build());
 
             var mergedSpanAddr = -1;
             try {
-                copyFeatures(aContext, aDocument, aDataOwner, adapter, mergedAnn, aSourceFs);
+                copyFeatures(aContext, aDocument, aTargetDataOwner, adapter, mergedAnn, aSourceFs);
                 mergedSpanAddr = getAddr(mergedAnn);
             }
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                adapter.delete(aDocument, aDataOwner, aTargetCas, VID.of(mergedAnn));
+                adapter.delete(aDocument, aTargetDataOwner, aTargetCas, VID.of(mergedAnn));
                 throw e;
             }
             return new CasMergeOperationResult(CREATED, mergedSpanAddr);
@@ -86,7 +86,7 @@ class CasMergeDocument
         }
         else {
             var annoToUpdate = existingAnnos.get(0);
-            copyFeatures(aContext, aDocument, aDataOwner, adapter, annoToUpdate, aSourceFs);
+            copyFeatures(aContext, aDocument, aTargetDataOwner, adapter, annoToUpdate, aSourceFs);
             var mergedSpanAddr = getAddr(annoToUpdate);
             return new CasMergeOperationResult(UPDATED, mergedSpanAddr);
         }

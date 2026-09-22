@@ -44,6 +44,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
@@ -78,16 +79,29 @@ public class RecommenderInfoPanel
 
     private ModalDialog detailsDialog;
 
-    public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
+    private final DocumentEditorManager manager;
+
+    private final IModel<Project> project;
+
+    /**
+     * @param aProject
+     *            the project - separate from the state as the state may not be available yet when
+     *            the panel is constructed.
+     */
+    public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel, IModel<Project> aProject,
+            DocumentEditorManager aManager)
     {
         super(aId, aModel);
+
+        manager = aManager;
+        project = aProject;
 
         setOutputMarkupId(true);
 
         var sessionOwner = userService.getCurrentUser();
 
         var settings = preferencesService.loadDefaultTraitsForProject(
-                KEY_RECOMMENDER_GENERAL_SETTINGS, aModel.getObject().getProject());
+                KEY_RECOMMENDER_GENERAL_SETTINGS, aProject.getObject());
 
         detailsDialog = new BootstrapModalDialog("detailsDialog").trapFocus().closeOnEscape()
                 .closeOnClick();
@@ -181,8 +195,8 @@ public class RecommenderInfoPanel
                                 .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
-        var recommenders = LoadableDetachableModel.of(() -> recommendationService
-                .listEnabledRecommenders(aModel.getObject().getProject()));
+        var recommenders = LoadableDetachableModel
+                .of(() -> recommendationService.listEnabledRecommenders(project.getObject()));
         searchResultGroups.setModel(recommenders);
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
@@ -256,7 +270,7 @@ public class RecommenderInfoPanel
         var sessionOwner = userService.getCurrentUser();
         var state = getModelObject();
 
-        var context = findParent(DocumentEditorManager.class).getActiveContext().orElseThrow();
+        var context = manager.getActiveEditor().orElseThrow();
 
         var cas = context.getEditorCas();
 

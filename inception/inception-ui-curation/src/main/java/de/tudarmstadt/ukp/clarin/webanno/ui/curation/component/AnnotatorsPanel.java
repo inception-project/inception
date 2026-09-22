@@ -57,7 +57,6 @@ import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -83,7 +82,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
@@ -332,41 +330,39 @@ public class AnnotatorsPanel
     }
 
     private CasMergeOperationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
-            VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
+            VID aSourceVid, SourceDocument aSourceDocument, String aTargetDataOwner,
             AnnotationLayer aLayer)
         throws AnnotationException, UIMAException, IOException
     {
-        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
-                aSourceVid.getId());
+        var sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
 
-        return aCasMerge.mergeSpanAnnotation(aSourceDocument, aSourceUser, aLayer, aTargetCas,
+        return aCasMerge.mergeSpanAnnotation(aSourceDocument, aTargetDataOwner, aLayer, aTargetCas,
                 sourceAnnotation);
     }
 
     private void mergeSlot(CasMerge aCasMerge, CAS aCas, CAS aSourceCas, VID aSourceVid,
-            SourceDocument aSourceDocument, String aSourceUser, AnnotationLayer aLayer)
+            SourceDocument aSourceDocument, String aTargetDataOwner, AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
-        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
-                aSourceVid.getId());
+        var sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
 
-        TypeAdapter adapter = schemaService.getAdapter(aLayer);
-        AnnotationFeature feature = adapter.listFeatures().stream().sequential()
-                .skip(aSourceVid.getAttribute()).findFirst().get();
+        var adapter = schemaService.getAdapter(aLayer);
+        var feature = adapter.listFeatures().stream().sequential().skip(aSourceVid.getAttribute())
+                .findFirst().get();
 
-        aCasMerge.mergeSlotFeature(aSourceDocument, aSourceUser, aLayer, aCas, sourceAnnotation,
-                feature.getName(), aSourceVid.getSlot());
+        aCasMerge.mergeSlotFeature(aSourceDocument, aTargetDataOwner, aLayer, aCas,
+                sourceAnnotation, feature.getName(), aSourceVid.getSlot());
     }
 
     private CasMergeOperationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
-            VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
+            VID aSourceVid, SourceDocument aSourceDocument, String aTargetDataOwner,
             AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
         AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
                 aSourceVid.getId());
 
-        return aCasMerge.mergeRelationAnnotation(aSourceDocument, aSourceUser, aLayer, aCas,
+        return aCasMerge.mergeRelationAnnotation(aSourceDocument, aTargetDataOwner, aLayer, aCas,
                 sourceAnnotation);
     }
 

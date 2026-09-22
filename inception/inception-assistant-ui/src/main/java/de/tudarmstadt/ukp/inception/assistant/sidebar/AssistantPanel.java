@@ -32,12 +32,12 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
 import de.tudarmstadt.ukp.inception.assistant.AssistantWebsocketController;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.support.svelte.SvelteBehavior;
 import jakarta.servlet.ServletContext;
 
@@ -54,9 +54,13 @@ public class AssistantPanel
 
     private DiamAjaxBehavior diamBehavior;
 
-    public AssistantPanel(String aId)
+    private final DocumentEditorManager manager;
+
+    public AssistantPanel(String aId, DocumentEditorManager aManager)
     {
         super(aId);
+
+        manager = aManager;
         setOutputMarkupPlaceholderTag(true);
     }
 
@@ -67,8 +71,7 @@ public class AssistantPanel
 
         add(new SvelteBehavior());
 
-        var manager = findParent(DocumentEditorManager.class);
-        add(diamBehavior = new DiamAjaxBehavior(() -> manager.getActiveContext().orElse(null)));
+        add(diamBehavior = new DiamAjaxBehavior(() -> manager.getActiveEditor().orElse(null)));
     }
 
     @Override
@@ -76,12 +79,14 @@ public class AssistantPanel
     {
         super.onConfigure();
 
-        var state = findParent(AnnotationPageBase.class).getModelObject();
+        var maybeState = manager.getActiveEditor().map(DiamContext::getAnnotatorState);
 
-        if (state.getDocument() == null) {
+        if (maybeState.isEmpty() || maybeState.get().getDocument() == null) {
             setDefaultModel(null);
             return;
         }
+
+        var state = maybeState.get();
 
         Map<String, Object> properties = Map.of( //
                 "ajaxEndpointUrl", diamBehavior.getCallbackUrl(), //

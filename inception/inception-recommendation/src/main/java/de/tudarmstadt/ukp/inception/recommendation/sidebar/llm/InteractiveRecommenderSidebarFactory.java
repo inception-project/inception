@@ -24,11 +24,10 @@ import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
@@ -76,14 +75,8 @@ public class InteractiveRecommenderSidebarFactory
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aContext)
+    public AnnotationSidebar_ImplBase create(String aId, SidebarContext aContext)
     {
-        return available(aContext.getModelObject().getProject());
-    }
-
-    @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
-    {
-        return new InteractiveRecommenderSidebar(aId, aAnnotationPage);
+        return new InteractiveRecommenderSidebar(aId, aContext);
     }
 }

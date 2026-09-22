@@ -20,12 +20,12 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 import org.apache.commons.lang3.Validate;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 
-public record ActionBarContext(AnnotationPageBase page, DiamContext editorContext) {
+public record ActionBarContext(AnnotationPageBase page, DocumentEditor editor) {
     public ActionBarContext
     {
-        Validate.notNull(editorContext, "Editor context must be specified");
+        Validate.notNull(editor, "Editor context must be specified");
     }
 
     /**
@@ -33,7 +33,7 @@ public record ActionBarContext(AnnotationPageBase page, DiamContext editorContex
      */
     public boolean hasDocument()
     {
-        var state = editorContext.getAnnotatorState();
+        var state = editor.getAnnotatorState();
 
         return state != null && state.getDocument() != null;
     }

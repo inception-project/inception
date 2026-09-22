@@ -19,11 +19,10 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar;
 
 import java.util.List;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint;
 
 public interface AnnotationSidebarRegistry
-    extends ExtensionPoint<AnnotationPageBase, AnnotationSidebarFactory>
+    extends ExtensionPoint<SidebarContext, AnnotationSidebarFactory>
 {
     @Deprecated
     List<AnnotationSidebarFactory> getSidebarFactories();

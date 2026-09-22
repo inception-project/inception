@@ -19,9 +19,12 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.AnnotationDetailEditorPanel.handleException;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
+import static de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes.CHAIN_LAYER_TYPE;
+import static de.tudarmstadt.ukp.inception.schema.api.layer.LayerTypes.SPAN_LAYER_TYPE;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static java.util.Collections.emptyList;
-import static org.apache.wicket.event.Broadcast.BUBBLE;
+import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,8 +43,11 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AnchoringModeChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -73,25 +79,46 @@ public class LayerSelectionPanel
 
         setOutputMarkupPlaceholderTag(true);
 
-        // Visible if there is more than one selectable layer and if the document is editable
-        // (meaning we need to be able to change the layer)
         add(layerSelector = createDefaultAnnotationLayerSelector());
-        layerSelector.add(visibleWhen(() -> layerSelector.getChoicesModel() //
-                .map(layerChoices -> layerChoices.size() > 1) //
-                .orElse(false).getObject()));
+        layerSelector.add(visibleWhen(this::isLayerChoiceAvailable));
         add(relationHint = createRelationHint());
-        relationHint.add(visibleWhen(() -> layerSelector.getChoicesModel() //
-                .map(layerChoices -> layerChoices.size() > 1) //
-                .orElse(false).getObject()));
+        relationHint.add(visibleWhen(this::isLayerChoiceAvailable));
 
-        add(visibleWhen(
-                () -> findParent(AnnotationDetailEditorPanel.class).isActiveEditorEditable()));
+        add(enabledWhen(() -> findParent(AnnotationDetailEditorPanel.class).hasActiveEditor()));
 
         allowedAnchoringModes = Model.ofList(emptyList());
 
         anchoringModePanel = new AnchoringModePanel("anchoringMode", null, allowedAnchoringModes) //
                 .onApplied(this::actionApplyAnchoringMode);
         add(anchoringModePanel);
+    }
+
+    private boolean isLayerChoiceAvailable()
+    {
+        return getSelectableLayers().size() > 1;
+    }
+
+    private List<AnnotationLayer> getSelectableLayers()
+    {
+        var layers = getModel().map(AnnotatorState::getSelectableLayers).getObject();
+        if (layers != null && !layers.isEmpty()) {
+            return layers;
+        }
+
+        var project = getModel().map(AnnotatorState::getProject).getObject();
+        if (project == null) {
+            return emptyList();
+        }
+
+        // Mirrors AnnotatorStateImpl.refreshSelectableLayers: enabled, writable, not blocked, and
+        // only the types one can actually create by selecting a layer.
+        return annotationService.listAnnotationLayer(project).stream() //
+                .filter(AnnotationLayer::isEnabled) //
+                .filter(layer -> !layer.isReadonly()) //
+                .filter(layer -> !annotationEditorProperties.isLayerBlocked(layer)) //
+                .filter(layer -> SPAN_LAYER_TYPE.equals(layer.getType())
+                        || CHAIN_LAYER_TYPE.equals(layer.getType())) //
+                .toList();
     }
 
     @Override
@@ -137,7 +164,7 @@ public class LayerSelectionPanel
     private DropDownChoice<AnnotationLayer> createDefaultAnnotationLayerSelector()
     {
         var selector = new DropDownChoice<AnnotationLayer>("defaultAnnotationLayer");
-        selector.setChoices(getModel().map(AnnotatorState::getSelectableLayers));
+        selector.setChoices(this::getSelectableLayers);
         selector.setChoiceRenderer(new ChoiceRenderer<>("uiName"));
         selector.setOutputMarkupId(true);
         selector.add(LambdaAjaxFormComponentUpdatingBehavior.onUpdate("change",
@@ -152,8 +179,6 @@ public class LayerSelectionPanel
         var currentDefaultLayer = state.getDefaultAnnotationLayer();
 
         aTarget.add(relationHint, anchoringModePanel);
-
-        send(this, BUBBLE, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
 
         // Save the currently selected layer as a user preference so it is remains active when a
         // user leaves the application and later comes back to continue annotating
@@ -183,17 +208,37 @@ public class LayerSelectionPanel
                 handleException(this, aTarget, e);
             }
         }
+
+        // Sent LAST, once the preference and the anchoring mode have been brought in line - a
+        // handler that reads either would otherwise see the value from before this change.
+        send(getPage(), BREADTH, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
     }
 
-    private void actionApplyAnchoringMode(AjaxRequestTarget Target, AnchoringMode aMode)
+    private void actionApplyAnchoringMode(AjaxRequestTarget aTarget, AnchoringMode aMode)
     {
-        var state = getModelObject();
+        var layer = layerSelector.getModelObject();
+        if (layer == null) {
+            return;
+        }
+
+        var project = getProjectForPreferences();
+        if (project == null) {
+            return;
+        }
+
         var sessionOwner = userService.getCurrentUser();
 
         var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
-                sessionOwner, state.getProject());
-        anchoringPrefs.setAnchoringModes(layerSelector.getModelObject(), aMode);
-        preferencesService.saveTraitsForUserAndProject(KEY_ANCHORING_MODE, sessionOwner,
-                state.getProject(), anchoringPrefs);
+                sessionOwner, project);
+        anchoringPrefs.setAnchoringModes(layer, aMode);
+        preferencesService.saveTraitsForUserAndProject(KEY_ANCHORING_MODE, sessionOwner, project,
+                anchoringPrefs);
+
+        send(getPage(), BREADTH, new AnchoringModeChangedEvent(layer, aMode, anchoringPrefs));
+    }
+
+    private Project getProjectForPreferences()
+    {
+        return findParent(ProjectPageBase.class).getProject();
     }
 }

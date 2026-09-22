@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostAction;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndHighlight;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.PostActionScrollToAndSelect;
@@ -57,9 +58,10 @@ public class CreateRelationAnnotationAction
         throws AnnotationException
     {
         var adapter = aSchemaService.getAdapter(getLayer());
-        adapter.delete(getDocument(), getUser(), aCas, getVid());
+        adapter.delete(getDocument(), getDataOwner(), aCas, getVid());
         aMessages.add(LogMessage.info(this, "[%s] deleted", getLayer().getUiName()));
-        return Optional.of(new PostActionScrollToAndHighlight(getDocument(), range));
+        return Optional.of(new PostActionScrollToAndHighlight(getDocument(),
+                AnnotationSet.forUser(getDataOwner()), range));
     }
 
     @Override
@@ -68,7 +70,7 @@ public class CreateRelationAnnotationAction
         throws AnnotationException
     {
         var adapter = (RelationAdapter) aSchemaService.getAdapter(getLayer());
-        adapter.restore(getDocument(), getUser(), aCas, getVid());
+        adapter.restore(getDocument(), getDataOwner(), aCas, getVid());
         aMessages.add(LogMessage.info(this, "[%s] restored", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
     }

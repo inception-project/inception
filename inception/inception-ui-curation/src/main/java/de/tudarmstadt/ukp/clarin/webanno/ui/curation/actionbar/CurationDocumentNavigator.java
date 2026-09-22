@@ -22,12 +22,16 @@ import static de.tudarmstadt.ukp.inception.curation.settings.CurationNavigationU
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static wicket.contrib.input.events.EventType.click;
 
+import java.util.List;
+
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.panel.GenericPanel;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
@@ -39,6 +43,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 
@@ -55,14 +60,20 @@ public class CurationDocumentNavigator
     private @SpringBean DocumentService documentService;
 
     private AnnotationPageBase page;
+    private DiamContext editorContext;
 
     private final ExportDocumentDialog exportDialog;
+    private final IModel<List<SourceDocument>> documentList;
 
-    public CurationDocumentNavigator(String aId, AnnotationPageBase aPage)
+    public CurationDocumentNavigator(String aId, ActionBarContext aContext,
+            IModel<List<SourceDocument>> aDocumentList)
     {
-        super(aId, aPage.getModel());
+        super(aId, aContext.editor().getStateModel());
 
-        page = aPage;
+        documentList = aDocumentList;
+
+        page = aContext.page();
+        editorContext = aContext.editor();
 
         queue(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
                 .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(
@@ -105,19 +116,19 @@ public class CurationDocumentNavigator
     {
         var sessionOwner = userService.getCurrentUser();
         var state = getModelObject();
-        var aDocuments = page.getListOfDocs();
+        var documents = documentList.getObject();
 
         var prefs = preferencesService.loadTraitsForUserAndProject(
                 KEY_CURATION_NAVIGATION_USER_PREFS, sessionOwner, state.getProject());
 
         // Index of the current source document in the list
-        var currentDocumentIndex = aDocuments.indexOf(state.getDocument());
+        var currentDocumentIndex = documents.indexOf(state.getDocument());
 
         while (true) {
             // If the first document
             if (currentDocumentIndex <= 0) {
                 if (prefs.isFinishedDocumentsSkippedByNavigation()) {
-                    info("There is no previous unfinished document. Use the Open Document dialog to select finished documents.");
+                    info("There is no previous unfinished document.");
                 }
                 else {
                     info("There is no previous document.");
@@ -128,11 +139,11 @@ public class CurationDocumentNavigator
 
             currentDocumentIndex--;
 
-            var newDocument = aDocuments.get(currentDocumentIndex);
+            var newDocument = documents.get(currentDocumentIndex);
 
             if (!prefs.isFinishedDocumentsSkippedByNavigation() || !isTerminal(newDocument)) {
-                state.setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
-                page.actionLoadDocument(aTarget);
+                state.setDocument(documents.get(currentDocumentIndex), documents);
+                editorContext.actionLoadDocument(aTarget);
                 break;
             }
         }
@@ -148,19 +159,19 @@ public class CurationDocumentNavigator
     {
         var sessionOwner = userService.getCurrentUser();
         var state = getModelObject();
-        var aDocuments = page.getListOfDocs();
+        var documents = documentList.getObject();
 
         var prefs = preferencesService.loadTraitsForUserAndProject(
                 KEY_CURATION_NAVIGATION_USER_PREFS, sessionOwner, state.getProject());
 
         // Index of the current source document in the list
-        var currentDocumentIndex = aDocuments.indexOf(state.getDocument());
+        var currentDocumentIndex = documents.indexOf(state.getDocument());
 
         while (true) {
             // If the last document
-            if (currentDocumentIndex < 0 || currentDocumentIndex >= aDocuments.size() - 1) {
+            if (currentDocumentIndex < 0 || currentDocumentIndex >= documents.size() - 1) {
                 if (prefs.isFinishedDocumentsSkippedByNavigation()) {
-                    info("There is no next unfinished document. Use the Open Document dialog to select finished documents.");
+                    info("There is no next unfinished document.");
                 }
                 else {
                     info("There is no next document.");
@@ -171,10 +182,10 @@ public class CurationDocumentNavigator
 
             currentDocumentIndex++;
 
-            var newDocument = aDocuments.get(currentDocumentIndex);
+            var newDocument = documents.get(currentDocumentIndex);
             if (!prefs.isFinishedDocumentsSkippedByNavigation() || !isTerminal(newDocument)) {
-                state.setDocument(aDocuments.get(currentDocumentIndex), aDocuments);
-                page.actionLoadDocument(aTarget);
+                state.setDocument(documents.get(currentDocumentIndex), documents);
+                editorContext.actionLoadDocument(aTarget);
                 break;
             }
         }

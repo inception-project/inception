@@ -23,10 +23,9 @@ import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.ui.curation.page.SplitCurationPage;
@@ -55,14 +54,15 @@ public class CurationUnitOverviewSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, SidebarContext aContext)
     {
-        return new CurationUnitOverviewSidebar(aId, aAnnotationPage);
+        return new CurationUnitOverviewSidebar(aId, aContext);
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aContext)
+    public boolean accepts(SidebarContext aContext)
     {
-        return aContext instanceof SplitCurationPage || aContext instanceof CurationPage;
+        return aContext.page() instanceof SplitCurationPage
+                || aContext.page() instanceof CurationPage;
     }
 }

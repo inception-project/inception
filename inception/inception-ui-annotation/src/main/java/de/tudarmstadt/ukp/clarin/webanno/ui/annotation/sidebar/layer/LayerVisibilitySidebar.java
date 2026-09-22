@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
 import static java.util.Collections.emptySet;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
@@ -48,13 +50,14 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Tag;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreferencesChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class LayerVisibilitySidebar
     extends AnnotationSidebar_ImplBase
@@ -72,16 +75,18 @@ public class LayerVisibilitySidebar
 
     private Map<AnnotationLayer, Boolean> layerCollapseState = new HashMap<>();
 
-    public LayerVisibilitySidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public LayerVisibilitySidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
+
+        add(visibleWhenModelIsNotNull(this));
 
         add(createLayerContainer("layer", LoadableDetachableModel.of(this::listLayers)));
     }
 
     private List<AnnotationLayer> listLayers()
     {
-        return annotationService.listSupportedLayers(getModelObject().getProject()).stream() //
+        return annotationService.listSupportedLayers(getContext().getProject()).stream() //
                 .filter(AnnotationLayer::isEnabled) //
                 .filter(layer -> !annotationEditorProperties.isLayerBlocked(layer)) //
                 .toList();
@@ -155,10 +160,12 @@ public class LayerVisibilitySidebar
     private void saveVisibilityStateAndRerender(AjaxRequestTarget aTarget) throws IOException
     {
         var sessionOwner = userService.getCurrentUsername();
-        userPreferencesService.savePreferences(getModelObject(), sessionOwner);
-        userPreferencesService.loadPreferences(getModelObject(), sessionOwner);
+        var state = getModelObject();
 
-        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
+        userPreferencesService.savePreferences(state, sessionOwner);
+
+        send(getPage(), Broadcast.BREADTH,
+                new AnnotationPreferencesChangedEvent(getProject(), sessionOwner, aTarget, false));
     }
 
     private List<Tag> listSelectableTags(AnnotationFeature aFeature)

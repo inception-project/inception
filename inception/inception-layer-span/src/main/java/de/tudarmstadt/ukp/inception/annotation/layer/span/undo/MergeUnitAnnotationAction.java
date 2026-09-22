@@ -64,7 +64,7 @@ public class MergeUnitAnnotationAction
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
         var unitAdapter = new SegmentationUnitAdapter(adapter);
-        unitAdapter.unMerge(getDocument(), getUser(), aCas, getVid(), oldBegin, oldEnd,
+        unitAdapter.unMerge(getDocument(), getDataOwner(), aCas, getVid(), oldBegin, oldEnd,
                 deletedUnit);
         aMessages.add(LogMessage.info(this, "[%s] un-merged", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));
@@ -77,7 +77,7 @@ public class MergeUnitAnnotationAction
     {
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
         var unitAdapter = new SegmentationUnitAdapter(adapter);
-        unitAdapter.unSplit(getDocument(), getUser(), aCas, getVid(), newBegin, newEnd,
+        unitAdapter.unSplit(getDocument(), getDataOwner(), aCas, getVid(), newBegin, newEnd,
                 deletedUnit);
         aMessages.add(LogMessage.info(this, "[%s] un-split", getLayer().getUiName()));
         return Optional.of(new PostActionScrollToAndSelect(getVid()));

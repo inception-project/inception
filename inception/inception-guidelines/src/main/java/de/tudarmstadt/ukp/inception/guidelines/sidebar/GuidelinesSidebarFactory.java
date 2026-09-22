@@ -23,11 +23,10 @@ import org.springframework.core.annotation.Order;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 
@@ -67,16 +66,16 @@ public class GuidelinesSidebarFactory
     }
 
     @Override
-    public boolean accepts(AnnotationPageBase aContext)
+    public boolean accepts(SidebarContext aContext)
     {
         // Hide the tab entirely if the project has no guidelines to show.
-        var project = aContext.getModelObject().getProject();
+        var project = aContext.getProject();
         return project != null && guidelinesService.hasGuidelines(project);
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, SidebarContext aContext)
     {
-        return new GuidelinesSidebar(aId, aAnnotationPage);
+        return new GuidelinesSidebar(aId, aContext);
     }
 }

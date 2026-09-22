@@ -28,6 +28,7 @@ import static org.apache.commons.collections4.CollectionUtils.containsAny;
 
 import java.lang.invoke.MethodHandles;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -93,52 +94,61 @@ public class DocumentAccessImpl
             var sessionOwner = getUser(aSessionOwner);
             var project = getProject(aProjectId);
 
-            var permissionLevels = projectService.listRoles(project, sessionOwner);
+            assertCanViewAnnotationDocument(sessionOwner, project,
+                    () -> documentService.getSourceDocument(project.getId(), aDocumentId),
+                    aDataOwner);
 
-            // Does the user have the permission to access the project at all?
-            if (permissionLevels.isEmpty()) {
-                LOG.trace("Access denied: User {} has no acccess to project {}", sessionOwner,
-                        project);
-                return false;
-            }
-
-            // Managers and curators can see anything
-            if (containsAny(permissionLevels, MANAGER, CURATOR)) {
-                LOG.trace("Access granted: User {} can view annotations [{}] as MANGER or CURATOR",
-                        sessionOwner, aDocumentId);
-                return true;
-            }
-
-            // Annotators can only see their own documents
-            if (!aSessionOwner.equals(aDataOwner)) {
-                LOG.trace(
-                        "Access denied: User {} tries to see annotations from [{}] but can only see own annotations",
-                        sessionOwner, aDataOwner);
-                return false;
-            }
-
-            // Annotators cannot view blocked documents
-            var doc = documentService.getSourceDocument(project.getId(), aDocumentId);
-            var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
-            if (documentService.existsAnnotationDocument(doc, dataOwnerSet)) {
-                var aDoc = documentService.getAnnotationDocument(doc, dataOwnerSet);
-                if (aDoc.getState() == AnnotationDocumentState.IGNORE) {
-                    LOG.trace("Access denied: Document {} is locked (IGNORE) for user {}", aDoc,
-                            aDataOwner);
-                    return false;
-                }
-            }
-
-            LOG.trace(
-                    "Access granted: canViewAnnotationDocument [aSessionOwner: {}] [project: {}] "
-                            + "[document: {}] [annotator: {}]",
-                    aSessionOwner, aProjectId, aDocumentId, aDataOwner);
             return true;
         }
         catch (NoResultException | AccessDeniedException e) {
-            LOG.trace("Access denied: prerequisites not met", e);
+            LOG.trace("Access denied: {}", e.getMessage());
             // If any object does not exist, the user cannot view
             return false;
+        }
+    }
+
+    @Override
+    public void assertCanViewAnnotationDocument(User aSessionOwner, SourceDocument aDocument,
+            String aDataOwner)
+    {
+        assertCanViewAnnotationDocument(aSessionOwner, aDocument.getProject(), () -> aDocument,
+                aDataOwner);
+    }
+
+    /**
+     * The document is resolved lazily: a manager or curator is granted access without it ever being
+     * looked at, and the project is known independently of it.
+     */
+    private void assertCanViewAnnotationDocument(User aSessionOwner, Project aProject,
+            Supplier<SourceDocument> aDocument, String aDataOwner)
+    {
+        var permissionLevels = projectService.listRoles(aProject, aSessionOwner);
+
+        // Does the user have the permission to access the project at all?
+        if (permissionLevels.isEmpty()) {
+            throw new AccessDeniedException("You have no permission to access this project");
+        }
+
+        // Managers and curators can see anything - including documents locked (IGNORE).
+        if (containsAny(permissionLevels, MANAGER, CURATOR)) {
+            return;
+        }
+
+        // Annotators can only see their own documents
+        if (!aSessionOwner.getUsername().equals(aDataOwner)) {
+            throw new AccessDeniedException("Viewing another users annotations is not permitted!");
+        }
+
+        // Annotators cannot view blocked documents - for them, IGNORE is what takes a document out
+        // of their workload.
+        var doc = aDocument.get();
+        var dataOwnerSet = AnnotationSet.forUser(aDataOwner);
+        if (documentService.existsAnnotationDocument(doc, dataOwnerSet)) {
+            var annDoc = documentService.getAnnotationDocument(doc, dataOwnerSet);
+            if (annDoc.getState() == AnnotationDocumentState.IGNORE) {
+                throw new AccessDeniedException("This document is blocked for user [" + aDataOwner
+                        + "]. Please ask your project manager if you believe this is wrong.");
+            }
         }
     }
 

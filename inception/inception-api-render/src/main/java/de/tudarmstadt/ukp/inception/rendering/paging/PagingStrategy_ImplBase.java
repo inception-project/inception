@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
+package de.tudarmstadt.ukp.inception.rendering.paging;
 
 import static java.lang.Math.max;
 import static java.util.Arrays.asList;
@@ -30,7 +30,6 @@ import org.apache.wicket.core.request.handler.IPageRequestHandler;
 import org.apache.wicket.request.cycle.RequestCycle;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
-import de.tudarmstadt.ukp.inception.rendering.paging.PagingStrategy;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;

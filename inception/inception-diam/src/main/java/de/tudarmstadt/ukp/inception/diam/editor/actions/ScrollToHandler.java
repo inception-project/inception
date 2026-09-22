@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.diam.model.ajax.DefaultAjaxResponse;
 import de.tudarmstadt.ukp.inception.diam.model.compact.CompactRangeList;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -93,8 +94,9 @@ public class ScrollToHandler
 
         var state = aContext.getAnnotatorState();
         var project = state.getProject();
-        var doc = state.getDocument();
         var docId = requestParameters.getParameterValue(PARAM_DOCUMENT_ID).toLong(-1);
+
+        SourceDocument doc = null;
         if (docId != -1) {
             doc = documentService.getSourceDocument(project.getId(), docId);
             if (doc == null) {
@@ -106,14 +108,27 @@ public class ScrollToHandler
         // unconditionally on the main editor's page.
         if (vid.isSet() && !vid.isSynthetic()) {
             var fs = selectAnnotationByAddr(aContext.getEditorCas(), vid.getId());
-            aContext.actionShowSelectedDocument(aTarget, doc, fs.getBegin(), fs.getEnd());
+            scrollTo(aContext, aTarget, doc, new Range(fs.getBegin(), fs.getEnd()));
             return;
         }
 
         if (!requestParameters.getParameterValue(PARAM_OFFSETS).isEmpty()) {
-            var offsets = getRangeFromRequest(requestParameters);
-            aContext.actionShowSelectedDocument(aTarget, doc, offsets.getBegin(), offsets.getEnd());
+            scrollTo(aContext, aTarget, doc, getRangeFromRequest(requestParameters));
             return;
+        }
+    }
+
+    private void scrollTo(DiamContext aContext, AjaxRequestTarget aTarget, SourceDocument aDocument,
+            Range aRange)
+        throws IOException, AnnotationException
+    {
+        if (aDocument != null) {
+            // Navigating to another document keeps the owner this editor is showing.
+            aContext.actionShowSelectedDocument(aTarget, aDocument,
+                    aContext.getAnnotatorState().getDataOwner(), aRange);
+        }
+        else {
+            aContext.actionJumpTo(aTarget, aRange.getBegin(), aRange.getEnd());
         }
     }
 
@@ -128,8 +143,17 @@ public class ScrollToHandler
 
         var offsetLists = JSONUtil.fromJsonString(CompactRangeList.class, offsets);
 
+        if (offsetLists.isEmpty()) {
+            throw new IllegalArgumentException("Scroll-to request carries no offsets");
+        }
+
         var begin = offsetLists.get(0).getBegin();
         var end = offsetLists.get(offsetLists.size() - 1).getEnd();
+
+        if (begin < 0 || end < begin) {
+            throw new IllegalArgumentException(
+                    "Scroll-to request carries an invalid range [" + begin + "-" + end + "]");
+        }
 
         return new Range(begin, end);
     }

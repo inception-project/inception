@@ -32,15 +32,8 @@
       -->
       <div wicket:id="leftSidebar" class="flex-v-container"
            style="padding-block: 0.75rem 1rem; box-sizing: border-box;"></div>
-      <!--
-        The centre card - header, action bar and editor - lives in the DocumentEditorPanel. Only
-        centerArea itself stays here, because Kendo requires the three splitter panes to be direct
-        DOM children of the splitter.
-      -->
-      <div wicket:id="centerArea" class="flex-content flex-v-container"
-           style="padding-block: 0.75rem 1rem; box-sizing: border-box;">
-        <div wicket:id="documentEditorPanel" class="flex-content flex-v-container"></div>
-      </div>
+      <div wicket:id="workspace" class="flex-content flex-h-container"
+           style="padding-block: 0.75rem 1rem; box-sizing: border-box;"></div>
       <div wicket:id="rightSidebar" class="flex-sidebar flex-v-container"
            style="padding-block: 0.75rem 1rem; box-sizing: border-box;">
         <div wicket:id="annotationDetailEditorPanel" class="flex-content flex-v-container"/>

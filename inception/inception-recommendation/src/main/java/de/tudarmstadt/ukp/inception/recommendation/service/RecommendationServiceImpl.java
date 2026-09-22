@@ -127,6 +127,7 @@ import de.tudarmstadt.ukp.inception.recommendation.tasks.PredictionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.SelectionTask;
 import de.tudarmstadt.ukp.inception.recommendation.tasks.TrainingTask;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -826,13 +827,17 @@ public class RecommendationServiceImpl
             return;
         }
 
-        var recommenders = listEnabledRecommenders(aEvent.getDocument().getProject());
+        var annDoc = aEvent.getDocument();
+        var document = annDoc.getDocument();
+        var project = document.getProject();
+
+        var recommenders = listEnabledRecommenders(project);
         if (recommenders.isEmpty()) {
             return;
         }
 
-        runSynchronousRecommenders(aEvent.getDocument().getDocument(),
-                aEvent.getDocument().getUser(), recommenders, "onAfterCasWritten");
+        runSynchronousRecommenders(document, aEvent.getDocument().getUser(), recommenders,
+                "onAfterCasWritten");
 
         var committed = requestCycle.getMetaData(COMMITTED);
         if (committed == null) {
@@ -840,7 +845,6 @@ public class RecommendationServiceImpl
             requestCycle.setMetaData(COMMITTED, committed);
         }
 
-        var annDoc = aEvent.getDocument();
         committed.add(new CommittedDocument(annDoc));
 
         var containsTrainingTrigger = false;
@@ -851,15 +855,21 @@ public class RecommendationServiceImpl
         }
 
         if (!containsTrainingTrigger) {
-            // Hack to figure out which annotations the user is viewing. This obviously works only
-            // if the user is viewing annotations through an AnnotationPageBase ... still not a
-            // bad guess
+            // HACK: Figure out which annotations the user is viewing. This works only if they are
+            // viewing them through an AnnotationPageBase ... still not a bad guess.
+            //
+            // Ask the page's editor manager for its active editor rather than the page's own
+            // annotator state: the page state is being retired, and with more than one editor open
+            // only the active one answers "what is the user looking at".
             var handler = PageRequestHandlerTracker.getLastHandler(requestCycle);
-            if (handler.isPageInstanceCreated()
-                    && handler.getPage() instanceof AnnotationPageBase) {
-                var state = ((AnnotationPageBase) handler.getPage()).getModelObject();
-                requestCycle.getListeners().add(new TriggerTrainingTaskListener(state.getDocument(),
-                        state.getUser().getUsername()));
+            var activeState = handler.isPageInstanceCreated()
+                    && handler.getPage() instanceof AnnotationPageBase page
+                            ? page.getDocumentEditorManager().getActiveEditor()
+                                    .map(DiamContext::getAnnotatorState).orElse(null)
+                            : null;
+            if (activeState != null && activeState.getDocument() != null) {
+                requestCycle.getListeners().add(new TriggerTrainingTaskListener(
+                        activeState.getDocument(), activeState.getUser().getUsername()));
             }
             else {
                 // Otherwise use the document from the event... mind that if there are multiple

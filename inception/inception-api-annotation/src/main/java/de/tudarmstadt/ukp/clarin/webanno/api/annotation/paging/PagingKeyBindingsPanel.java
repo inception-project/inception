@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
 import static wicket.contrib.input.events.EventType.click;
 
 import java.io.Serializable;
-import java.util.Optional;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -31,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProper
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyCombo;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
@@ -41,9 +41,13 @@ public class PagingKeyBindingsPanel
 
     private @SpringBean KeyBindingsProperties keyBindings;
 
-    public PagingKeyBindingsPanel(String aId)
+    private final DocumentEditorManager manager;
+
+    public PagingKeyBindingsPanel(String aId, DocumentEditorManager aManager)
     {
         super(aId);
+
+        manager = aManager;
 
         setOutputMarkupId(true);
 
@@ -74,20 +78,14 @@ public class PagingKeyBindingsPanel
 
     private void onActiveEditor(AjaxRequestTarget aTarget, PagingAction aAction) throws Exception
     {
-        var context = getActiveContext().orElse(null);
+        var editor = manager.getActiveEditor().orElse(null);
 
-        if (context == null || !isPageable(context)) {
+        if (editor == null || !isPageable(editor)) {
             return;
         }
 
-        aAction.apply(aTarget, context);
-        context.actionRefreshDocument(aTarget);
-    }
-
-    private Optional<DiamContext> getActiveContext()
-    {
-        var manager = findParent(DocumentEditorManager.class);
-        return manager != null ? manager.getActiveContext() : Optional.empty();
+        aAction.apply(aTarget, editor);
+        editor.actionRefreshDocument(aTarget);
     }
 
     private boolean isPageable(DiamContext aContext)

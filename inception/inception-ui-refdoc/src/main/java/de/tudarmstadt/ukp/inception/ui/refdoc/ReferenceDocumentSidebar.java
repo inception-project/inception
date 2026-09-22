@@ -25,7 +25,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarState.KEY_REFERENCE_DOCUMENT_SIDEBAR_STATE;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
@@ -49,21 +48,22 @@ import org.slf4j.LoggerFactory;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.multiedit.DocumentEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class ReferenceDocumentSidebar
     extends AnnotationSidebar_ImplBase
@@ -85,12 +85,12 @@ public class ReferenceDocumentSidebar
 
     private WebMarkupContainer scrollSyncGroup;
 
-    public ReferenceDocumentSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public ReferenceDocumentSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
 
         var sessionOwner = userRepository.getCurrentUser();
-        var project = getModelObject().getProject();
+        var project = aContext.getProject();
 
         var state = new AnnotatorStateImpl();
         stateModel = Model.of(state);
@@ -110,16 +110,34 @@ public class ReferenceDocumentSidebar
             scrollSyncEnabled = loadSidebarState().isScrollSyncEnabled();
         }
 
-        // Default to the document currently open in the main editor - if any
-        state.setDocument(getModelObject().getDocument(), emptyList());
+        state.setDocument(aContext.editorContext() //
+                .map(DiamContext::getAnnotatorState) //
+                .map(AnnotatorState::getDocument) //
+                .orElse(null), emptyList());
 
         documentEditorPanel = new RefDocEditorPanel("documentEditorPanel", stateModel);
         add(documentEditorPanel);
 
-        openDialog = new OpenDocumentDialog("openDialog", stateModel,
-                getAnnotationPage()::listAccessibleDocuments,
-                documentEditorPanel::actionLoadDocument);
+        openDialog = new OpenDocumentDialog("openDialog",
+                stateModel.map(AnnotatorState::getProject),
+                stateModel.map(AnnotatorState::getDataOwner),
+                getAnnotationPage()::listAccessibleDocuments, this::actionOpenDocument);
         add(openDialog);
+    }
+
+    private void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, List<SourceDocument> aDocuments)
+    {
+        var state = stateModel.getObject();
+
+        var user = userRepository.getUserOrCurationUser(aDataOwner.id());
+        if (user != null) {
+            state.setUser(user);
+        }
+
+        state.setDocument(aDocument, aDocuments);
+
+        documentEditorPanel.actionLoadDocument(aTarget);
     }
 
     private ReferenceDocumentSidebarState loadSidebarState()
@@ -139,23 +157,9 @@ public class ReferenceDocumentSidebar
                 userRepository.getCurrentUser(), project, aState);
     }
 
-    private List<SourceDocument> listReferenceDocuments()
-    {
-        var state = stateModel.getObject();
-        var project = state.getProject();
-        var user = state.getUser();
-        if (project == null || user == null) {
-            return emptyList();
-        }
-
-        return getAnnotationPage().listAccessibleDocuments(project, user).stream()
-                .map(AnnotationDocument::getDocument) //
-                .collect(toList());
-    }
-
     private void actionShowOpenDocumentDialog(AjaxRequestTarget aTarget)
     {
-        openDialog.show(aTarget);
+        openDialog.show(aTarget, documentEditorPanel);
     }
 
     private void actionToggleScrollSync(AjaxRequestTarget aTarget)
@@ -245,7 +249,7 @@ public class ReferenceDocumentSidebar
      *         one viewport to the other's character offset, which is only meaningful between two
      *         views of the same document and data owner.
      */
-    private Optional<DiamContext> findSyncPartner(AnnotatorState aState)
+    private Optional<DocumentEditor> findSyncPartner(AnnotatorState aState)
     {
         if (aState.getDocument() == null) {
             return Optional.empty();
@@ -327,12 +331,6 @@ public class ReferenceDocumentSidebar
         public RefDocEditorPanel(String aId, IModel<AnnotatorState> aModel)
         {
             super(aId, ReferenceDocumentSidebar.this.getDocumentEditorManager(), aModel);
-        }
-
-        @Override
-        public List<SourceDocument> listAccessibleDocuments()
-        {
-            return listReferenceDocuments();
         }
 
         @Override

@@ -238,31 +238,31 @@ public class CurationEditorExtension
         throws IOException, AnnotationException
     {
 
-        // get user CAS and annotation (to be merged into curator's)
         var doc = aState.getDocument();
-        var srcUser = aCurationVid.getUsername();
+        var srcDataOwner = aCurationVid.getUsername();
+        var tgtDataOwner = aState.getUser().getUsername();
 
         var vid = VID.parse(aCurationVid.getExtensionPayload());
 
-        var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcUser));
+        var srcCas = documentService.readAnnotationCas(doc, AnnotationSet.forUser(srcDataOwner));
         var sourceAnnotation = selectAnnotationByAddr(srcCas, vid.getId());
         var layer = annotationService.findLayer(aState.getProject(), sourceAnnotation);
 
         if (vid.isSlotSet()) {
-            mergeSlot(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
+            mergeSlot(aState, aTargetCas, vid, tgtDataOwner, sourceAnnotation, layer);
         }
         else if (RelationLayerSupport.TYPE.equals(layer.getType())) {
-            mergeRelation(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
+            mergeRelation(aState, aTargetCas, vid, tgtDataOwner, sourceAnnotation, layer);
         }
         else if (SpanLayerSupport.TYPE.equals(layer.getType())) {
-            mergeSpan(aState, aTargetCas, vid, srcUser, sourceAnnotation, layer);
+            mergeSpan(aState, aTargetCas, vid, tgtDataOwner, sourceAnnotation, layer);
         }
 
         aActionHandler.actionLoadSelectedAnnotationDetails(aTarget);
         aActionHandler.writeEditorCas();
     }
 
-    private void mergeSlot(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+    private void mergeSlot(AnnotatorState aState, CAS aTargetCas, VID aVid, String aTargetDataOwner,
             AnnotationFS sourceAnnotation, AnnotationLayer layer)
         throws AnnotationException
     {
@@ -273,7 +273,7 @@ public class CurationEditorExtension
         var feature = adapter.listFeatures().stream().sequential().skip(aVid.getAttribute())
                 .findFirst().get();
 
-        var mergeResult = casMerge.mergeSlotFeature(doc, aSrcUser, layer, aTargetCas,
+        var mergeResult = casMerge.mergeSlotFeature(doc, aTargetDataOwner, layer, aTargetCas,
                 sourceAnnotation, feature.getName(), aVid.getSlot());
 
         // open created/updates FS in annotation detail editor panel
@@ -281,13 +281,13 @@ public class CurationEditorExtension
         aState.setSelection(Selection.span(mergedAnno));
     }
 
-    private void mergeRelation(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
-            AnnotationFS sourceAnnotation, AnnotationLayer layer)
+    private void mergeRelation(AnnotatorState aState, CAS aTargetCas, VID aVid,
+            String aTargetDataOwner, AnnotationFS sourceAnnotation, AnnotationLayer layer)
         throws AnnotationException
     {
         var doc = aState.getDocument();
         var casMerge = new CasMerge(annotationService, applicationEventPublisher);
-        var mergeResult = casMerge.mergeRelationAnnotation(doc, aSrcUser, layer, aTargetCas,
+        var mergeResult = casMerge.mergeRelationAnnotation(doc, aTargetDataOwner, layer, aTargetCas,
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel
@@ -295,13 +295,13 @@ public class CurationEditorExtension
         aState.setSelection(Selection.arc(mergedAnno));
     }
 
-    private void mergeSpan(AnnotatorState aState, CAS aTargetCas, VID aVid, String aSrcUser,
+    private void mergeSpan(AnnotatorState aState, CAS aTargetCas, VID aVid, String aTargetDataOwner,
             AnnotationFS sourceAnnotation, AnnotationLayer layer)
         throws AnnotationException
     {
         var doc = aState.getDocument();
         var casMerge = new CasMerge(annotationService, applicationEventPublisher);
-        var mergeResult = casMerge.mergeSpanAnnotation(doc, aSrcUser, layer, aTargetCas,
+        var mergeResult = casMerge.mergeSpanAnnotation(doc, aTargetDataOwner, layer, aTargetCas,
                 sourceAnnotation);
 
         // open created/updates FS in annotation detail editor panel

@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersResumedEvent;
 import de.tudarmstadt.ukp.inception.recommendation.event.RecommendersSuspendedEvent;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 
 public class RecommenderSidebarIcon
@@ -74,8 +75,13 @@ public class RecommenderSidebarIcon
 
     private boolean isSessionActive()
     {
-        return !recommendationService.isSuspended(userService.getCurrentUsername(),
-                getModelObject().getProject());
+        var project = getPage() instanceof ProjectPageBase page ? page.getProject() : null;
+
+        if (project == null) {
+            return false;
+        }
+
+        return !recommendationService.isSuspended(userService.getCurrentUsername(), project);
     }
 
     private IconType getStateIcon()
