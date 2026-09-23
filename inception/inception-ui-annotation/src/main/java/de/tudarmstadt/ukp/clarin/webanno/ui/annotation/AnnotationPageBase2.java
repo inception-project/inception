@@ -147,7 +147,6 @@ public abstract class AnnotationPageBase2
     private boolean sidebarsVisible;
 
     private long currentProjectId;
-    private boolean pageReloaded = false;
 
     /**
      * Whether the left sidebar's tabs have been refreshed on this page instance. They depend on the
@@ -196,13 +195,6 @@ public abstract class AnnotationPageBase2
         handleParameters(document, focus, user);
 
         updateDocumentView(null, focus);
-    }
-
-    @Override
-    public void renderHead(IHeaderResponse aResponse)
-    {
-        super.renderHead(aResponse);
-        pageReloaded = true;
     }
 
     private void createChildComponents()
@@ -647,9 +639,6 @@ public abstract class AnnotationPageBase2
 
     private void updateDocumentView(AjaxRequestTarget aTarget, StringValue aFocusParameter)
     {
-        var originalPageReloaded = pageReloaded;
-        pageReloaded = false;
-
         // URL is from external link, not just paging through documents, tabs may have changed
         // depending on user rights
         if (aTarget != null && !sidebarTabsRefreshed) {
@@ -657,42 +646,6 @@ public abstract class AnnotationPageBase2
                     "Refreshing left sidebar as this is the first document loaded on this page instance");
             sidebarTabsRefreshed = true;
             leftSidebar.refreshTabs(aTarget);
-        }
-
-        if (originalPageReloaded) {
-            resumeEditorsAfterPageReload();
-        }
-    }
-
-    private void resumeEditorsAfterPageReload()
-    {
-        if (workspace == null) {
-            return;
-        }
-
-        var sessionOwnerName = userRepository.getCurrentUsername();
-
-        for (var panel : workspace.getEditorsDescribedByUrlFragment()) {
-            var state = panel.getModelObject();
-            if (state.getDocument() == null || state.getUser() == null) {
-                continue;
-            }
-
-            var dataOwnerName = state.getUser().getUsername();
-            if (!dataOwnerName.equals(sessionOwnerName) && !dataOwnerName.equals(CURATION_USER)) {
-                continue;
-            }
-
-            try {
-                var editorCas = panel.getEditorCas();
-                state.moveToOffset(editorCas, TypeAdapter_ImplBase.getResumptionLocation(editorCas),
-                        CENTERED);
-            }
-            catch (Exception e) {
-                LOG.error("Error reading CAS of document {} for user {}", state.getDocument(),
-                        state.getUser(), e);
-                error("Error reading CAS " + e.getMessage());
-            }
         }
     }
 

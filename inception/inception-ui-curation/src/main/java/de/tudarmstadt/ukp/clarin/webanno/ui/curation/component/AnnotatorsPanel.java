@@ -501,21 +501,30 @@ public class AnnotatorsPanel
         var casses = getCasses(aState.getDocument());
         var annoStates = calculateAnnotationStates(aState, casses);
 
-        // get differing feature structures
-        annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
-            var vis = (BratSuggestionVisualizer) v;
-            var seg = vis.getModelObject();
-
+        // Re-render the segments themselves, not only those that already have a visualizer. Right
+        // after init() - e.g. a document opened and then moved to a focus in the same request -
+        // the list items have not been created yet, so visiting the visualizers would skip every
+        // segment and leave it with a view of the window as it was when the document was opened.
+        // The visualizers created later wrap these same segment objects.
+        for (var seg : annotatorSegments.getModelObject()) {
             var cas = casses.get(seg.getUser().getUsername());
 
             if (cas == null) {
                 // This may happen if a user has not yet finished document
-                return;
+                continue;
             }
 
             var annotationStates = annoStates.get(seg.getUser().getUsername());
             seg.setAnnotatorState(aState);
             renderSegment(aTarget, seg, cas, annotationStates);
+        }
+
+        annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
+            var vis = (BratSuggestionVisualizer) v;
+
+            if (!casses.containsKey(vis.getModelObject().getUser().getUsername())) {
+                return;
+            }
 
             if (isBlank(vis.getDocumentData())) {
                 return;
