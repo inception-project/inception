@@ -20,7 +20,19 @@ package de.tudarmstadt.ukp.inception.support.text;
 public class WhitespaceNormalizingSanitizer
     implements KeySanitizer
 {
+    private final boolean ignoreCase;
+
     private boolean lastWasWhitespace = true;
+
+    public WhitespaceNormalizingSanitizer()
+    {
+        this(false);
+    }
+
+    public WhitespaceNormalizingSanitizer(boolean aIgnoreCase)
+    {
+        ignoreCase = aIgnoreCase;
+    }
 
     @Override
     public char map(char aChar)
@@ -34,11 +46,23 @@ public class WhitespaceNormalizingSanitizer
         char result = currentIsWhitespace && aChar != ' ' ? ' ' : aChar;
         lastWasWhitespace = currentIsWhitespace;
 
+        if (ignoreCase) {
+            // Map each character individually to keep the length of the text unchanged (unlike
+            // String.toLowerCase). Going through upper case first also maps characters that have
+            // multiple lower case forms (e.g. Greek final sigma) to the same one.
+            result = Character.toLowerCase(Character.toUpperCase(result));
+        }
+
         return result;
     }
 
     public static KeySanitizerFactory factory()
     {
-        return () -> new WhitespaceNormalizingSanitizer();
+        return factory(false);
+    }
+
+    public static KeySanitizerFactory factory(boolean aIgnoreCase)
+    {
+        return () -> new WhitespaceNormalizingSanitizer(aIgnoreCase);
     }
 }

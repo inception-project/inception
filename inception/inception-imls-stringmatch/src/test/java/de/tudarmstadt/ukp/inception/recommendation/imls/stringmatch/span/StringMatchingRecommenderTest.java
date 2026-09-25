@@ -393,6 +393,42 @@ public class StringMatchingRecommenderTest
     }
 
     @Test
+    public void thatCaseInsensitivePredictionKeepsOffsetsIfLowerCasingChangesTextLength()
+        throws Exception
+    {
+        traits.setIgnoreCase(true);
+
+        var sut = new StringMatchingRecommender(recommender, traits);
+
+        var jcas = JCasFactory.createJCas();
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
+        // "İ".toLowerCase() yields two characters
+        builder.buildTokens(jcas, "Berlin is big . İstanbul is big . BERLIN is big .");
+        var cas = jcas.getCas();
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
+
+        var gazetteer = asList( //
+                new GazetteerEntry("berlin", "LOC"), //
+                new GazetteerEntry("istanbul", "LOC"));
+
+        sut.pretrain(gazetteer, context);
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions) //
+                .extracting(NamedEntity::getBegin, NamedEntity::getCoveredText,
+                        NamedEntity::getValue) //
+                .containsExactlyInAnyOrder( //
+                        tuple(0, "Berlin", "LOC"), //
+                        tuple(16, "İstanbul", "LOC"), //
+                        tuple(34, "BERLIN", "LOC"));
+    }
+
+    @Test
     public void thatEvaluationWorks() throws Exception
     {
         var splitStrategy = new PercentageBasedSplitter(0.8, 10);
@@ -449,6 +485,21 @@ public class StringMatchingRecommenderTest
     @Test
     public void thatEvaluationProducesSpecificResults() throws Exception
     {
+        assertSpecificEvaluationResults(null);
+    }
+
+    @Test
+    public void thatEvaluationProducesSpecificResults_CaseInsensitive() throws Exception
+    {
+        traits.setIgnoreCase(true);
+        traits.setMinLength(0);
+
+        assertSpecificEvaluationResults(traits);
+    }
+
+    private void assertSpecificEvaluationResults(StringMatchingRecommenderTraits aTraits)
+        throws Exception
+    {
         var text = "Hans Peter, Peter und Hans. Blabla Peter. Und so weiter Darmstadt, Darmstadt.";
         var vals = new String[] { "PER", "PER", "PER", "PER", "LOC", "ORG" };
         var indices = new int[][] { { 0, 9 }, { 12, 16 }, { 22, 25 }, { 35, 39 }, { 56, 64 },
@@ -463,7 +514,7 @@ public class StringMatchingRecommenderTest
         int expectedTestSize = 2;
         int expectedTrainSize = 2;
 
-        var result = new StringMatchingRecommender(buildRecommender(), null).evaluate(testCas,
+        var result = new StringMatchingRecommender(buildRecommender(), aTraits).evaluate(testCas,
                 new PercentageBasedSplitter(0.5, 500));
 
         assertThat(result.getTestSetSize()).as("correct test size").isEqualTo(expectedTestSize);
