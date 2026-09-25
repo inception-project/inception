@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -109,7 +108,8 @@ public class StringMatchingRecommender
 
         traits = aTraits;
         gazetteerService = aGazetteerService;
-        keySanitizerFactory = WhitespaceNormalizingSanitizer.factory();
+        keySanitizerFactory = WhitespaceNormalizingSanitizer
+                .factory(traits != null && traits.isIgnoreCase());
 
         if (traits != null && traits.getExcludePattern() != null) {
             try {
@@ -281,9 +281,6 @@ public class StringMatchingRecommender
 
         var data = new ArrayList<Sample>();
         var text = aCas.getDocumentText();
-        if (traits != null && traits.isIgnoreCase()) {
-            text = text.toLowerCase(Locale.ROOT);
-        }
 
         for (var sampleUnit : units) {
             var spans = new ArrayList<Span>();
@@ -464,16 +461,11 @@ public class StringMatchingRecommender
 
         var label = isBlank(aLabel) ? BLANK_LABEL : aLabel;
 
-        var text = aText;
-        if (traits != null && traits.isIgnoreCase()) {
-            text = text.toLowerCase(Locale.ROOT);
-        }
-
-        var entry = aDict.get(text);
+        var entry = aDict.get(aText);
         if (entry == null) {
-            entry = new DictEntry(text);
+            entry = new DictEntry(aText);
             try {
-                aDict.put(text, entry);
+                aDict.put(aText, entry);
             }
             catch (IllegalArgumentException e) {
                 // This can happen if the text is empty after sanitization

@@ -108,6 +108,30 @@ public class TrieTest
     }
 
     @Test
+    public void thatCaseFoldingKeepsMatchLengthAlignedWithText()
+    {
+        sut = new Trie<>(WhitespaceNormalizingSanitizer.factory(true));
+
+        sut.put("istanbul", "LOC");
+        sut.put("ΟΔΟΣ", "street");
+
+        // "İ".toLowerCase() yields two characters
+        assertThat(sut.getNode("İstanbul is big", 0)) //
+                .extracting($ -> $.node.value, $ -> $.matchLength) //
+                .containsExactly("LOC", "İstanbul".length());
+
+        // Final sigma matches upper case sigma
+        assertThat(sut.getNode("οδος", 0)) //
+                .extracting($ -> $.node.value, $ -> $.matchLength) //
+                .containsExactly("street", 4);
+
+        sut = new Trie<>(WhitespaceNormalizingSanitizer.factory());
+        sut.put("istanbul", "LOC");
+
+        assertThat(sut.getNode("İstanbul", 0)).isNull();
+    }
+
+    @Test
     public void testThatKeySanitizerWorks()
     {
         sut = new Trie<>(WhitespaceNormalizingSanitizer.factory());
