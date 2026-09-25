@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.support.text;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 
@@ -63,6 +64,47 @@ public class TrieTest
         sut.put("in", "in");
 
         assertThat(sut.get("initially")).isNull();
+    }
+
+    @Test
+    public void thatMatchLengthEndsAtLongestMatchingKey()
+    {
+        sut = new Trie<>(WhitespaceNormalizingSanitizer.factory());
+
+        sut.put("Washington", "Location");
+        sut.put("Washington State University", "Organization");
+
+        var text = "In Washington is the capital.";
+        var match = sut.getNode(text, 3);
+
+        assertThat(match).isNotNull();
+        assertThat(match.node.value).isEqualTo("Location");
+        assertThat(match.matchLength).isEqualTo("Washington".length());
+
+        match = sut.getNode("Washington State University.", 0);
+
+        assertThat(match).isNotNull();
+        assertThat(match.node.value).isEqualTo("Organization");
+        assertThat(match.matchLength).isEqualTo("Washington State University".length());
+    }
+
+    @Test
+    public void thatAllMatchingKeysAreReturnedFromShortestToLongest()
+    {
+        sut = new Trie<>(WhitespaceNormalizingSanitizer.factory());
+
+        sut.put("Washington", "Location");
+        sut.put("Washington State", "Organization");
+        sut.put("Washington State University", "Organization");
+
+        assertThat(sut.getNodes("Washington  Statesman spoke.", 0)) //
+                .extracting($ -> $.node.value, $ -> $.matchLength) //
+                .containsExactly( //
+                        tuple("Location", "Washington".length()), //
+                        tuple("Organization", "Washington  State".length()));
+
+        assertThat(sut.getNodes("Wash", 0)).isEmpty();
+        assertThat(sut.getNodes(" Washington", 0)).isEmpty();
     }
 
     @Test
