@@ -139,9 +139,9 @@ public class StringMatchingRelationRecommender
 
                     var totalNumberOfOccurrences = occurrences.size();
 
-                    for (var relationLabel : occurrences) {
-                        var score = numberOfOccurrencesPerLabel.get(relationLabel)
-                                / totalNumberOfOccurrences;
+                    for (var labelAndCount : numberOfOccurrencesPerLabel.entrySet()) {
+                        var relationLabel = labelAndCount.getKey();
+                        var score = (double) labelAndCount.getValue() / totalNumberOfOccurrences;
                         var prediction = aCas.createAnnotation(predictedType, governor.getBegin(),
                                 governor.getEnd());
                         prediction.setFeatureValue(governorFeature, governor);
@@ -214,7 +214,7 @@ public class StringMatchingRelationRecommender
         // evaluation: collect predicted and gold labels for evaluation
         // The inner map is needed, because we predict a list of things
         return testData.stream()
-                .flatMap(t -> model.get(Pair.of(t.governor, t.label)).stream()
+                .flatMap(t -> model.get(Pair.of(t.governor, t.dependent)).stream()
                         .map(prediction -> new LabelPair(t.label, prediction)))
                 .collect(toEvaluationResult(layerName, SAMPLE_UNIT.getSimpleName(), trainingSetSize,
                         testSetSize, trainRatio));
