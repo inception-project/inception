@@ -19,12 +19,14 @@ package de.tudarmstadt.ukp.inception.recommendation.imls.stringmatch.span;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.SINGLE_TOKEN;
 import static de.tudarmstadt.ukp.inception.support.test.recommendation.RecommenderTestHelper.getPredictions;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.apache.uima.fit.factory.CollectionReaderFactory.createReader;
 import static org.apache.uima.fit.util.JCasUtil.select;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.Assumptions.assumeThat;
 import static org.dkpro.core.api.datasets.DatasetValidationPolicy.CONTINUE;
 
@@ -205,6 +207,106 @@ public class StringMatchingRecommenderTest
         var predictions = getPredictions(cas, NamedEntity.class);
 
         assertThat(predictions).extracting(NamedEntity::getCoveredText).contains("Smith .\nPeter");
+    }
+
+    @Test
+    public void thatShorterMatchIsUsedIfLongerMatchDoesNotEndAtTokenBoundary() throws Exception
+    {
+        var sut = new StringMatchingRecommender(recommender, traits);
+
+        var jcas = JCasFactory.createJCas();
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "Washington Statesman spoke . Washington is big .");
+        var cas = jcas.getCas();
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
+
+        var gazetteer = asList( //
+                new GazetteerEntry("Washington", "LOC"), //
+                new GazetteerEntry("Washington State", "ORG"), //
+                new GazetteerEntry("Washington State University", "ORG"));
+
+        sut.pretrain(gazetteer, context);
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions) //
+                .extracting(NamedEntity::getBegin, NamedEntity::getCoveredText,
+                        NamedEntity::getValue) //
+                .containsExactlyInAnyOrder( //
+                        tuple(0, "Washington", "LOC"), //
+                        tuple(29, "Washington", "LOC"));
+    }
+
+    @Test
+    public void thatShorterMatchIsUsedIfLongerMatchSpansMultipleTokensOnSingleTokenLayer()
+        throws Exception
+    {
+        recommender.getLayer().setAnchoringMode(SINGLE_TOKEN);
+
+        var sut = new StringMatchingRecommender(recommender, traits);
+
+        var jcas = JCasFactory.createJCas();
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "New York is big . New Yorker .");
+        var cas = jcas.getCas();
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
+
+        var gazetteer = asList( //
+                new GazetteerEntry("New", "ORG"), //
+                new GazetteerEntry("New York", "LOC"));
+
+        sut.pretrain(gazetteer, context);
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions) //
+                .extracting(NamedEntity::getBegin, NamedEntity::getCoveredText,
+                        NamedEntity::getValue) //
+                .containsExactlyInAnyOrder( //
+                        tuple(0, "New", "ORG"), //
+                        tuple(18, "New", "ORG"));
+    }
+
+    @Test
+    public void thatShorterMatchIsUsedIfLongerCrossSentenceMatchDoesNotEndAtTokenBoundary()
+        throws Exception
+    {
+        recommender.getLayer().setCrossSentence(true);
+
+        var sut = new StringMatchingRecommender(recommender, traits);
+
+        var jcas = JCasFactory.createJCas();
+        var builder = new TokenBuilder<>(Token.class, Sentence.class);
+        builder.buildTokens(jcas, "John Smith .\nPeter Johnheim .\nJohn Smith .\nPetersen .");
+        var cas = jcas.getCas();
+        casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+
+        RecommenderTestHelper.addPredictionFeatures(cas, NamedEntity.class, "value");
+
+        var gazetteer = asList( //
+                new GazetteerEntry("Smith", "PER"), //
+                new GazetteerEntry("Smith . Peter", "ORG"));
+
+        sut.pretrain(gazetteer, context);
+
+        sut.predict(new PredictionContext(context), cas);
+
+        var predictions = getPredictions(cas, NamedEntity.class);
+
+        assertThat(predictions) //
+                .extracting(NamedEntity::getBegin, NamedEntity::getCoveredText,
+                        NamedEntity::getValue) //
+                .containsExactlyInAnyOrder( //
+                        tuple(5, "Smith .\nPeter", "ORG"), //
+                        tuple(35, "Smith", "PER"));
     }
 
     private CAS getTestCasNoLabelLabels() throws Exception
