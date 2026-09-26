@@ -31,12 +31,11 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.stereotype.Component;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.inception.support.extensionpoint.ExtensionPoint_ImplBase;
 
 @Component
 public class AnnotationSidebarRegistryImpl
-    extends ExtensionPoint_ImplBase<AnnotationPageBase, AnnotationSidebarFactory>
+    extends ExtensionPoint_ImplBase<SidebarContext, AnnotationSidebarFactory>
     implements AnnotationSidebarRegistry
 {
     private static final Logger LOG = getLogger(lookup().lookupClass());

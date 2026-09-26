@@ -52,6 +52,9 @@ public interface EventLoggingAdapter<T>
         return -1;
     }
 
+    /**
+     * @return the data owner (i.e. whose version of the document we look at)
+     */
     default String getAnnotator(T aEvent)
     {
         return null;
@@ -71,6 +74,9 @@ public interface EventLoggingAdapter<T>
         return aEvent.getClass().getSimpleName();
     }
 
+    /**
+     * @return the session owner
+     */
     default String getUser(T aEvent)
     {
         var context = SecurityContextHolder.getContext();

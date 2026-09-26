@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
+import static org.apache.wicket.event.Broadcast.BREADTH;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
@@ -28,10 +29,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.uima.cas.CAS;
 import org.apache.commons.lang3.Validate;
+import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AbstractDefaultAjaxBehavior;
 import org.apache.wicket.ajax.AjaxEventBehavior;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -53,8 +55,8 @@ import org.wicketstuff.jquery.ui.settings.JQueryUILibrarySettings;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.comment.AnnotatorCommentDialogPanel;
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.brat.annotation.BratRequestUtils;
 import de.tudarmstadt.ukp.clarin.webanno.brat.message.GetCollectionInformationResponse;
 import de.tudarmstadt.ukp.clarin.webanno.brat.render.BratSerializer;
@@ -81,8 +83,10 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -201,7 +205,8 @@ public abstract class BratSuggestionVisualizer
             break;
         }
 
-        ((AnnotationPageBase) getPage()).actionLoadDocument(aTarget);
+        send(getPage(), BREADTH,
+                new EditorContentReplacedEvent(getModelObject().getAnnotatorState(), aTarget));
     }
 
     private AnnotationDocument getAnnotationDocument()
@@ -264,6 +269,12 @@ public abstract class BratSuggestionVisualizer
     }
 
     @Override
+    public Optional<DocumentEditor> getHostingEditor()
+    {
+        return manager.getActiveEditor();
+    }
+
+    @Override
     public AnnotationActionHandler getActionHandler()
     {
         throw new UnsupportedOperationException(
@@ -271,8 +282,22 @@ public abstract class BratSuggestionVisualizer
     }
 
     @Override
+    public void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
+    {
+        throw new UnsupportedOperationException(
+                "This editor is a passive viewer and does not load documents.");
+    }
+
+    @Override
+    public void actionJumpTo(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            List<VRange> aAdditionalPingRanges)
+    {
+        // Scrolling is not supported - this viewer always shows the whole segment
+    }
+
+    @Override
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
     {
         // Selection of annotations is not supported
     }

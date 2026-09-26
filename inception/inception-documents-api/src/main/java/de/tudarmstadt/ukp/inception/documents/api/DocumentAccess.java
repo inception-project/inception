@@ -32,6 +32,10 @@ public interface DocumentAccess
     boolean canViewAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
             String aAnnotator);
 
+    void assertCanViewAnnotationDocument(User aSessionOwner, SourceDocument aDocument,
+            String aDataOwner)
+        throws AccessDeniedException;
+
     boolean canEditAnnotationDocument(String aUser, String aProjectId, long aDocumentId,
             String aAnnotator);
 

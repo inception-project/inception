@@ -25,7 +25,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExten
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * <p>
@@ -55,15 +54,13 @@ public class RecommenderActionBarExtension
             return false;
         }
 
-        return aContext.page().getModel() //
-                .map(AnnotatorState::getProject) //
-                .map(recommendationService::existsEnabledRecommender) //
-                .orElse(false).getObject();
+        var project = aContext.page().getProject();
+        return project != null && recommendationService.existsEnabledRecommender(project);
     }
 
     @Override
     public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new RecommenderActionBarPanel(aId, aContext.editorContext());
+        return new RecommenderActionBarPanel(aId, aContext.editor());
     }
 }

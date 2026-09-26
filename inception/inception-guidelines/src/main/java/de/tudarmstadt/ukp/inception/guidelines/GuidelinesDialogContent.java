@@ -33,7 +33,7 @@ import org.apache.wicket.request.resource.ResourceStreamResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.apache.wicket.util.resource.FileResourceStream;
 
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 /**
@@ -53,7 +53,8 @@ public class GuidelinesDialogContent
 
     private final LambdaAjaxLink cancelButton;
 
-    public GuidelinesDialogContent(String aId, final IModel<AnnotatorState> aModel)
+    @Deprecated
+    public GuidelinesDialogContent(String aId, final IModel<Project> aProject)
     {
         super(aId);
 
@@ -61,8 +62,7 @@ public class GuidelinesDialogContent
         var guidelineRepeater = new RepeatingView("guidelineRepeater");
         add(guidelineRepeater);
 
-        for (var guidelineFileName : guidelinesService
-                .listGuidelines(aModel.getObject().getProject())) {
+        for (var guidelineFileName : guidelinesService.listGuidelines(aProject.getObject())) {
             var item = new AbstractItem(guidelineRepeater.newChildId());
 
             guidelineRepeater.add(item);
@@ -71,8 +71,8 @@ public class GuidelinesDialogContent
             var popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS).setHeight(500)
                     .setWidth(700);
 
-            var stream = new FileResourceStream(guidelinesService
-                    .getGuideline(aModel.getObject().getProject(), guidelineFileName));
+            var stream = new FileResourceStream(
+                    guidelinesService.getGuideline(aProject.getObject(), guidelineFileName));
             var resource = new ResourceStreamResource(stream);
             var rlink = new ResourceLink<Void>("guideine", resource);
             rlink.setPopupSettings(popupSettings);
@@ -87,11 +87,13 @@ public class GuidelinesDialogContent
         queue(new LambdaAjaxLink("closeDialog", this::actionCloseDialog));
     }
 
+    @Deprecated
     protected void actionCloseDialog(AjaxRequestTarget aTarget)
     {
         findParent(ModalDialog.class).close(aTarget);
     }
 
+    @Deprecated
     public void onShow(AjaxRequestTarget aTarget)
     {
         aTarget.focusComponent(cancelButton);

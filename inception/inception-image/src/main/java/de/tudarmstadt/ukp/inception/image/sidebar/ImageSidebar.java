@@ -42,7 +42,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.layer.relation.api.RelationLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
@@ -55,6 +54,8 @@ import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
+import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
 
 public class ImageSidebar
     extends AnnotationSidebar_ImplBase
@@ -69,9 +70,9 @@ public class ImageSidebar
 
     final WebMarkupContainer mainContainer;
 
-    public ImageSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public ImageSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
 
         mainContainer = new WebMarkupContainer("mainContainer");
         mainContainer.setOutputMarkupId(true);
@@ -101,8 +102,12 @@ public class ImageSidebar
         var state = getModelObject();
         var project = state.getProject();
 
-        var context = getActiveContext();
+        var context = getActiveEditor();
         if (context.isEmpty()) {
+            return emptyList();
+        }
+
+        if (context.get().getAnnotatorState().getDocument() == null) {
             return emptyList();
         }
 
@@ -168,13 +173,21 @@ public class ImageSidebar
         aEvent.getRequestHandler().add(mainContainer);
     }
 
+    @OnEvent
+    public void onActiveEditorChanged(ActiveEditorChangedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() != null) {
+            aEvent.getRequestHandler().add(mainContainer);
+        }
+    }
+
     public void actionJumpTo(AjaxRequestTarget aTarget, ImageHandle aHandle)
     {
         try {
             var state = getModelObject();
 
             // Get the CAS
-            var cas = getActiveContext().orElseThrow().getEditorCas();
+            var cas = getActiveEditor().orElseThrow().getEditorCas();
 
             var fs = ICasUtil.selectAnnotationByAddr(cas, aHandle.getVid().getId());
 
@@ -184,7 +197,7 @@ public class ImageSidebar
                 return;
             }
 
-            getActiveContext().orElseThrow().actionActivateAndSelect(aTarget, aHandle.getVid());
+            getActiveEditor().orElseThrow().actionActivateAndSelect(aTarget, aHandle.getVid());
         }
         catch (IOException | AnnotationException e) {
             error("Unable to select annotation: " + e.getMessage());

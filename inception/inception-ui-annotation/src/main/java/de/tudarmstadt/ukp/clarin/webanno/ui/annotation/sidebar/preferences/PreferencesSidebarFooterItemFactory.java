@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.preferences;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
 
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
@@ -46,8 +45,7 @@ public class PreferencesSidebarFooterItemFactory
         var editorState = preferencesService.loadDefaultTraitsForProject(
                 KEY_ANNOTATION_EDITOR_MANAGER_PREFS, aContext.getProject());
 
-        return editorState.isPreferencesAccessAllowed()
-                || aContext.getModelObject().getMode() == CURATION;
+        return editorState.isPreferencesAccessAllowed();
     }
 
     @Override

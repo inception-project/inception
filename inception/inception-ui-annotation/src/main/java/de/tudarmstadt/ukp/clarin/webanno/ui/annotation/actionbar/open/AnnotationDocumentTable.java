@@ -57,6 +57,7 @@ import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentFilterStateChanged;
 import de.tudarmstadt.ukp.inception.annotation.filters.AnnotationDocumentStateFilterPanel;
@@ -79,6 +80,18 @@ public class AnnotationDocumentTable
     private TextField<String> nameFilter;
 
     public AnnotationDocumentTable(String aId, IModel<List<AnnotationDocument>> aModel)
+    {
+        this(aId, aModel, NEW, IN_PROGRESS, FINISHED);
+    }
+
+    /**
+     * @param aFilterableStates
+     *            the states offered as filter chips. Callers that may see locked documents - i.e.
+     *            managers and curators - additionally pass {@link AnnotationDocumentState#IGNORE},
+     *            which is not offered to plain annotators.
+     */
+    public AnnotationDocumentTable(String aId, IModel<List<AnnotationDocument>> aModel,
+            AnnotationDocumentState... aFilterableStates)
     {
         super(aId, aModel);
 
@@ -117,7 +130,7 @@ public class AnnotationDocumentTable
         queue(nameFilter);
 
         queue(new AnnotationDocumentStateFilterPanel(CID_STATE_FILTERS,
-                () -> dataProvider.getFilterState().getStates(), NEW, IN_PROGRESS, FINISHED));
+                () -> dataProvider.getFilterState().getStates(), aFilterableStates));
     }
 
     @Override

@@ -53,7 +53,7 @@ public class CurationAutoOpenDialogBehavior
         // If the page has loaded and there is no document open yet, show the open-document
         // dialog. Also check that the dialog is actually on the page (in the footer) before
         // trying to open it.
-        if (page.getModelObject().getDocument() != null) {
+        if (page.getDocumentEditorManager().hasOpenDocument()) {
             return;
         }
 

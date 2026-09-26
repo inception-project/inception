@@ -30,6 +30,7 @@ import org.apache.wicket.model.Model;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationContextProvider;
 
 public class SidebarPanel
@@ -53,7 +54,9 @@ public class SidebarPanel
         annotationPage = aAnnotationPage;
 
         tabsPanel = new SidebarTabbedPanel<>("leftSidebarContent", makeTabs(), annotationPage,
-                annotationPage.getModel());
+                LoadableDetachableModel.of(() -> annotationPage.getWorkspace().getActiveEditor() //
+                        .map(DiamContext::getAnnotatorState) //
+                        .orElse(null)));
         add(tabsPanel);
 
         add(new AttributeAppender("class",
@@ -70,7 +73,7 @@ public class SidebarPanel
     {
         super.onConfigure();
 
-        setVisible(annotationPage.hasEditor());
+        setVisible(annotationPage.getWorkspace().hasOpenDocument());
     }
 
     public void refreshTabs(AjaxRequestTarget aTarget)
@@ -79,7 +82,7 @@ public class SidebarPanel
         var tabs = tabsPanel.getTabs();
         tabs.clear();
         tabs.addAll(makeTabs());
-        aTarget.add(tabsPanel);
+        aTarget.add(this);
     }
 
     public void showTab(AjaxRequestTarget aTarget, String aFactoryId)
@@ -91,12 +94,17 @@ public class SidebarPanel
         aTarget.add(tabsPanel);
     }
 
+    private SidebarContext newContext()
+    {
+        return new SidebarContext(annotationPage, annotationPage.getWorkspace());
+    }
+
     private List<SidebarTab> makeTabs()
     {
         var tabs = new ArrayList<SidebarTab>();
         for (var factory : sidebarRegistry.getExtensions()) {
 
-            if (!factory.accepts(annotationPage)) {
+            if (!factory.accepts(newContext())) {
                 continue;
             }
 
@@ -115,7 +123,7 @@ public class SidebarPanel
                         var ctx = ApplicationContextProvider.getApplicationContext();
                         return ctx.getBean(AnnotationSidebarRegistry.class) //
                                 .getExtension(factoryId) //
-                                .map($ -> (Panel) $.create(aId, annotationPage))
+                                .map($ -> (Panel) $.create(aId, newContext()))
                                 .orElseGet(() -> new EmptyPanel(aId));
                     }
                     catch (Exception e) {

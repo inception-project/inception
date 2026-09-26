@@ -27,7 +27,6 @@ import com.networknt.schema.Schema;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.diam.sidebar.config.AnnotationBrowserSidebarAutoConfiguration;
@@ -36,6 +35,7 @@ import de.tudarmstadt.ukp.inception.preferences.ClientSideUserPreferencesProvide
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.io.WatchedResourceFile;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 /**
  * <p>
@@ -80,10 +80,9 @@ public class DiamSidebarFactory
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, SidebarContext aContext)
     {
-        return new DiamSidebar(aId, aAnnotationPage,
-                getUserPreferencesKey().get().getClientSideKey());
+        return new DiamSidebar(aId, aContext, getUserPreferencesKey().get().getClientSideKey());
     }
 
     @SuppressWarnings({ "unchecked" })

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationPreference;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 
 class NoPagingStrategyTest
 {

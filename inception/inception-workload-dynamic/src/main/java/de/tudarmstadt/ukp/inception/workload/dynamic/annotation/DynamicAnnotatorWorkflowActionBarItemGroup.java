@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension;
@@ -78,7 +78,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
     private AnnotationPageBase page;
 
     private ModalDialog dialog;
-    private final DiamContext editorContext;
+    private final DocumentEditor editorContext;
     private final IModel<DynamicWorkloadTraits> traits;
 
     // SpringBeans
@@ -93,7 +93,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
         super(aId);
 
         page = aContext.page();
-        editorContext = aContext.editorContext();
+        editorContext = aContext.editor();
 
         traits = LoadableDetachableModel
                 .of(() -> dynamicWorkloadExtension.readTraits(workloadManagementService
@@ -156,7 +156,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
             var state = getModelObject();
             documentService.resetAnnotationCas(state.getDocument(), state.getUser(),
                     EXPLICIT_ANNOTATOR_USER_ACTION);
-            page.actionLoadDocument(_target);
+            editorContext.actionLoadDocument(_target);
         });
 
         dialog.open(content, aTarget);
@@ -240,7 +240,7 @@ public class DynamicAnnotatorWorkflowActionBarItemGroup
         // Assign a new document with actionLoadDocument
         state.setDocument(nextDocument.get(),
                 documentService.listSourceDocuments(nextDocument.get().getProject()));
-        page.actionLoadDocument(aTarget);
-        aTarget.add(page);
+
+        editorContext.actionLoadDocument(aTarget);
     }
 }

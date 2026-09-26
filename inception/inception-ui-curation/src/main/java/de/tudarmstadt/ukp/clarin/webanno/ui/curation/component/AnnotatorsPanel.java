@@ -57,7 +57,6 @@ import org.wicketstuff.jquery.ui.widget.menu.IMenuItem;
 
 import de.tudarmstadt.ukp.clarin.webanno.brat.schema.BratSchemaGenerator;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
@@ -83,7 +82,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaMenuItem;
@@ -332,41 +330,39 @@ public class AnnotatorsPanel
     }
 
     private CasMergeOperationResult mergeSpan(CasMerge aCasMerge, CAS aTargetCas, CAS aSourceCas,
-            VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
+            VID aSourceVid, SourceDocument aSourceDocument, String aTargetDataOwner,
             AnnotationLayer aLayer)
         throws AnnotationException, UIMAException, IOException
     {
-        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
-                aSourceVid.getId());
+        var sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
 
-        return aCasMerge.mergeSpanAnnotation(aSourceDocument, aSourceUser, aLayer, aTargetCas,
+        return aCasMerge.mergeSpanAnnotation(aSourceDocument, aTargetDataOwner, aLayer, aTargetCas,
                 sourceAnnotation);
     }
 
     private void mergeSlot(CasMerge aCasMerge, CAS aCas, CAS aSourceCas, VID aSourceVid,
-            SourceDocument aSourceDocument, String aSourceUser, AnnotationLayer aLayer)
+            SourceDocument aSourceDocument, String aTargetDataOwner, AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
-        AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
-                aSourceVid.getId());
+        var sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
 
-        TypeAdapter adapter = schemaService.getAdapter(aLayer);
-        AnnotationFeature feature = adapter.listFeatures().stream().sequential()
-                .skip(aSourceVid.getAttribute()).findFirst().get();
+        var adapter = schemaService.getAdapter(aLayer);
+        var feature = adapter.listFeatures().stream().sequential().skip(aSourceVid.getAttribute())
+                .findFirst().get();
 
-        aCasMerge.mergeSlotFeature(aSourceDocument, aSourceUser, aLayer, aCas, sourceAnnotation,
-                feature.getName(), aSourceVid.getSlot());
+        aCasMerge.mergeSlotFeature(aSourceDocument, aTargetDataOwner, aLayer, aCas,
+                sourceAnnotation, feature.getName(), aSourceVid.getSlot());
     }
 
     private CasMergeOperationResult mergeRelation(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
-            VID aSourceVid, SourceDocument aSourceDocument, String aSourceUser,
+            VID aSourceVid, SourceDocument aSourceDocument, String aTargetDataOwner,
             AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
         AnnotationFS sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas,
                 aSourceVid.getId());
 
-        return aCasMerge.mergeRelationAnnotation(aSourceDocument, aSourceUser, aLayer, aCas,
+        return aCasMerge.mergeRelationAnnotation(aSourceDocument, aTargetDataOwner, aLayer, aCas,
                 sourceAnnotation);
     }
 
@@ -505,21 +501,30 @@ public class AnnotatorsPanel
         var casses = getCasses(aState.getDocument());
         var annoStates = calculateAnnotationStates(aState, casses);
 
-        // get differing feature structures
-        annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
-            var vis = (BratSuggestionVisualizer) v;
-            var seg = vis.getModelObject();
-
+        // Re-render the segments themselves, not only those that already have a visualizer. Right
+        // after init() - e.g. a document opened and then moved to a focus in the same request -
+        // the list items have not been created yet, so visiting the visualizers would skip every
+        // segment and leave it with a view of the window as it was when the document was opened.
+        // The visualizers created later wrap these same segment objects.
+        for (var seg : annotatorSegments.getModelObject()) {
             var cas = casses.get(seg.getUser().getUsername());
 
             if (cas == null) {
                 // This may happen if a user has not yet finished document
-                return;
+                continue;
             }
 
             var annotationStates = annoStates.get(seg.getUser().getUsername());
             seg.setAnnotatorState(aState);
             renderSegment(aTarget, seg, cas, annotationStates);
+        }
+
+        annotatorSegments.visitChildren(BratSuggestionVisualizer.class, (v, visit) -> {
+            var vis = (BratSuggestionVisualizer) v;
+
+            if (!casses.containsKey(vis.getModelObject().getUser().getUsername())) {
+                return;
+            }
 
             if (isBlank(vis.getDocumentData())) {
                 return;

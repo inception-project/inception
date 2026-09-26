@@ -80,10 +80,9 @@ public class LegacyCurationUIAutoConfiguration
 
     @SuppressWarnings("deprecation")
     @Bean
-    public UserPreferencesActionBarExtension userPreferencesActionBarExtension(
-            PreferencesService aPreferencesService)
+    public UserPreferencesActionBarExtension userPreferencesActionBarExtension()
     {
-        return new UserPreferencesActionBarExtension(aPreferencesService);
+        return new UserPreferencesActionBarExtension();
     }
 
     @Bean

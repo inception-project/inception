@@ -107,6 +107,12 @@ public interface AnnotatorState
     @Override
     User getUser();
 
+    /**
+     * @param aUser
+     *            the data owner.
+     * @deprecated We should introduce a {@code setDataOwner(AnnotationSet)} instead
+     */
+    @Deprecated
     void setUser(User aUser);
 
     AnnotationSet getDataOwner();

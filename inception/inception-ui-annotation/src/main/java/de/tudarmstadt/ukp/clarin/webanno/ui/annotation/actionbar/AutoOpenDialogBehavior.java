@@ -23,7 +23,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.head.IHeaderResponse;
 import org.apache.wicket.markup.head.OnLoadHeaderItem;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.open.OpenDocumentDialog;
 
 /**
@@ -48,12 +48,12 @@ public class AutoOpenDialogBehavior
     @Override
     protected void respond(AjaxRequestTarget aTarget)
     {
-        var page = (AnnotationPageBase) getComponent().getPage();
+        var page = (AnnotationPageBase2) getComponent().getPage();
 
-        // If the page has loaded and there is no document open yet, show the open-document
+        // If the workspace has loaded and no editor holds a document yet, show the open-document
         // dialog. Also check that the dialog is actually on the page (in the footer) before
         // trying to open it.
-        if (page.getModelObject().getDocument() != null) {
+        if (page.getWorkspace().hasOpenDocument()) {
             return;
         }
 

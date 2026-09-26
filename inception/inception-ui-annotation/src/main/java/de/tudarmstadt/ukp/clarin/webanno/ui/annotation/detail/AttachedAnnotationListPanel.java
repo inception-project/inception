@@ -121,7 +121,7 @@ public class AttachedAnnotationListPanel
 
     private AnnotationActionHandler actionHandler()
     {
-        return manager.getActiveContext().orElseThrow().getActionHandler();
+        return manager.getActiveEditor().orElseThrow().getActionHandler();
     }
 
     private List<AttachedAnnotationInfo> getRelationInfo()
@@ -134,7 +134,7 @@ public class AttachedAnnotationListPanel
 
         CAS cas;
         try {
-            cas = manager.getActiveContext().orElseThrow().getEditorCas();
+            cas = manager.getActiveEditor().orElseThrow().getEditorCas();
         }
         catch (IOException e) {
             // If we have trouble accessing the CAS, we probably never get here anyway...

@@ -34,7 +34,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Range
-    implements Serializable, Comparable<Range>
+    implements Serializable, Comparable<Range>, IRange
 {
     private static final long serialVersionUID = -6261188569647696831L;
 
@@ -43,7 +43,13 @@ public class Range
     private static final String BEGIN = "begin";
     private static final String END = "end";
 
-    public static final Range UNDEFINED = new Range(-1, -1);
+    private static final int UNDEFINED_OFFSET = -1;
+
+    /**
+     * A range that names no location. This is the <b>only</b> negative range that can be
+     * constructed.
+     */
+    public static final Range UNDEFINED = new Range(UNDEFINED_OFFSET, UNDEFINED_OFFSET);
 
     private final @JsonProperty(BEGIN) int begin;
     private final @JsonProperty(END) int end;
@@ -51,8 +57,18 @@ public class Range
     @JsonCreator
     public Range(@JsonProperty(BEGIN) int aBegin, @JsonProperty(END) int aEnd)
     {
+        if ((aBegin < 0 || aEnd < 0) && !(aBegin == UNDEFINED_OFFSET && aEnd == UNDEFINED_OFFSET)) {
+            throw new IllegalArgumentException(
+                    format("Range [%d-%d] has negative offsets", aBegin, aEnd));
+        }
+
         begin = aBegin;
         end = aEnd;
+    }
+
+    public Range(IRange aRange)
+    {
+        this(aRange.getBegin(), aRange.getEnd());
     }
 
     /**
@@ -62,14 +78,12 @@ public class Range
     @Deprecated
     public Range(CAS aCas)
     {
-        begin = 0;
-        end = aCas.getDocumentText().length();
+        this(0, aCas.getDocumentText().length());
     }
 
     public Range(AnnotationFS aAnnotation)
     {
-        begin = aAnnotation.getBegin();
-        end = aAnnotation.getEnd();
+        this(aAnnotation.getBegin(), aAnnotation.getEnd());
     }
 
     /**
@@ -79,16 +93,22 @@ public class Range
     @Deprecated
     public Range(Iterable<? extends AnnotationFS> aAnnotations)
     {
+        this(spanOf(aAnnotations));
+    }
+
+    /**
+     * An empty collection has no span, which is exactly what {@link #UNDEFINED} means.
+     */
+    private static Range spanOf(Iterable<? extends AnnotationFS> aAnnotations)
+    {
         var i = aAnnotations.iterator();
         if (!i.hasNext()) {
-            begin = -1;
-            end = -1;
-            return;
+            return UNDEFINED;
         }
 
         var current = i.next();
-        int b = current.getBegin();
-        int e = current.getEnd();
+        var b = current.getBegin();
+        var e = current.getEnd();
 
         while (i.hasNext()) {
             current = i.next();
@@ -96,15 +116,16 @@ public class Range
             e = max(current.getEnd(), e);
         }
 
-        begin = b;
-        end = e;
+        return new Range(b, e);
     }
 
+    @Override
     public int getBegin()
     {
         return begin;
     }
 
+    @Override
     public int getEnd()
     {
         return end;
@@ -120,7 +141,7 @@ public class Range
         var clippedBegin = max(0, begin);
         var clippedEnd = min(length, end);
 
-        if (clippedBegin > length || clippedEnd > length) {
+        if (clippedBegin > length || clippedEnd > length || clippedEnd < 0) {
             throw new IllegalArgumentException(format(
                     "Range [%d-%d] is fully outside the document [%d-%d]", begin, end, 0, length));
         }
@@ -140,6 +161,17 @@ public class Range
     public static Range rangeCoveringAnnotations(Iterable<? extends AnnotationFS> aAnnotations)
     {
         return new Range(aAnnotations);
+    }
+
+    /**
+     * @param aRange
+     *            the range to test, may be {@code null}.
+     * @return whether the range expresses no location. Construction rejects any other negative
+     *         range, so this is the only way a range can fail to name one.
+     */
+    public static boolean isUndefined(Range aRange)
+    {
+        return aRange == null || UNDEFINED.equals(aRange);
     }
 
     @Override

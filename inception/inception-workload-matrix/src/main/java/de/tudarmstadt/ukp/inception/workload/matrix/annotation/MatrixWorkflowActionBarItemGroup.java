@@ -66,7 +66,7 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
@@ -88,7 +88,7 @@ public class MatrixWorkflowActionBarItemGroup
     private @SpringBean PreferencesService preferencesService;
 
     private final AnnotationPageBase page;
-    private final DiamContext editorContext;
+    private final DocumentEditor editorContext;
     private final ModalDialog dialog;
     private final IModel<MatrixWorkloadTraits> traits;
     private final LoadableDetachableModel<Boolean> reopenableByUser;
@@ -98,7 +98,7 @@ public class MatrixWorkflowActionBarItemGroup
         super(aId);
 
         page = aContext.page();
-        editorContext = aContext.editorContext();
+        editorContext = aContext.editor();
 
         traits = LoadableDetachableModel
                 .of(() -> matrixWorkloadExtension.readTraits(workloadManagementService
@@ -261,7 +261,7 @@ public class MatrixWorkflowActionBarItemGroup
             var state = editorContext.getViewState();
             documentService.resetAnnotationCas(state.getDocument(), state.getUser(),
                     EXPLICIT_ANNOTATOR_USER_ACTION);
-            page.actionLoadDocument(_target);
+            editorContext.actionLoadDocument(_target);
         });
 
         dialog.open(content, aTarget);
@@ -300,11 +300,13 @@ public class MatrixWorkflowActionBarItemGroup
                 EXPLICIT_ANNOTATOR_USER_ACTION);
 
         if (newState == AnnotationDocumentState.IGNORE) {
+            // Document is no longer accessible so it needs to be unloaded
             state.reset();
-            state.setDocument(null, null);
+            editorContext.actionUnloadDocument(aTarget);
+            return;
         }
 
-        aTarget.add(page);
+        editorContext.refreshAfterDocumentStateChange(aTarget);
     }
 
     private void actionToggleDocumentState(AjaxRequestTarget aTarget)
@@ -317,11 +319,11 @@ public class MatrixWorkflowActionBarItemGroup
             switch (document.getState()) {
             case CURATION_FINISHED:
                 documentService.setSourceDocumentState(document, CURATION_IN_PROGRESS);
-                aTarget.add(page);
+                editorContext.refreshAfterDocumentStateChange(aTarget);
                 break;
             default:
                 documentService.setSourceDocumentState(document, CURATION_FINISHED);
-                aTarget.add(page);
+                editorContext.refreshAfterDocumentStateChange(aTarget);
                 break;
             }
             return;
@@ -360,11 +362,11 @@ public class MatrixWorkflowActionBarItemGroup
         switch (annState) {
         case IN_PROGRESS:
             documentService.setAnnotationDocumentState(annDoc, FINISHED, flags);
-            aTarget.add(page);
+            editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         case FINISHED:
             documentService.setAnnotationDocumentState(annDoc, IN_PROGRESS, flags);
-            aTarget.add(page);
+            editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         default:
             error("Can only change document state for documents that are finished or in progress, "

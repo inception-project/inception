@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -121,6 +122,57 @@ class DocumentAccessImplTest
                 any(AnnotationSet.class))).thenReturn(aDoc);
 
         assertThat(sut.canViewAnnotationDocument("alice", "2", 8L, "alice")).isFalse();
+    }
+
+    @Test
+    void assertCanView_manager_ownLockedDocument_granted()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(MANAGER));
+        when(sourceDocument.getProject()).thenReturn(project);
+
+        // The document IS locked for her. Stub it explicitly rather than relying on the default
+        // "no annotation document" - otherwise this passes even if the role bypass is removed,
+        // because the IGNORE branch would never be reached.
+        lenient().when(documentService.existsAnnotationDocument(any(SourceDocument.class),
+                any(AnnotationSet.class))).thenReturn(true);
+        var annDoc = AnnotationDocument.builder() //
+                .withState(IGNORE) //
+                .build();
+        lenient().when(documentService.getAnnotationDocument(any(SourceDocument.class),
+                any(AnnotationSet.class))).thenReturn(annDoc);
+
+        // A manager may look at a document locked for herself - locking is her own act, and she
+        // has to be able to review the data to decide what to do with it.
+        assertThatNoException().isThrownBy(
+                () -> sut.assertCanViewAnnotationDocument(user, sourceDocument, "alice"));
+    }
+
+    @Test
+    void assertCanView_annotator_ownLockedDocument_throws()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+        when(documentService.existsAnnotationDocument(any(SourceDocument.class),
+                any(AnnotationSet.class))).thenReturn(true);
+        var annDoc = AnnotationDocument.builder() //
+                .withState(IGNORE) //
+                .build();
+        when(documentService.getAnnotationDocument(any(SourceDocument.class),
+                any(AnnotationSet.class))).thenReturn(annDoc);
+
+        assertThatThrownBy(() -> sut.assertCanViewAnnotationDocument(user, sourceDocument, "alice"))
+                .isInstanceOf(AccessDeniedException.class);
+    }
+
+    @Test
+    void assertCanView_annotator_foreignDocument_throws()
+    {
+        when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
+        when(sourceDocument.getProject()).thenReturn(project);
+
+        assertThatThrownBy(
+                () -> sut.assertCanViewAnnotationDocument(user, sourceDocument, "someoneElse"))
+                        .isInstanceOf(AccessDeniedException.class);
     }
 
     @Test

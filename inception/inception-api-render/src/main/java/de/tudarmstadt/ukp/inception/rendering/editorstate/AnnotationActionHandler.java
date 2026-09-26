@@ -23,6 +23,8 @@ import java.util.List;
 import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
+import de.tudarmstadt.ukp.inception.support.uima.Range;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -77,43 +79,10 @@ public interface AnnotationActionHandler
     }
 
     /**
-     * Navigate to the given document at the given offsets.
-     * <p>
-     * The default stays within the editor's current document, scrolling to the offsets via
-     * {@link #actionJump(AjaxRequestTarget, int, int)} - appropriate for a self-contained editor
-     * (e.g. a read-only reference-document viewer). A handler that hosts a document-switchable
-     * editor (the main editor's detail panel) overrides this to switch the displayed document to
-     * {@code aDocument} first. This is the seam through which a cross-document scroll-to (search
-     * hit / cross-document link) opens the target document instead of jumping to raw offsets in the
-     * currently displayed one.
+     * Scroll to the given location within the document already being shown.
      *
      * @param aTarget
      *            the AJAX target
-     * @param aDocument
-     *            the document to show
-     * @param aBegin
-     *            the offset to scroll to
-     * @param aEnd
-     *            the corresponding end offset
-     * @throws IOException
-     *             if there was an I/O-level problem
-     * @throws AnnotationException
-     *             if there was an annotation-level problem
-     */
-    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
-        throws IOException, AnnotationException
-    {
-        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, null);
-    }
-
-    /**
-     * Navigate to the given document at the given offsets, additionally pinging the given ranges.
-     *
-     * @param aTarget
-     *            the AJAX target
-     * @param aDocument
-     *            the document to show
      * @param aBegin
      *            the offset to scroll to
      * @param aEnd
@@ -125,12 +94,40 @@ public interface AnnotationActionHandler
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
+    default void actionJumpTo(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            List<VRange> aAdditionalPingRanges)
         throws IOException, AnnotationException
     {
         actionJump(aTarget, aBegin, aEnd, aAdditionalPingRanges);
     }
+
+    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange)
+        throws IOException, AnnotationException
+    {
+        actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange, null);
+    }
+
+    /**
+     * Navigate to the given document at the given offsets, additionally pinging the given ranges.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aDocument
+     *            the document to show
+     * @param aRange
+     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
+     *            opening the document placed it.
+     * @param aAdditionalPingRanges
+     *            additional ranges that should ideally be visible. May be {@code null} or empty.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException;
 
     /**
      * Delete currently selected annotation.

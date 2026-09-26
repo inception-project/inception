@@ -30,21 +30,22 @@ import org.apache.wicket.RestartResponseException;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.form.CheckBox;
-import org.apache.wicket.markup.html.panel.GenericPanel;
+import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.danekja.java.util.function.serializable.SerializableBiConsumer;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -57,7 +58,7 @@ import wicket.contrib.input.events.key.KeyType;
  * and associated documents
  */
 public class CurationOpenDocumentDialogPanel
-    extends GenericPanel<AnnotatorState>
+    extends Panel
 {
     private static final long serialVersionUID = 1299869948010875439L;
 
@@ -75,13 +76,26 @@ public class CurationOpenDocumentDialogPanel
 
     private final IModel<List<SourceDocument>> documentList;
     private final IModel<Boolean> finishedDocumentsSkippedByNavigation;
+    private final IModel<Project> project;
+    private final SerializableBiConsumer<AjaxRequestTarget, SourceDocument> onDocumentSelected;
 
-    public CurationOpenDocumentDialogPanel(String aId, IModel<AnnotatorState> aState,
-            IModel<List<SourceDocument>> aDocumentList)
+    /**
+     * @param aProject
+     *            the project whose documents are offered.
+     * @param aDocumentList
+     *            the documents to offer.
+     * @param aOnDocumentSelected
+     *            invoked with the chosen document.
+     */
+    public CurationOpenDocumentDialogPanel(String aId, IModel<Project> aProject,
+            IModel<List<SourceDocument>> aDocumentList,
+            SerializableBiConsumer<AjaxRequestTarget, SourceDocument> aOnDocumentSelected)
     {
-        super(aId, aState);
+        super(aId);
 
+        project = aProject;
         documentList = aDocumentList;
+        onDocumentSelected = aOnDocumentSelected;
 
         queue(new LambdaAjaxLink(CID_CLOSE_DIALOG, this::actionCancel)
                 .add(new InputBehavior(new KeyType[] { KeyType.Escape }, click)));
@@ -100,14 +114,14 @@ public class CurationOpenDocumentDialogPanel
 
     private Map<Long, DocumentStatistics> loadStatistics(Collection<SourceDocument> aDocuments)
     {
-        var project = getModelObject().getProject();
+        var proj = project.getObject();
 
-        if (project == null || aDocuments == null || aDocuments.isEmpty()) {
+        if (proj == null || aDocuments == null || aDocuments.isEmpty()) {
             return emptyMap();
         }
 
         try {
-            return searchService.getAnnotationCountsPerDocument(AnnotationSet.CURATION_SET, project,
+            return searchService.getAnnotationCountsPerDocument(AnnotationSet.CURATION_SET, proj,
                     aDocuments);
         }
         catch (Exception e) {
@@ -117,7 +131,7 @@ public class CurationOpenDocumentDialogPanel
 
     private boolean isFinishedDocumentsSkippedByNavigation()
     {
-        var project = getModelObject().getProject();
+        var project = this.project.getObject();
         var sessionOwner = userService.getCurrentUser();
         return preferencesService.loadTraitsForUserAndProject(KEY_CURATION_NAVIGATION_USER_PREFS,
                 sessionOwner, project).isFinishedDocumentsSkippedByNavigation();
@@ -125,7 +139,7 @@ public class CurationOpenDocumentDialogPanel
 
     private void setFinishedDocumentsSkippedByNavigation(boolean aBoolean)
     {
-        var project = getModelObject().getProject();
+        var project = this.project.getObject();
         var sessionOwner = userService.getCurrentUser();
         var prefs = preferencesService.loadTraitsForUserAndProject(
                 KEY_CURATION_NAVIGATION_USER_PREFS, sessionOwner, project);
@@ -137,17 +151,20 @@ public class CurationOpenDocumentDialogPanel
     @OnEvent
     public void onCurationDocumentOpenDocumentEvent(CurationDocumentOpenDocumentEvent aEvent)
     {
-        getModelObject().setDocument(aEvent.getSourceDocument(), documentList.getObject());
-
-        ((AnnotationPageBase) getPage()).actionLoadDocument(aEvent.getTarget());
+        onDocumentSelected.accept(aEvent.getTarget(), aEvent.getSourceDocument());
 
         findParent(ModalDialog.class).close(aEvent.getTarget());
     }
 
+    private boolean hasDocumentOnScreen()
+    {
+        return getPage() instanceof AnnotationPageBase page
+                && page.getDocumentEditorManager().hasOpenDocument();
+    }
+
     private void actionCancel(AjaxRequestTarget aTarget)
     {
-        // If the dialog is aborted without choosing a document, return to a sensible location.
-        if (getModelObject().getProject() == null || getModelObject().getDocument() == null) {
+        if (!hasDocumentOnScreen()) {
             try {
                 var ppb = findParent(ProjectPageBase.class);
                 if (ppb != null) {

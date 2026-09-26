@@ -41,6 +41,7 @@ public class GuidelinesActionBarExtension
     private final GuidelinesService guidelinesService;
     private final LegacySplitCurationPageProperties curationPageProperties;
 
+    @Deprecated
     public GuidelinesActionBarExtension(GuidelinesService aGuidelinesService,
             LegacySplitCurationPageProperties aCurationPageProperties)
     {
@@ -48,6 +49,7 @@ public class GuidelinesActionBarExtension
         curationPageProperties = aCurationPageProperties;
     }
 
+    @Deprecated
     @Override
     public boolean accepts(ActionBarContext aContext)
     {
@@ -59,15 +61,17 @@ public class GuidelinesActionBarExtension
             return false;
         }
 
+        var project = aContext.editor().getProject();
+
         // Hide the guidelines item if there are no guidelines
-        return ActionBarExtension.super.accepts(aContext)
-                && aContext.page().getModelObject().getProject() != null
-                && guidelinesService.hasGuidelines(aContext.page().getModelObject().getProject());
+        return ActionBarExtension.super.accepts(aContext) && project != null
+                && guidelinesService.hasGuidelines(project);
     }
 
+    @Deprecated
     @Override
     public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new GuidelinesActionBarItem(aId, aContext.page());
+        return new GuidelinesActionBarItem(aId, aContext);
     }
 }

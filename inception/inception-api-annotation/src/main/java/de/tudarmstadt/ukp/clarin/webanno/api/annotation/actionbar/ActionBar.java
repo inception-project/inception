@@ -31,7 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 
 public class ActionBar
     extends Panel
@@ -44,19 +44,19 @@ public class ActionBar
 
     private final Set<String> activeExtensions = new HashSet<>();
 
-    private final DiamContext editorContext;
+    private final DocumentEditor editor;
 
     /**
      * @param aId
      *            the component id.
-     * @param aEditorContext
+     * @param aEditor
      *            the editor this action bar belongs to.
      */
-    public ActionBar(String aId, DiamContext aEditorContext)
+    public ActionBar(String aId, DocumentEditor aEditor)
     {
         super(aId);
 
-        editorContext = aEditorContext;
+        editor = aEditor;
 
         add(new ListView<ActionBarExtension>("items",
                 LoadableDetachableModel.of(this::getExtensions))
@@ -74,7 +74,7 @@ public class ActionBar
 
     private ActionBarContext newActionBarContext()
     {
-        return new ActionBarContext((AnnotationPageBase) getPage(), editorContext);
+        return new ActionBarContext((AnnotationPageBase) getPage(), editor);
     }
 
     @Override

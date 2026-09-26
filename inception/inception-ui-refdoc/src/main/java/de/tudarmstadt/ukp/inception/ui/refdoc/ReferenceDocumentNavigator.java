@@ -28,7 +28,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.multiedit.DocumentEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -75,8 +75,7 @@ public class ReferenceDocumentNavigator
 
             if (index < 0 || index >= documents.size()) {
                 if (skipFinished) {
-                    info("There is no " + aWhich + " unfinished document. Use the Open Document"
-                            + " dialog to select finished documents.");
+                    info("There is no " + aWhich + " unfinished document.");
                 }
                 else {
                     info("There is no " + aWhich + " document.");

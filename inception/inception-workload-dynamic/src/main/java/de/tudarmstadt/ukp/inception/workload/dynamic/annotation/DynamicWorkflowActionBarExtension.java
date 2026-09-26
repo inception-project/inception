@@ -74,11 +74,11 @@ public class DynamicWorkflowActionBarExtension
             return false;
         }
 
-        if (!aContext.editorContext().isEditor()) {
+        if (!aContext.editor().isEditor()) {
             return false;
         }
 
-        var project = aContext.page().getModelObject().getProject();
+        var project = aContext.editor().getProject();
         if (project == null) {
             return false;
         }

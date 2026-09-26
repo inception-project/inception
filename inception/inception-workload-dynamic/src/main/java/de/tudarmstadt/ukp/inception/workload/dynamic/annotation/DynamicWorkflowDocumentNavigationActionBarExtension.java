@@ -88,14 +88,14 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     public boolean accepts(ActionBarContext aContext)
     {
         // #Issue 1813 fix
-        var project = aContext.page().getModelObject().getProject();
+        var project = aContext.editor().getProject();
         if (project == null) {
             return false;
         }
 
         var sessionOwner = userService.getCurrentUser();
-        var workloadConfig = workloadManagementService.loadOrCreateWorkloadManagerConfiguration(
-                aContext.page().getModelObject().getProject());
+        var workloadConfig = workloadManagementService
+                .loadOrCreateWorkloadManagerConfiguration(project);
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadConfig.getType())
                 && !projectService.hasRole(sessionOwner, project, CURATOR);
     }
@@ -109,23 +109,22 @@ public class DynamicWorkflowDocumentNavigationActionBarExtension
     @Override
     public void onInitialize(ActionBarContext aContext)
     {
-        var annotatorState = aContext.page().getModelObject();
-        var user = annotatorState.getUser();
-        var project = annotatorState.getProject();
+        var state = aContext.editor().getAnnotatorState();
+        var user = state.getUser();
+        var project = aContext.editor().getProject();
         var target = RequestCycle.get().find(AjaxRequestTarget.class);
 
         // Assign a new document with actionLoadDocument
         var allDocuments = documentService.listSourceDocuments(project);
         var nextDocument = dynamicWorkloadExtension.nextDocumentToAnnotate(project, user);
         if (nextDocument.isPresent()) {
-            var state = aContext.page().getModelObject();
             // This was the case, so load the document and return
             if (!nextDocument.get().equals(state.getDocument())) {
                 // If the document is already loaded, do nothing (avoids an endless recursion
                 // triggered by actionLoadDocument refreshing the action bar which then
                 // calls onInitialize).
                 state.setDocument(nextDocument.get(), allDocuments);
-                aContext.page().actionLoadDocument(target.orElse(null));
+                aContext.editor().actionLoadDocument(target.orElse(null));
             }
             return;
         }

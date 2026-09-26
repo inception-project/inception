@@ -46,6 +46,6 @@ public class AnnotationDocumentNavigatorActionBarExtension
     @Override
     public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new DocumentNavigator(aId, aContext.page());
+        return new DocumentNavigator(aId, aContext);
     }
 }

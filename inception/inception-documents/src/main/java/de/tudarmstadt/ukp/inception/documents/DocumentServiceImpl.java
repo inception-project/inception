@@ -31,6 +31,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.DEACTI
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.FORMER_ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.MISSING;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
@@ -1617,18 +1619,22 @@ public class DocumentServiceImpl
         var accessibleDocuments = new ArrayList<AnnotationDocument>();
         var docs = listAllDocuments(aProject, AnnotationSet.forUser(aDataOwner));
 
+        // Managers and curators may access locked documents
+        var sessionOwnerMayViewLocked = projectService.hasRole(aSessionOwner, aProject, MANAGER,
+                CURATOR);
+
         for (var e : docs.entrySet()) {
             var sd = e.getKey();
             var ad = e.getValue();
             if (ad != null) {
-                // if current user is opening her own docs, don't let her see locked ones
+                // Annotators may not view locked documents unless they are also managers/curators
                 var userIsSelected = aDataOwner.equals(aSessionOwner);
-                if (userIsSelected && ad.getState() == IGNORE) {
+                if (userIsSelected && !sessionOwnerMayViewLocked && ad.getState() == IGNORE) {
                     continue;
                 }
             }
             else {
-                ad = new AnnotationDocument(aSessionOwner.getUsername(), sd);
+                ad = new AnnotationDocument(aDataOwner.getUsername(), sd);
             }
 
             accessibleDocuments.add(ad);

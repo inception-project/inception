@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.preferences;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 
@@ -30,24 +32,15 @@ public class PreferencesSidebarFooterItem
     private static final long serialVersionUID = -7010485821196580123L;
 
     private final AnnotationPreferencesDialog preferencesDialog;
-    private final AnnotationPageBase2 page;
 
     public PreferencesSidebarFooterItem(String aId, AnnotationPageBase2 aPage)
     {
         super(aId);
 
-        page = aPage;
-
         add(preferencesDialog = new AnnotationPreferencesDialog("preferencesDialog",
-                page.getModel()));
-        preferencesDialog.setOnChangeAction(this::actionCompletePreferencesChange);
+                aPage.getProjectModel(), ANNOTATION));
 
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-    }
-
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        page.actionLoadDocument(aTarget);
     }
 
     private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)

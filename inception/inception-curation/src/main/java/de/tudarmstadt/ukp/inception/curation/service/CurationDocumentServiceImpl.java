@@ -39,6 +39,7 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -74,17 +76,20 @@ public class CurationDocumentServiceImpl
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
             AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
-            EntityManager aEntityManager, DocumentService aDocumentService)
+            EntityManager aEntityManager, DocumentService aDocumentService,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
         curationProperties = aCurationProperties;
         documentService = aDocumentService;
+        applicationEventPublisher = aApplicationEventPublisher;
     }
 
     @Override
@@ -96,6 +101,11 @@ public class CurationDocumentServiceImpl
         if (aUpdateTimestamp) {
             aDocument.setTimestamp(new Timestamp(new Date().getTime()));
             entityManager.merge(aDocument);
+        }
+
+        if (documentService.existsAnnotationDocument(aDocument, CURATION_SET)) {
+            applicationEventPublisher.publishEvent(new AfterCasWrittenEvent(this,
+                    documentService.getAnnotationDocument(aDocument, CURATION_SET), aCas));
         }
     }
 

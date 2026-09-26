@@ -21,8 +21,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 /**
  * Dialog providing access to the annotation guidelines.
@@ -37,20 +37,22 @@ public class GuidelinesDialog
 {
     private static final long serialVersionUID = 671214149298791793L;
 
-    private IModel<AnnotatorState> state;
+    private IModel<Project> project;
 
-    public GuidelinesDialog(String id, final IModel<AnnotatorState> aModel)
+    @Deprecated
+    public GuidelinesDialog(String id, final IModel<Project> aProject)
     {
         super(id);
 
-        state = aModel;
+        project = aProject;
 
         setOutputMarkupId(true);
     }
 
+    @Deprecated
     public void show(AjaxRequestTarget aTarget)
     {
-        setContent(new GuidelinesDialogContent(ModalDialog.CONTENT_ID, state));
+        setContent(new GuidelinesDialogContent(ModalDialog.CONTENT_ID, project));
 
         open(aTarget);
     }

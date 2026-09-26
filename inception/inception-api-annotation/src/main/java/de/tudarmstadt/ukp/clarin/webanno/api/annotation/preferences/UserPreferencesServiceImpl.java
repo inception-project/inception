@@ -105,12 +105,13 @@ public class UserPreferencesServiceImpl
     {
         Validate.notBlank(aSessionOwnerName, "Parameter [sessionOwner] must be specified");
 
-        var preference = loadPreferences(aState.getProject(), aSessionOwnerName, aState.getMode());
+        var project = aState.getProject();
+        var preference = loadPreferences(project, aSessionOwnerName, aState.getMode());
 
         aState.setPreferences(preference);
 
         // set layers according to preferences
-        var allLayers = annotationService.listAnnotationLayer(aState.getProject());
+        var allLayers = annotationService.listAnnotationLayer(project);
         aState.setAllAnnotationLayers(allLayers);
         aState.setAnnotationLayers(allLayers.stream() //
                 .filter(l -> !annotationEditorProperties.isLayerBlocked(l)) //
@@ -134,7 +135,7 @@ public class UserPreferencesServiceImpl
         if (aState.getDefaultAnnotationLayer() != null) {
             var sessionOwner = userService.getCurrentUser();
             var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
-                    sessionOwner, aState.getProject());
+                    sessionOwner, project);
             aState.syncAnchoringModeToDefaultLayer(anchoringPrefs);
         }
     }
@@ -213,16 +214,13 @@ public class UserPreferencesServiceImpl
             return;
         }
 
-        saveLayoutStatePreferences(aProject, aSessionOwner, preferences);
+        saveLayoutStatePreferences(aProject, aSessionOwner);
     }
 
-    private void saveLayoutStatePreferences(Project aProject, User aSessionOwner,
-            AnnotationPreference preferences)
+    private void saveLayoutStatePreferences(Project aProject, User aSessionOwner)
     {
         var layoutState = preferencesService.loadTraitsForUserAndProject(KEY_LAYOUT_STATE,
                 aSessionOwner, aProject);
-        layoutState.setSidebarSizeLeft(preferences.getSidebarSizeLeft());
-        layoutState.setSidebarSizeRight(preferences.getSidebarSizeRight());
         preferencesService.saveTraitsForUserAndProject(KEY_LAYOUT_STATE, aSessionOwner, aProject,
                 layoutState);
     }
@@ -239,7 +237,7 @@ public class UserPreferencesServiceImpl
 
         // TODO Switch to a new and modular way of writing preferences
         saveLayerVisibilityPreferences(aProject, sessionOwner, aPref);
-        saveLayoutStatePreferences(aProject, sessionOwner, aPref);
+        saveLayoutStatePreferences(aProject, sessionOwner);
 
         saveLegacyPreferences(aProject, aSessionOwnerName, aMode, aPref);
     }
@@ -427,6 +425,7 @@ public class UserPreferencesServiceImpl
 
         private int defaultPageSize = 20;
 
+        @Deprecated
         public BratAnnotationEditorManagerPrefs()
         {
             var defaults = ApplicationContextProvider.getApplicationContext()
@@ -434,11 +433,13 @@ public class UserPreferencesServiceImpl
             defaultPageSize = defaults.getPageSize();
         }
 
+        @Deprecated
         public int getDefaultPageSize()
         {
             return defaultPageSize;
         }
 
+        @Deprecated
         public void setDefaultPageSize(int aDefaultPageSize)
         {
             defaultPageSize = aDefaultPageSize;

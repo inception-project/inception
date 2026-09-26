@@ -54,7 +54,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
@@ -71,7 +71,7 @@ public class CuratorWorkflowActionBarItemGroup
     private @SpringBean UserDao userRepository;
 
     private final AnnotationPageBase page;
-    private final DiamContext editorContext;
+    private final DocumentEditor editorContext;
     // private final ConfirmationDialog finishDocumentDialog;
     private final LambdaAjaxLink toggleCurationStateLink;
     private final IModel<CurationWorkflow> curationWorkflowModel;
@@ -83,7 +83,7 @@ public class CuratorWorkflowActionBarItemGroup
         super(aId);
 
         page = aContext.page();
-        editorContext = aContext.editorContext();
+        editorContext = aContext.editor();
 
         // add(finishDocumentDialog = new ConfirmationDialog("finishDocumentDialog",
         // new StringResourceModel("FinishDocumentDialog.title", this, null),
@@ -96,9 +96,10 @@ public class CuratorWorkflowActionBarItemGroup
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
         toggleCurationStateLink.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
-        curationWorkflowModel = Model.of(
-                curationService.readOrCreateCurationWorkflow(page.getModelObject().getProject()));
-        IModel<String> documentNameModel = PropertyModel.of(page.getModel(), "document.name");
+        curationWorkflowModel = Model.of(curationService
+                .readOrCreateCurationWorkflow(editorContext.getAnnotatorState().getProject()));
+        IModel<String> documentNameModel = PropertyModel.of(editorContext.getStateModel(),
+                "document.name");
         add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
                 new ResourceModel("ResetDocumentDialog.title"),
                 new ResourceModel("ResetDocumentDialog.text"), documentNameModel,
@@ -112,7 +113,7 @@ public class CuratorWorkflowActionBarItemGroup
 
     public String getStateClass()
     {
-        var state = page.getModelObject();
+        var state = editorContext.getAnnotatorState();
 
         if (curationDocumentService.isCurationFinished(state.getDocument())) {
             return FontAwesome7IconType.clipboard_s.cssClassName();
@@ -124,7 +125,7 @@ public class CuratorWorkflowActionBarItemGroup
 
     protected boolean isEditable()
     {
-        var state = page.getModelObject();
+        var state = editorContext.getAnnotatorState();
         if (state.getProject() == null || state.getDocument() == null) {
             return false;
         }
@@ -137,7 +138,7 @@ public class CuratorWorkflowActionBarItemGroup
     protected void actionToggleCurationState(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        var state = page.getModelObject();
+        var state = editorContext.getAnnotatorState();
         var sourceDocument = state.getDocument();
         var docState = sourceDocument.getState();
 
@@ -153,11 +154,11 @@ public class CuratorWorkflowActionBarItemGroup
             }
 
             documentService.setSourceDocumentState(sourceDocument, CURATION_FINISHED);
-            aTarget.add(page);
+            editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         case CURATION_FINISHED:
             documentService.setSourceDocumentState(sourceDocument, CURATION_IN_PROGRESS);
-            aTarget.add(page);
+            editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         default:
             error("Can only change document state for documents that are finished or in progress, "
@@ -182,13 +183,13 @@ public class CuratorWorkflowActionBarItemGroup
         }
 
         var mergeMode = aForm.getModelObject().isClearTargetCas() ? RECREATE : FILL_ONLY;
-        var state = page.getModelObject();
+        var state = editorContext.getAnnotatorState();
 
-        ((CuratableDocumentPage) page).readOrCreateCurationCas(state.getDocument(), mergeStrategy,
-                mergeMode);
+        ((CuratableDocumentPage) page).readOrCreateCurationCas(state.getDocument(), state,
+                mergeStrategy, mergeMode);
 
         // ... and load it
-        page.actionLoadDocument(aTarget);
+        editorContext.actionLoadDocument(aTarget);
 
         getPage().success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
         aTarget.addChildren(getPage(), IFeedback.class);

@@ -36,13 +36,13 @@ public class PagingActionBarExtension
             return false;
         }
 
-        return aContext.editorContext().getAnnotatorState().getPagingStrategy() != null;
+        return aContext.editor().getAnnotatorState().getPagingStrategy() != null;
     }
 
     @Override
     public Component createActionBarItem(String aId, ActionBarContext aContext)
     {
-        var editor = aContext.editorContext();
+        var editor = aContext.editor();
         return editor.getAnnotatorState().getPagingStrategy().createPageNavigator(aId, editor);
     }
 }

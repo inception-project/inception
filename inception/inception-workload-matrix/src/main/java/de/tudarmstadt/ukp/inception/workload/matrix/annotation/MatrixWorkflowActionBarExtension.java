@@ -39,7 +39,7 @@ public class MatrixWorkflowActionBarExtension
     @Override
     public boolean accepts(ActionBarContext aContext)
     {
-        return aContext.hasDocument() && aContext.editorContext().isEditor();
+        return aContext.hasDocument() && aContext.editor().isEditor();
     }
 
     @Override

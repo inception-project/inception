@@ -46,7 +46,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer_;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
@@ -66,6 +65,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 import jakarta.persistence.EntityManager;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -105,9 +105,9 @@ public class InteractiveRecommenderSidebar
 
     private CompoundPropertyModel<InteractiveRecommenderSidebarPrefs> sidebarPrefs;
 
-    public InteractiveRecommenderSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public InteractiveRecommenderSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
 
         sidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
 
@@ -170,6 +170,15 @@ public class InteractiveRecommenderSidebar
         executeButton
                 .add(new InputBehavior(new KeyType[] { KeyType.Enter }, click).setTarget(this));
         form.add(executeButton);
+    }
+
+    @Override
+    protected void onConfigure()
+    {
+        super.onConfigure();
+
+        // Recommender needs an active editor
+        setVisible(getActiveEditor().isPresent());
     }
 
     private void loadLastUsedRecommender(IModel<Recommender> aRecommender)
@@ -259,15 +268,14 @@ public class InteractiveRecommenderSidebar
         prefs.setLastExtractionModeUsed(traits.getExtractionMode());
         prefs.setLastJustificationEnabled(traits.isJustificationEnabled());
         preferencesService.saveTraitsForUserAndProject(KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS,
-                sessionOwner, getModelObject().getProject(), prefs);
+                sessionOwner, getContext().getProject(), prefs);
     }
 
     private InteractiveRecommenderSidebarPrefs loadSidebarPrefs()
     {
         var sessionOwner = userService.getCurrentUser();
         return preferencesService.loadTraitsForUserAndProject(
-                KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS, sessionOwner,
-                getModelObject().getProject());
+                KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS, sessionOwner, getContext().getProject());
     }
 
     private void actionChangeFeature(AjaxRequestTarget aTarget)
@@ -278,7 +286,7 @@ public class InteractiveRecommenderSidebar
 
         var sessionOwner = userService.getCurrentUser();
         preferencesService.saveTraitsForUserAndProject(KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS,
-                sessionOwner, getModelObject().getProject(), prefs);
+                sessionOwner, getContext().getProject(), prefs);
     }
 
     private void actionChangeLayer(AjaxRequestTarget aTarget)
@@ -299,7 +307,7 @@ public class InteractiveRecommenderSidebar
         prefs.setLastFeatureUsed(
                 recommender.map(r -> r.getFeature()).map(f -> f.getId()).orElse(null).getObject());
         preferencesService.saveTraitsForUserAndProject(KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS,
-                sessionOwner, getModelObject().getProject(), prefs);
+                sessionOwner, getContext().getProject(), prefs);
 
         if (aTarget != null) {
             aTarget.add(featureChoice, traitsContainer);
@@ -336,7 +344,7 @@ public class InteractiveRecommenderSidebar
 
         var sessionOwner = userService.getCurrentUser();
         preferencesService.saveTraitsForUserAndProject(KEY_INTERACTIVE_RECOMMENDER_SIDEBAR_PREFS,
-                sessionOwner, getModelObject().getProject(), prefs);
+                sessionOwner, getContext().getProject(), prefs);
 
         if (aTarget != null) {
             aTarget.add(traitsContainer, featureChoice, layerChoice);
@@ -345,7 +353,8 @@ public class InteractiveRecommenderSidebar
 
     private List<Recommender> listInteractiveRecommenders()
     {
-        return recommendationService.listEnabledRecommenders(getModelObject().getProject()).stream() //
+        return recommendationService.listEnabledRecommenders(getContext().getProject()) //
+                .stream() //
                 .filter(rec -> recommendationService.getRecommenderFactory(rec)
                         .map(factory -> factory.isInteractive(rec) && hasLlmTraits(factory))
                         .orElse(false)) //
@@ -401,7 +410,7 @@ public class InteractiveRecommenderSidebar
 
         var factory = maybeFactory.get();
 
-        return schemaService.listAnnotationLayer(getModelObject().getProject()).stream() //
+        return schemaService.listAnnotationLayer(getContext().getProject()).stream() //
                 .filter(layer -> !Token._TypeName.equals(layer.getName())) //
                 .filter(layer -> !Sentence._TypeName.equals(layer.getName())) //
                 .filter(layer -> !ChainLayerSupport.TYPE.equals(layer.getType())) //
@@ -412,7 +421,7 @@ public class InteractiveRecommenderSidebar
     private void execute(AjaxRequestTarget aTarget, Form<Recommender> aForm) throws Exception
     {
         var sessionOwner = userService.getCurrentUser();
-        var state = getActiveContext().orElseThrow().getAnnotatorState();
+        var state = getActiveEditor().orElseThrow().getAnnotatorState();
         var document = state.getDocument();
         var dataOwner = state.getUser().getUsername();
         var rec = aForm.getModelObject();

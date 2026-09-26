@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.ExternalResultDataProvider;
 import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter;
@@ -78,6 +77,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxSubmitLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class ExternalSearchAnnotationSidebar
     extends AnnotationSidebar_ImplBase
@@ -108,23 +108,23 @@ public class ExternalSearchAnnotationSidebar
 
     private WebMarkupContainer dataTableContainer;
 
-    public ExternalSearchAnnotationSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public ExternalSearchAnnotationSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
 
         // Attach search state to annotation page
         // This state is to maintain persistence of this sidebar so that when user moves to another
         // sidebar and comes back here, the state of this sidebar (search results) are preserved.
         searchStateModel = new CompoundPropertyModel<>(LambdaModelAdapter.of(
-                () -> aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE),
-                searchState -> aAnnotationPage.setMetaData(CURRENT_ES_USER_STATE, searchState)));
+                () -> aContext.page().getMetaData(CURRENT_ES_USER_STATE),
+                searchState -> aContext.page().setMetaData(CURRENT_ES_USER_STATE, searchState)));
 
         // Set up the search state in the page if it is not already there
-        if (aAnnotationPage.getMetaData(CURRENT_ES_USER_STATE) == null) {
+        if (aContext.page().getMetaData(CURRENT_ES_USER_STATE) == null) {
             searchStateModel.setObject(new ExternalSearchUserState());
         }
 
-        project = getModel().getObject().getProject();
+        project = aContext.getProject();
         List<DocumentRepository> repositories = externalSearchService
                 .listDocumentRepositories(project);
 
@@ -261,7 +261,8 @@ public class ExternalSearchAnnotationSidebar
             }
 
             getDocumentEditorManager().actionShowDocument(aTarget,
-                    documentService.getSourceDocument(project, aResult.getDocumentId()));
+                    documentService.getSourceDocument(project, aResult.getDocumentId()),
+                    getContext().getDataOwner());
         }
         catch (Exception e) {
             LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
@@ -275,7 +276,8 @@ public class ExternalSearchAnnotationSidebar
         try {
             searchStateModel.getObject().setSelectedResult(aResult);
             getDocumentEditorManager().actionShowDocument(aTarget,
-                    documentService.getSourceDocument(project, aResult.getDocumentId()));
+                    documentService.getSourceDocument(project, aResult.getDocumentId()),
+                    getContext().getDataOwner());
         }
         catch (Exception e) {
             LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
