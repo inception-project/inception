@@ -97,15 +97,24 @@ public class CurationDocumentServiceImpl
     public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
         throws IOException
     {
-        casStorageService.writeCas(aDocument, aCas, CURATION_SET);
-        if (aUpdateTimestamp) {
-            aDocument.setTimestamp(new Timestamp(new Date().getTime()));
-            entityManager.merge(aDocument);
-        }
+        writeCurationCasSilently(aCas, aDocument, aUpdateTimestamp);
 
         if (documentService.existsAnnotationDocument(aDocument, CURATION_SET)) {
             applicationEventPublisher.publishEvent(new AfterCasWrittenEvent(this,
                     documentService.getAnnotationDocument(aDocument, CURATION_SET), aCas));
+        }
+    }
+
+    @Override
+    @Transactional
+    public void writeCurationCasSilently(CAS aCas, SourceDocument aDocument,
+            boolean aUpdateTimestamp)
+        throws IOException
+    {
+        casStorageService.writeCas(aDocument, aCas, CURATION_SET);
+        if (aUpdateTimestamp) {
+            aDocument.setTimestamp(new Timestamp(new Date().getTime()));
+            entityManager.merge(aDocument);
         }
     }
 

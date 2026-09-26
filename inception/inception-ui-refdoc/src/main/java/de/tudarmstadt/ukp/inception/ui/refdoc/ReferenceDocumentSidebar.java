@@ -110,7 +110,7 @@ public class ReferenceDocumentSidebar
             scrollSyncEnabled = loadSidebarState().isScrollSyncEnabled();
         }
 
-        state.setDocument(aContext.editorContext() //
+        state.setDocument(aContext.activeEditor() //
                 .map(DiamContext::getAnnotatorState) //
                 .map(AnnotatorState::getDocument) //
                 .orElse(null), emptyList());

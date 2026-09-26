@@ -75,10 +75,10 @@ public class ReferenceDocumentNavigator
 
             if (index < 0 || index >= documents.size()) {
                 if (skipFinished) {
-                    info("There is no " + aWhich + " unfinished document.");
+                    getPage().info("There is no " + aWhich + " unfinished document.");
                 }
                 else {
-                    info("There is no " + aWhich + " document.");
+                    getPage().info("There is no " + aWhich + " document.");
                 }
                 aTarget.addChildren(getPage(), IFeedback.class);
                 return;

@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -71,6 +72,14 @@ public class RecommendationSidebarFactory
     public boolean available(Project aProject)
     {
         return recommendationService.existsEnabledRecommender(aProject);
+    }
+
+    @Override
+    public boolean accepts(SidebarContext aContext)
+    {
+        // Predictions are currently only rendered for the session owner, so on the curation pages
+        // the sidebar would offer actions on suggestions that are not shown.
+        return super.accepts(aContext) && aContext.page() instanceof AnnotationPage;
     }
 
     @Override

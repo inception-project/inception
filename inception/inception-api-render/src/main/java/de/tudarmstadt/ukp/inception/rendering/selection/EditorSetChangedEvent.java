@@ -20,7 +20,8 @@ package de.tudarmstadt.ukp.inception.rendering.selection;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
 /**
- * Fired when an editor has been added to or removed from the workspace.
+ * Fired when an editor has been added to or removed from the workspace, or when an editor has
+ * started or stopped holding a document.
  */
 public class EditorSetChangedEvent
 {

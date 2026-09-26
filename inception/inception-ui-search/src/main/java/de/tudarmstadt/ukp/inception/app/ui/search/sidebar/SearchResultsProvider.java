@@ -157,6 +157,15 @@ public class SearchResultsProvider
         cache.clear();
     }
 
+    /**
+     * @return the user whose annotations the current query searches, or {@code null} if there is no
+     *         current query.
+     */
+    public User getDataOwner()
+    {
+        return query != null ? user : null;
+    }
+
     public AnnotationLayer getAnnotationLayer()
     {
         return annotationLayer;

@@ -246,8 +246,10 @@ class CurationEditingServiceImplTest
             assertThat(readCuration(LOAD_ONLY, "ann1", true)).isSameAs(curationCas);
 
             verify(curationDocumentService).upgradeCurationCas(curationCas, document);
-            // The upgrade has to be persisted, otherwise it would be redone on every load.
-            verify(curationDocumentService).writeCurationCas(curationCas, document, true);
+            // The upgrade has to be persisted, otherwise it would be redone on every load. But as
+            // it does not change the annotations, the write must not announce itself.
+            verify(curationDocumentService).writeCurationCasSilently(curationCas, document, true);
+            verify(curationDocumentService, never()).writeCurationCas(any(), any(), anyBoolean());
             verifyNoInteractions(curationMergeService);
         }
 
@@ -262,6 +264,8 @@ class CurationEditingServiceImplTest
 
             verify(curationDocumentService, never()).upgradeCurationCas(any(), any());
             verify(curationDocumentService, never()).writeCurationCas(any(), any(), anyBoolean());
+            verify(curationDocumentService, never()).writeCurationCasSilently(any(), any(),
+                    anyBoolean());
             verifyNoInteractions(curationMergeService);
         }
     }

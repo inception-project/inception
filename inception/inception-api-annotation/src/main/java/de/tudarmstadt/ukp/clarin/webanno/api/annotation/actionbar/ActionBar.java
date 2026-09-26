@@ -20,13 +20,16 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.visit.IVisit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -111,6 +114,18 @@ public class ActionBar
                 LOG.debug("Added footer extension: {}", ext.getId());
             }
         }
+    }
+
+    /**
+     * @param aType
+     *            the type to look for - typically a handler interface such as
+     *            {@link DocumentNavigationHandler}.
+     * @return the first item contributed to this action bar that is of the given type.
+     */
+    public <T> Optional<T> findItem(Class<T> aType)
+    {
+        return Optional.ofNullable(visitChildren(aType,
+                (Component component, IVisit<T> visit) -> visit.stop(aType.cast(component))));
     }
 
     private List<ActionBarExtension> getExtensions()

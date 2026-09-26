@@ -22,6 +22,7 @@ import java.util.List;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.Model;
 import org.danekja.java.util.function.serializable.SerializableBiFunction;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
@@ -85,7 +86,8 @@ public class OpenDocumentDialog
     }
 
     /**
-     * Show the dialog on behalf of a specific editor. The document should open in that editor.
+     * Show the dialog on behalf of a specific editor. The document should open in that editor, and
+     * the data owner of that editor is pre-selected - not the one of whichever editor is active.
      *
      * @param aTarget
      *            the AJAX target.
@@ -94,8 +96,23 @@ public class OpenDocumentDialog
      */
     public void show(AjaxRequestTarget aTarget, DocumentEditor aRequestingEditor)
     {
-        var content = new OpenDocumentDialogPanel(ModalDialog.CONTENT_ID, project, dataOwner,
-                docListProvider, onDocumentSelected, aRequestingEditor);
+        var content = new OpenDocumentDialogPanel(ModalDialog.CONTENT_ID, project,
+                dataOwnerFor(aRequestingEditor), docListProvider, onDocumentSelected,
+                aRequestingEditor);
         super.open(content, aTarget);
+    }
+
+    private IModel<AnnotationSet> dataOwnerFor(DocumentEditor aRequestingEditor)
+    {
+        if (aRequestingEditor == null) {
+            return dataOwner;
+        }
+
+        var editorDataOwner = aRequestingEditor.getAnnotatorState().getDataOwner();
+        if (editorDataOwner == null) {
+            return dataOwner;
+        }
+
+        return Model.of(editorDataOwner);
     }
 }

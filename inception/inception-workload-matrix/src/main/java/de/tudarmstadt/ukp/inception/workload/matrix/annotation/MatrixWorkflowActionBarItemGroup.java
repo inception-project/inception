@@ -27,9 +27,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Ctrl;
-import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
 import java.util.Set;
@@ -51,6 +48,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentStateHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogContent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.finish.FinishDocumentDialogModel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
@@ -68,15 +66,14 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension;
 import de.tudarmstadt.ukp.inception.workload.matrix.trait.MatrixWorkloadTraits;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 import de.tudarmstadt.ukp.inception.workload.ui.ResetAnnotationDocumentConfirmationDialogContentPanel;
-import wicket.contrib.input.events.key.KeyType;
 
 public class MatrixWorkflowActionBarItemGroup
     extends Panel
+    implements DocumentStateHandler
 {
     private static final long serialVersionUID = 4139817495914347777L;
 
@@ -136,7 +133,6 @@ public class MatrixWorkflowActionBarItemGroup
         var link = new LambdaAjaxLink(aId, this::actionFinishOrReopen);
         link.setOutputMarkupId(true);
         link.add(enabledWhen(() -> isHostEditorEditable() || reopenableByUser.getObject()));
-        link.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
         var stateLabel = new Label("state");
         stateLabel.add(new CssClassNameModifier(LoadableDetachableModel.of(this::getStateClass)));
@@ -159,6 +155,18 @@ public class MatrixWorkflowActionBarItemGroup
         else {
             actionRequestFinishDocumentConfirmation(aTarget);
         }
+    }
+
+    @Override
+    public void actionFinishOrReopenDocument(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        if (editorContext.getViewState().getDocument() == null
+                || !(isHostEditorEditable() || reopenableByUser.getObject())) {
+            return;
+        }
+
+        actionFinishOrReopen(aTarget);
     }
 
     private boolean isHostEditorEditable()
@@ -258,6 +266,8 @@ public class MatrixWorkflowActionBarItemGroup
         content.setExpectedResponseModel(editorContext.getStateModel()
                 .map(AnnotatorState::getDocument).map(SourceDocument::getName));
         content.setConfirmAction(_target -> {
+            editorContext.getActionHandler().ensureIsEditable();
+
             var state = editorContext.getViewState();
             documentService.resetAnnotationCas(state.getDocument(), state.getUser(),
                     EXPLICIT_ANNOTATOR_USER_ACTION);
@@ -335,14 +345,14 @@ public class MatrixWorkflowActionBarItemGroup
                 MANAGER);
 
         if (!isOwnDocument && !canOverrideState) {
-            error("You are not allowed to change the state of another user's document.");
+            page.error("You are not allowed to change the state of another user's document.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
         }
 
         var annDoc = documentService.getAnnotationDocument(document, state.getUser());
         if (isOwnDocument && annDoc.getAnnotatorState() != annDoc.getState() && !canOverrideState) {
-            error("Annotation state has been overridden by a project manager or curator. "
+            page.error("Annotation state has been overridden by a project manager or curator. "
                     + "You cannot change it.");
             aTarget.addChildren(getPage(), IFeedback.class);
             return;
@@ -369,8 +379,9 @@ public class MatrixWorkflowActionBarItemGroup
             editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         default:
-            error("Can only change document state for documents that are finished or in progress, "
-                    + "but document is in state [" + annState + "]");
+            page.error(
+                    "Can only change document state for documents that are finished or in progress, "
+                            + "but document is in state [" + annState + "]");
             aTarget.addChildren(getPage(), IFeedback.class);
             break;
         }

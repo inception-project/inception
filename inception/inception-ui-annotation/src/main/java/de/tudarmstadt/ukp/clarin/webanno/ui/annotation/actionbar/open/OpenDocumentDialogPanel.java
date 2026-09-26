@@ -386,7 +386,7 @@ public class OpenDocumentDialogPanel
                         annDoc.getDocument(), annDoc.getAnnotationSet());
             }
             catch (IOException | AnnotationException e) {
-                error(e.getMessage());
+                getPage().error(e.getMessage());
                 aEvent.getTarget().addChildren(getPage(), IFeedback.class);
                 findParent(ModalDialog.class).close(aEvent.getTarget());
                 return;

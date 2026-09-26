@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo;
 
+import java.util.Objects;
+
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.request.cycle.RequestCycle;
@@ -27,6 +29,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyCombo;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.actions.UndoableActionSupportRegistry;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.DocumentOpenedEvent;
@@ -75,12 +78,20 @@ public class UndoPanel
     @OnEvent
     public void onDocumentOpenedEvent(DocumentOpenedEvent aEvent)
     {
+        if (!isForThisEditor(aEvent.getDocument(), aEvent.getDocumentOwner())) {
+            return;
+        }
+
         executor().clearState(this, context);
     }
 
     @OnEvent
     public void onAnnotationEvent(AnnotationEvent aEvent)
     {
+        if (!isForThisEditor(aEvent.getDocument(), aEvent.getDocumentOwner())) {
+            return;
+        }
+
         var flag = RequestCycle.get().getMetaData(PerformingUndoRedoAction.INSTANCE);
         if (flag != null && flag) {
             return;
@@ -100,5 +111,21 @@ public class UndoPanel
                 // Ignore - undo not supported for this action...
             }
         }
+    }
+
+    /**
+     * Annotation and document events are broadcast to the whole page, so with several editors on
+     * the page every undo panel receives them. Only record actions for the document this panel's
+     * editor shows - otherwise undo would replay them against the wrong CAS.
+     */
+    private boolean isForThisEditor(SourceDocument aDocument, String aDocumentOwner)
+    {
+        var state = context.getAnnotatorState();
+        if (state == null || state.getUser() == null) {
+            return false;
+        }
+
+        return Objects.equals(state.getDocument(), aDocument)
+                && Objects.equals(state.getUser().getUsername(), aDocumentOwner);
     }
 }

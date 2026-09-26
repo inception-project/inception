@@ -66,6 +66,12 @@ public abstract class DocumentEditorWorkspace_ImplBase
     public abstract void openDocumentEditor(AjaxRequestTarget aTarget);
 
     /**
+     * @return whether the workspace currently has anything to show. The workspace is invisible
+     *         otherwise, so a host that lays it out must repaint the layout when this changes.
+     */
+    public abstract boolean isShowingEditors();
+
+    /**
      * Drop the active context if it is no longer displayed.
      *
      * @param aTarget

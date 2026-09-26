@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.AnchoringModeChange
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event.DefaultLayerChangedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
@@ -183,11 +184,12 @@ public class LayerSelectionPanel
         // Save the currently selected layer as a user preference so it is remains active when a
         // user leaves the application and later comes back to continue annotating
         var prevDefaultLayer = state.getPreferences().getDefaultLayer();
+        AnchoringModePrefs anchoringPrefs = null;
         if (currentDefaultLayer != null) {
             state.getPreferences().setDefaultLayer(state.getDefaultAnnotationLayer().getId());
 
             // Load the remembered anchoring mode preference or apply the default layer preference
-            var anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
+            anchoringPrefs = preferencesService.loadTraitsForUserAndProject(KEY_ANCHORING_MODE,
                     sessionOwner, state.getProject());
             state.syncAnchoringModeToDefaultLayer(anchoringPrefs);
 
@@ -211,7 +213,8 @@ public class LayerSelectionPanel
 
         // Sent LAST, once the preference and the anchoring mode have been brought in line - a
         // handler that reads either would otherwise see the value from before this change.
-        send(getPage(), BREADTH, new DefaultLayerChangedEvent(layerSelector.getModelObject()));
+        send(getPage(), BREADTH,
+                new DefaultLayerChangedEvent(layerSelector.getModelObject(), anchoringPrefs));
     }
 
     private void actionApplyAnchoringMode(AjaxRequestTarget aTarget, AnchoringMode aMode)

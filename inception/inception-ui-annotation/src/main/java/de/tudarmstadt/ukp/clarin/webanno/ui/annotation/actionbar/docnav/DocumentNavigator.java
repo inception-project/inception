@@ -22,7 +22,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static wicket.contrib.input.events.EventType.click;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,6 +34,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigationHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
@@ -55,6 +55,7 @@ import jakarta.persistence.NoResultException;
 
 public class DocumentNavigator
     extends Panel
+    implements DocumentNavigationHandler
 {
     private static final long serialVersionUID = 7061696472939390003L;
 
@@ -80,7 +81,6 @@ public class DocumentNavigator
         state = editor.getStateModel();
 
         add(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click))
                 .add(visibleWhen(this::hasDocument)).add(
                         AttributeModifier.append("title",
                                 () -> " ("
@@ -89,7 +89,6 @@ public class DocumentNavigator
                                         + ")")));
 
         add(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(keyBindings.getNavigation().getNextDocument().toInputBehavior(click))
                 .add(visibleWhen(this::hasDocument)).add(
                         AttributeModifier.append("title",
                                 () -> " ("
@@ -144,10 +143,11 @@ public class DocumentNavigator
                 .collect(joining(", "));
 
         if (aSkipped.size() == 1) {
-            info("Skipped [" + names + "] because it is already open in another editor.");
+            getPage().info("Skipped [" + names + "] because it is already open in another editor.");
         }
         else {
-            info("Skipped [" + names + "] because they are already open in other editors.");
+            getPage().info(
+                    "Skipped [" + names + "] because they are already open in other editors.");
         }
 
         aTarget.addChildren(getPage(), IFeedback.class);
@@ -171,8 +171,13 @@ public class DocumentNavigator
      * @param aTarget
      *            the AJAX request target
      */
+    @Override
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
+        if (!hasDocument()) {
+            return;
+        }
+
         var sessionOwner = userService.getCurrentUser();
         var aDocuments = listDocuments();
 
@@ -190,10 +195,10 @@ public class DocumentNavigator
                 reportSkippedDocuments(aTarget, skipped);
 
                 if (prefs.isFinishedDocumentsSkippedByNavigation()) {
-                    info("There is no previous unfinished document.");
+                    getPage().info("There is no previous unfinished document.");
                 }
                 else {
-                    info("There is no previous document.");
+                    getPage().info("There is no previous document.");
                 }
                 aTarget.addChildren(getPage(), IFeedback.class);
                 return;
@@ -223,8 +228,13 @@ public class DocumentNavigator
      * @param aTarget
      *            the AJAX request target
      */
+    @Override
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
+        if (!hasDocument()) {
+            return;
+        }
+
         var sessionOwner = userService.getCurrentUser();
         var aDocuments = listDocuments();
 
@@ -242,10 +252,10 @@ public class DocumentNavigator
                 reportSkippedDocuments(aTarget, skipped);
 
                 if (prefs.isFinishedDocumentsSkippedByNavigation()) {
-                    info("There is no next unfinished document.");
+                    getPage().info("There is no next unfinished document.");
                 }
                 else {
-                    info("There is no next document.");
+                    getPage().info("There is no next document.");
                 }
                 aTarget.addChildren(getPage(), IFeedback.class);
                 return;

@@ -43,12 +43,23 @@ public interface UserDao
 
     static final String NO_PASSWORD = null;
 
+    /**
+     * @deprecated Use {@link #getSessionOwner()}
+     * @return session owner
+     */
+    @Deprecated
     User getCurrentUser();
 
+    User getSessionOwner();
+
     /**
+     * @deprecated Use {@link #getSessionOwnerName()}
      * @return the name of the current user
      */
+    @Deprecated
     String getCurrentUsername();
+
+    String getSessionOwnerName();
 
     boolean isCurrentUserAdmin();
 

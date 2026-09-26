@@ -158,7 +158,9 @@ public class CurationEditingServiceImpl
 
             if (aUpgrade) {
                 curationDocumentService.upgradeCurationCas(mergeCas, aDocument);
-                curationDocumentService.writeCurationCas(mergeCas, aDocument, true);
+                // Only persisting the upgrade does not change the annotations, so there is
+                // nothing to announce to listeners (search index, recommenders, ...)
+                curationDocumentService.writeCurationCasSilently(mergeCas, aDocument, true);
             }
             break;
         default:

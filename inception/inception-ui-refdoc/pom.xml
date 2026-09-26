@@ -34,6 +34,11 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-api-annotation</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -93,6 +98,10 @@
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
     </dependency>
     <dependency>
@@ -148,6 +157,11 @@
       <artifactId>spring-boot-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -160,6 +174,7 @@
             <!-- Used only for the @ConditionalOnProperty annotation on the auto-configuration,
                  which is not retained in the bytecode the analyzer inspects. -->
             <ignoredNonTestScopedDependencies>
+              <dependency>org.springframework:spring-beans</dependency>
               <dependency>org.springframework.boot:spring-boot</dependency>
             </ignoredNonTestScopedDependencies>
           </configuration>

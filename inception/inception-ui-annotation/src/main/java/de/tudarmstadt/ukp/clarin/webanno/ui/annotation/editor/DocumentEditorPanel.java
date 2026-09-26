@@ -68,7 +68,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableExc
 import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -105,6 +104,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import jakarta.persistence.NoResultException;
 
 /**
  * Panel containing an editor and its furniture (in particular its action bar).
@@ -566,9 +566,19 @@ public class DocumentEditorPanel
             return "No document selected";
         }
 
+        // Check against the latest document state, the one from the state may be stale
+        SourceDocument document;
         try {
-            documentAccess.assertCanEditAnnotationDocument(userRepository.getCurrentUser(),
-                    state.getDocument(), state.getUser().getUsername());
+            document = documentService.getSourceDocument(state.getDocument().getProject().getId(),
+                    state.getDocument().getId());
+        }
+        catch (NoResultException e) {
+            return "Document no longer exists";
+        }
+
+        try {
+            documentAccess.assertCanEditAnnotationDocument(userRepository.getSessionOwner(),
+                    document, state.getUser().getUsername());
             return null;
         }
         catch (AccessDeniedException e) {
@@ -645,7 +655,7 @@ public class DocumentEditorPanel
         }
 
         if (aEvent.getPayload() instanceof DefaultLayerChangedEvent event) {
-            onDefaultLayerChanged(event.getLayer());
+            onDefaultLayerChanged(event);
         }
 
         if (aEvent.getPayload() instanceof AnchoringModeChangedEvent event) {
@@ -682,13 +692,17 @@ public class DocumentEditorPanel
      * was active applies here too. Without this the states diverge as soon as there are two panes:
      * drawing a span uses the state of the editor drawn in, not the active one, so the annotation
      * would land on whatever layer this pane happened to be left on.
+     * <p>
+     * The anchoring mode is remembered per layer, so it has to follow the layer - otherwise drawing
+     * here would keep using the mode of the layer this pane was on before.
      *
-     * @param aLayer
-     *            the newly chosen layer.
+     * @param aEvent
+     *            the change.
      */
-    private void onDefaultLayerChanged(AnnotationLayer aLayer)
+    private void onDefaultLayerChanged(DefaultLayerChangedEvent aEvent)
     {
-        if (aLayer == null) {
+        var layer = aEvent.getLayer();
+        if (layer == null) {
             return;
         }
 
@@ -696,12 +710,13 @@ public class DocumentEditorPanel
 
         // Not every pane can honour it - one showing a document whose project or configuration does
         // not offer this layer must keep the layer it has.
-        if (!state.getSelectableLayers().contains(aLayer)) {
+        if (!state.getSelectableLayers().contains(layer)) {
             return;
         }
 
-        state.setDefaultAnnotationLayer(aLayer);
-        state.setSelectedAnnotationLayer(aLayer);
+        state.setDefaultAnnotationLayer(layer);
+        state.setSelectedAnnotationLayer(layer);
+        state.syncAnchoringModeToDefaultLayer(aEvent.getAnchoringPrefs());
     }
 
     private void updateActiveEditorMarker(AjaxRequestTarget aTarget)
@@ -927,6 +942,10 @@ public class DocumentEditorPanel
         if (aTarget != null) {
             send(getPage(), BREADTH, new EditorContentReplacedEvent(getModelObject(), aTarget));
         }
+
+        // This pane no longer holds a document, which changes whether the OTHER panes may be
+        // closed and what the URL fragment describes - both follow the editor set.
+        send(getPage(), BREADTH, new EditorSetChangedEvent(aTarget));
     }
 
     private void unloadDocument()
@@ -1136,9 +1155,6 @@ public class DocumentEditorPanel
         }
 
         if (aEvent.isEditorStructureAffected()) {
-            // The configured editor has changed, or the paging strategy has - neither survives a
-            // re-render, so the component has to be built again even though that costs the
-            // reading position.
             actionLoadDocument(target);
         }
         else {

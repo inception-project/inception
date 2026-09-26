@@ -30,6 +30,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.event.IEvent;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
@@ -59,6 +60,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.selection.DocumentStateChangedInEditorEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
@@ -125,7 +127,7 @@ public class CurationSidebar
         var project = aContext.getProject();
 
         if (isSessionActive()) {
-            var sessionOwner = userRepository.getCurrentUsername();
+            var sessionOwner = userRepository.getSessionOwnerName();
             showMerged.setModelObject(
                     curationSidebarService.isShowAll(sessionOwner, project.getId()));
             showScore.setModelObject(
@@ -141,9 +143,21 @@ public class CurationSidebar
                 documentNameModel, curationWorkflowModel));
     }
 
+    @Override
+    public void onEvent(IEvent<?> aEvent)
+    {
+        super.onEvent(aEvent);
+
+        if (aEvent.getPayload() instanceof DocumentStateChangedInEditorEvent stateChanged
+                && stateChanged.isFor(getModelObject())
+                && stateChanged.getRequestHandler() != null) {
+            stateChanged.getRequestHandler().add(this);
+        }
+    }
+
     private void actionToggleShowMerged(AjaxRequestTarget aTarget)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getSessionOwnerName();
         curationSidebarService.setShowAll(sessionOwner, getProject().getId(),
                 showMerged.getModelObject());
         getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
@@ -151,7 +165,7 @@ public class CurationSidebar
 
     private void actionToggleShowScore(AjaxRequestTarget aTarget)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getSessionOwnerName();
         curationSidebarService.setShowScore(sessionOwner, getProject().getId(),
                 showScore.getModelObject());
         getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);

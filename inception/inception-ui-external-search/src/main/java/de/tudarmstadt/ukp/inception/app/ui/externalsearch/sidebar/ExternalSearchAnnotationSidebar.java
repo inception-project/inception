@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar;
 
 import static de.tudarmstadt.ukp.inception.app.ui.externalsearch.sidebar.ExternalSearchUserStateMetaData.CURRENT_ES_USER_STATE;
+import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.wrapInTryCatch;
 import static org.apache.commons.lang3.StringUtils.defaultIfBlank;
 
 import java.io.Serializable;
@@ -70,6 +71,7 @@ import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VMarker;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VTextMarker;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
@@ -106,6 +108,7 @@ public class ExternalSearchAnnotationSidebar
 
     private DocumentRepository currentRepository;
 
+    private WebMarkupContainer resultsScroller;
     private WebMarkupContainer dataTableContainer;
 
     public ExternalSearchAnnotationSidebar(String aId, SidebarContext aContext)
@@ -169,12 +172,16 @@ public class ExternalSearchAnnotationSidebar
 
         if (searchState.getDataProvider() == null) {
             searchState.setDataProvider(new ExternalResultDataProvider(externalSearchService,
-                    userRepository.getCurrentUser()));
+                    userRepository.getSessionOwner()));
         }
+
+        resultsScroller = new WebMarkupContainer("resultsScroller");
+        resultsScroller.setOutputMarkupId(true);
+        mainContainer.add(resultsScroller);
 
         dataTableContainer = new WebMarkupContainer("dataTableContainer");
         dataTableContainer.setOutputMarkupId(true);
-        mainContainer.add(dataTableContainer);
+        resultsScroller.add(dataTableContainer);
 
         DataTable<ExternalSearchResult, String> resultTable = new DefaultDataTable<>("resultsTable",
                 columns, searchState.getDataProvider(), 8);
@@ -260,9 +267,12 @@ public class ExternalSearchAnnotationSidebar
                 info("Document already present: " + aResult.getDocumentId());
             }
 
-            getDocumentEditorManager().actionShowDocument(aTarget,
+            // The rows decide between "import" and "open" when they are created, so re-render them
+            aTarget.add(dataTableContainer);
+
+            actionJumpToDocument(aTarget,
                     documentService.getSourceDocument(project, aResult.getDocumentId()),
-                    getContext().getDataOwner());
+                    getContext().getDataOwner(), Range.UNDEFINED);
         }
         catch (Exception e) {
             LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
@@ -275,9 +285,9 @@ public class ExternalSearchAnnotationSidebar
     {
         try {
             searchStateModel.getObject().setSelectedResult(aResult);
-            getDocumentEditorManager().actionShowDocument(aTarget,
+            actionJumpToDocument(aTarget,
                     documentService.getSourceDocument(project, aResult.getDocumentId()),
-                    getContext().getDataOwner());
+                    getContext().getDataOwner(), Range.UNDEFINED);
         }
         catch (Exception e) {
             LOG.error("Unable to load document {}: {}", aResult.getDocumentId(), e.getMessage(), e);
@@ -352,10 +362,12 @@ public class ExternalSearchAnnotationSidebar
         }
 
         aTarget.add(dataTableContainer);
+        aTarget.appendJavaScript(wrapInTryCatch(
+                "document.getElementById('" + resultsScroller.getMarkupId() + "').scrollTop = 0;"));
 
         applicationEventPublisher.get()
                 .publishEvent(new ExternalSearchQueryEvent(this, currentRepository.getProject(),
-                        userRepository.getCurrentUsername(), searchState.getQuery()));
+                        userRepository.getSessionOwnerName(), searchState.getQuery()));
     }
 
     public class ResultRowView

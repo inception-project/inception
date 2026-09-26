@@ -80,7 +80,7 @@ public class SingleDocumentEditorWorkspace
         urlParameterStrategy = aUrlParameterStrategy;
 
         setOutputMarkupPlaceholderTag(true);
-        add(LambdaBehavior.visibleWhen(this::hasOpenDocument));
+        add(LambdaBehavior.visibleWhen(this::isShowingEditors));
         add(new EmptyPanel(MID_DOCUMENT_EDITOR_PANEL));
     }
 
@@ -93,6 +93,12 @@ public class SingleDocumentEditorWorkspace
         }
 
         setActiveEditor(aTarget, documentEditorPanel);
+    }
+
+    @Override
+    public boolean isShowingEditors()
+    {
+        return hasOpenDocument();
     }
 
     @Override
@@ -174,6 +180,17 @@ public class SingleDocumentEditorWorkspace
         }
 
         return Optional.of(documentEditorPanel);
+    }
+
+    @Override
+    public List<DocumentEditor> findEditorsShowing(SourceDocument aDocument)
+    {
+        if (documentEditorPanel == null || !Objects
+                .equals(documentEditorPanel.getAnnotatorState().getDocument(), aDocument)) {
+            return List.of();
+        }
+
+        return List.of(documentEditorPanel);
     }
 
     @Override

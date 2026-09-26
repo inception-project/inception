@@ -22,9 +22,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.FILL_ONLY;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.RECREATE;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
-import static wicket.contrib.input.events.EventType.click;
-import static wicket.contrib.input.events.key.KeyType.Ctrl;
-import static wicket.contrib.input.events.key.KeyType.End;
 
 import java.io.IOException;
 
@@ -43,6 +40,8 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import de.agilecoders.wicket.core.markup.html.bootstrap.behavior.CssClassNameModifier;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentStateHandler;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
@@ -56,12 +55,11 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.support.wicket.input.InputBehavior;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
-import wicket.contrib.input.events.key.KeyType;
 
 public class CuratorWorkflowActionBarItemGroup
     extends Panel
+    implements DocumentStateHandler
 {
     private static final long serialVersionUID = 8596786586955459711L;
 
@@ -94,7 +92,6 @@ public class CuratorWorkflowActionBarItemGroup
         toggleCurationStateLink.setOutputMarkupId(true);
         toggleCurationStateLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
-        toggleCurationStateLink.add(new InputBehavior(new KeyType[] { Ctrl, End }, click));
 
         curationWorkflowModel = Model.of(curationService
                 .readOrCreateCurationWorkflow(editorContext.getAnnotatorState().getProject()));
@@ -161,16 +158,33 @@ public class CuratorWorkflowActionBarItemGroup
             editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         default:
-            error("Can only change document state for documents that are finished or in progress, "
-                    + "but document is in state [" + docState + "]");
+            page.error(
+                    "Can only change document state for documents that are finished or in progress, "
+                            + "but document is in state [" + docState + "]");
             aTarget.addChildren(getPage(), IFeedback.class);
             break;
         }
     }
 
+    @Override
+    public void actionFinishOrReopenDocument(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
+    {
+        if (editorContext.getAnnotatorState().getDocument() == null) {
+            return;
+        }
+
+        actionToggleCurationState(aTarget);
+    }
+
     protected void actionResetDocument(AjaxRequestTarget aTarget, Form<MergeDialog.State> aForm)
         throws Exception
     {
+        if (!isEditable()) {
+            throw new NotEditableException("Curation is already finished. You can put it back "
+                    + "into progress via the monitoring page.");
+        }
+
         MergeStrategyFactory<?> mergeStrategyFactory = curationService
                 .getMergeStrategyFactory(curationWorkflowModel.getObject());
         MergeStrategy mergeStrategy = curationService

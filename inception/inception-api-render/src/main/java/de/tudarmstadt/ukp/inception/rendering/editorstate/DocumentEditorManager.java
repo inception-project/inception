@@ -136,8 +136,36 @@ public interface DocumentEditorManager
             SourceDocument aDocument, AnnotationSet aDataOwner)
         throws IOException, AnnotationException
     {
+        actionShowDocument(aTarget, aPreferredEditor, aDocument, aDataOwner, Range.UNDEFINED);
+    }
+
+    /**
+     * Show the given document, preferably in the given editor, scrolling to the given location. An
+     * editor already showing the document for the data owner wins over the preferred one.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aPreferredEditor
+     *            the editor the document should land in, or {@code null} for no preference. An
+     *            editor the manager does not host is ignored like {@code null}.
+     * @param aDocument
+     *            the document to show
+     * @param aDataOwner
+     *            whose annotations to show.
+     * @param aRange
+     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
+     *            opening the document placed it.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    default void actionShowDocument(AjaxRequestTarget aTarget, DocumentEditor aPreferredEditor,
+            SourceDocument aDocument, AnnotationSet aDataOwner, Range aRange)
+        throws IOException, AnnotationException
+    {
         // Nothing to disambiguate when there is only one editor.
-        actionShowDocument(aTarget, aDocument, aDataOwner);
+        actionShowDocument(aTarget, aDocument, aDataOwner, aRange);
     }
 
     /**
@@ -199,6 +227,15 @@ public interface DocumentEditorManager
      * @return the editor showing it, or {@link Optional#empty()} if none is
      */
     Optional<DocumentEditor> findEditorFor(SourceDocument aDocument, AnnotationSet aDataOwner);
+
+    /**
+     * Find all editors currently showing the given document, whoever's annotations they show.
+     *
+     * @param aDocument
+     *            the document to look for
+     * @return the editors showing it, possibly none
+     */
+    List<DocumentEditor> findEditorsShowing(SourceDocument aDocument);
 
     /**
      * @return maximal number of editors that may be opened at the same time in this workspace.

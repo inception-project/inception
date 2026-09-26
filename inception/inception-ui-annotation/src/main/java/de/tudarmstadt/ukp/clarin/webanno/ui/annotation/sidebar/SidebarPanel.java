@@ -82,7 +82,7 @@ public class SidebarPanel
         var tabs = tabsPanel.getTabs();
         tabs.clear();
         tabs.addAll(makeTabs());
-        aTarget.add(this);
+        aTarget.add(tabsPanel);
     }
 
     public void showTab(AjaxRequestTarget aTarget, String aFactoryId)

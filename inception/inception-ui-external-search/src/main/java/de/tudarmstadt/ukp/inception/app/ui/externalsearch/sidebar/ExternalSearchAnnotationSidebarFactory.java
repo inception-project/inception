@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.inception.app.ui.externalsearch.config.ExternalSearchU
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Sidebar to access the external search on the annotation page.
@@ -43,10 +44,13 @@ public class ExternalSearchAnnotationSidebarFactory
     extends AnnotationSidebarFactory_ImplBase
 {
     private final ExternalSearchService externalSearchService;
+    private final WorkloadManagementService workloadManagementService;
 
-    public ExternalSearchAnnotationSidebarFactory(ExternalSearchService aExternalSearchService)
+    public ExternalSearchAnnotationSidebarFactory(ExternalSearchService aExternalSearchService,
+            WorkloadManagementService aWorkloadManagementService)
     {
         externalSearchService = aExternalSearchService;
+        workloadManagementService = aWorkloadManagementService;
     }
 
     @Override
@@ -59,7 +63,8 @@ public class ExternalSearchAnnotationSidebarFactory
     public String getDescription()
     {
         return "Allows searching document repositories and importing documents. Only available if "
-                + "there are document repositories defined in the project.";
+                + "there are document repositories defined in the project and the user may open "
+                + "documents in any order.";
     }
 
     @Override
@@ -71,7 +76,9 @@ public class ExternalSearchAnnotationSidebarFactory
     @Override
     public boolean available(Project aProject)
     {
-        return externalSearchService.existsEnabledDocumentRepository(aProject);
+        return externalSearchService.existsEnabledDocumentRepository(aProject)
+                && workloadManagementService.getWorkloadManagerExtension(aProject)
+                        .isDocumentRandomAccessAllowed(aProject);
     }
 
     @Override

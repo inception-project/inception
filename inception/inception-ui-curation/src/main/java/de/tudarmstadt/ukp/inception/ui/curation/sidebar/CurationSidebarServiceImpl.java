@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -147,12 +148,18 @@ public class CurationSidebarServiceImpl
     @Transactional
     public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
             Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
-        throws IOException, UIMAException
+        throws IOException, UIMAException, NotEditableException
     {
+        var doc = aState.getDocument();
+
+        if (curationDocumentService.isCurationFinished(doc)) {
+            throw new NotEditableException("Curation is already finished. You can put it back "
+                    + "into progress via the monitoring page.");
+        }
+
         MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
         var traits = factory.readTraits(aWorkflow);
         var mergeStrategy = factory.makeStrategy(traits);
-        var doc = aState.getDocument();
         var aTargetCas = retrieveCurationCAS(doc);
 
         var userCases = documentService.readAllCasesSharedNoUpgrade(doc,

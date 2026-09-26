@@ -681,8 +681,8 @@ public class DocumentMetadataAnnotationSelectionPanel
             DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
             List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
-        var state = getModelObject();
-        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject())
+        var sessionOwner = userService.getSessionOwner();
+        var predictions = recommendationService.getPredictions(sessionOwner, aLayer.getProject())
                 .values();
         for (var preds : predictions) {
             generateSuggestionItems(preds, aLayer, aLayerSupport, aSingleton, aCas, aItems,
@@ -690,7 +690,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
-    private void generateSuggestionItems(Predictions predictions, AnnotationLayer aLayer,
+    private void generateSuggestionItems(Predictions aPredictions, AnnotationLayer aLayer,
             DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
             List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
@@ -698,18 +698,19 @@ public class DocumentMetadataAnnotationSelectionPanel
         var featuresIndex = aFeatures.stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
-        if (predictions != null) {
-            var predictionsByDocument = predictions
+        if (aPredictions != null) {
+            var predictionsByDocument = aPredictions
                     .getPredictionsByDocument(state.getDocument().getId());
 
             var group = SuggestionDocumentGroup.groupsOfType(MetadataSuggestion.class,
                     predictionsByDocument);
 
-            recommendationService.calculateSuggestionVisibility(userService.getCurrentUsername(),
+            var sessionOwner = userService.getSessionOwner();
+            recommendationService.calculateSuggestionVisibility(sessionOwner.getUsername(),
                     state.getDocument(), aCas, state.getUser().getUsername(), aLayer, group, -1,
                     -1);
 
-            var pref = recommendationService.getPreferences(state.getUser(), state.getProject());
+            var pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
             for (var suggestion : predictionsByDocument) {
                 if ((!suggestion.isVisible() && !pref.isShowAllPredictions())

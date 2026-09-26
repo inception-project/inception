@@ -78,7 +78,7 @@ public abstract class ArcSuggestionRenderer_ImplBase<T extends ArcSuggestion_Imp
                 aRequest.getAnnotationUser().getUsername(), aLayer, groupedPredictions,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        var pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
+        var pref = recommendationService.getPreferences(aRequest.getSessionOwner(),
                 aLayer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later

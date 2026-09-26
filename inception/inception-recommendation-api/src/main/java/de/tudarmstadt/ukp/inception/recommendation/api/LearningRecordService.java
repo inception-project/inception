@@ -97,8 +97,6 @@ public interface LearningRecordService
     void logRecord(String aSessionOwner, LearningRecord aRecord);
 
     /**
-     * @param aSessionOwner
-     *            the user performing the action
      * @param aDataOwner
      *            the annotator user
      * @param aLayer
@@ -107,7 +105,7 @@ public interface LearningRecordService
      *         history of the given layer for the given user.
      * 
      */
-    boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
+    boolean hasSkippedSuggestions(User aDataOwner, AnnotationLayer aLayer);
 
     /**
      * Removes all records of type {@link LearningRecordUserAction#SKIPPED} in the history of the

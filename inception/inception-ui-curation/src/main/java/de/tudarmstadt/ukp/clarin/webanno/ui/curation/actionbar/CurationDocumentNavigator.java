@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.inception.curation.settings.CurationNavigationUserPrefs.KEY_CURATION_NAVIGATION_USER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static wicket.contrib.input.events.EventType.click;
 
 import java.util.List;
 
@@ -32,6 +31,7 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.DocumentNavigationHandler;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.export.ExportDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsProperties;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil;
@@ -49,6 +49,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationO
 
 public class CurationDocumentNavigator
     extends GenericPanel<AnnotatorState>
+    implements DocumentNavigationHandler
 {
     private static final long serialVersionUID = 7061696472939390003L;
 
@@ -76,16 +77,16 @@ public class CurationDocumentNavigator
         editorContext = aContext.editor();
 
         queue(new LambdaAjaxLink("showPreviousDocument", t -> actionShowPreviousDocument(t))
-                .add(keyBindings.getNavigation().getPreviousDocument().toInputBehavior(click)).add(
-                        AttributeModifier.append("title",
+                .add(AttributeModifier
+                        .append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
                                                 keyBindings.getNavigation().getPreviousDocument())
                                         + ")")));
 
         queue(new LambdaAjaxLink("showNextDocument", t -> actionShowNextDocument(t))
-                .add(keyBindings.getNavigation().getNextDocument().toInputBehavior(click)).add(
-                        AttributeModifier.append("title",
+                .add(AttributeModifier
+                        .append("title",
                                 () -> " ("
                                         + KeyBindingsUtil.formatShortcut(
                                                 keyBindings.getNavigation().getNextDocument())
@@ -112,6 +113,7 @@ public class CurationDocumentNavigator
      * @param aTarget
      *            the AJAX request target
      */
+    @Override
     public void actionShowPreviousDocument(AjaxRequestTarget aTarget)
     {
         var sessionOwner = userService.getCurrentUser();
@@ -128,10 +130,10 @@ public class CurationDocumentNavigator
             // If the first document
             if (currentDocumentIndex <= 0) {
                 if (prefs.isFinishedDocumentsSkippedByNavigation()) {
-                    info("There is no previous unfinished document.");
+                    getPage().info("There is no previous unfinished document.");
                 }
                 else {
-                    info("There is no previous document.");
+                    getPage().info("There is no previous document.");
                 }
                 aTarget.addChildren(getPage(), IFeedback.class);
                 return;
@@ -155,6 +157,7 @@ public class CurationDocumentNavigator
      * @param aTarget
      *            the AJAX request target
      */
+    @Override
     public void actionShowNextDocument(AjaxRequestTarget aTarget)
     {
         var sessionOwner = userService.getCurrentUser();
@@ -171,10 +174,10 @@ public class CurationDocumentNavigator
             // If the last document
             if (currentDocumentIndex < 0 || currentDocumentIndex >= documents.size() - 1) {
                 if (prefs.isFinishedDocumentsSkippedByNavigation()) {
-                    info("There is no next unfinished document.");
+                    getPage().info("There is no next unfinished document.");
                 }
                 else {
-                    info("There is no next document.");
+                    getPage().info("There is no next document.");
                 }
                 aTarget.addChildren(getPage(), IFeedback.class);
                 return;

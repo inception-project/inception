@@ -40,6 +40,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.Broadcast;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
+import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.CheckBox;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
@@ -179,7 +180,8 @@ public class AnnotationPreferencesDialogContent
             var prefs = userPreferencesService.loadPreferences(project, sessionOwner, mode);
 
             var editorStructureAffected = !Objects.equals(prefs.getEditor(), model.editor.getKey())
-                    || prefs.getWindowSize() != model.windowSize;
+                    || prefs.getWindowSize() != model.windowSize
+                    || prefs.isCollapseArcs() != model.collapseArcs;
 
             prefs.setScrollPage(model.scrollPage);
             prefs.setWindowSize(model.windowSize);
@@ -195,7 +197,8 @@ public class AnnotationPreferencesDialogContent
                     sessionOwner, aTarget, editorStructureAffected));
         }
         catch (IOException e) {
-            error("Preference file not found");
+            getPage().error("Preference file not found");
+            aTarget.addChildren(getPage(), IFeedback.class);
         }
 
         onConfirmInternal(aTarget);

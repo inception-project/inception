@@ -34,12 +34,16 @@ import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.repeater.RepeatingView;
+import org.apache.wicket.model.LoadableDetachableModel;
+import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.url.EditorUrlParameterStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.DocumentEditorWorkspace_ImplBase;
@@ -51,6 +55,7 @@ import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorSetChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.uima.Range;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Hosts up to {@code maxEditors} {@link DocumentEditorPanel}s side by side.
@@ -67,7 +72,11 @@ public class SplitEditorWorkspace
     private static final String MID_EDITOR_PANELS = "editorPanels";
     private static final String MID_EDITOR_PANEL_CONTAINER = "editorPanelContainer";
 
+    private @SpringBean WorkloadManagementService workloadManagementService;
+
     private final int maxEditors;
+    private final LoadableDetachableModel<Boolean> isDocumentRandomAccessAllowed = //
+            LoadableDetachableModel.of(this::loadIsDocumentRandomAccessAllowed);
     private final SerializableFunction<String, DocumentEditorPanel> editorPanelFactory;
     private final EditorUrlParameterStrategy urlParameterStrategy;
 
@@ -100,7 +109,7 @@ public class SplitEditorWorkspace
 
         setOutputMarkupPlaceholderTag(true);
 
-        add(visibleWhen(() -> !getEditorPanels().isEmpty()));
+        add(visibleWhen(this::isShowingEditors));
 
         // A RepeatingView rather than a ListView: panels must be attached to the component tree
         // the moment they are created, because actionLoadDocument() calls into the panel (e.g.
@@ -116,11 +125,39 @@ public class SplitEditorWorkspace
     }
 
     /**
-     * @return the maximum number of editors this workspace may host.
+     * @return the maximum number of editors this workspace may host. A user whom the workload
+     *         manager does not let open documents in any order - it hands out one document after
+     *         the other - gets a single editor. The cap is enforced here rather than where the
+     *         split is offered, because a URL fragment can request editors too.
      */
     public int getMaxEditors()
     {
-        return maxEditors;
+        // Not attached to a project page (yet): nothing to decide by, and nothing to cache
+        if (getProject() == null) {
+            return 1;
+        }
+
+        return isDocumentRandomAccessAllowed.getObject() ? maxEditors : 1;
+    }
+
+    private Project getProject()
+    {
+        var page = findParent(AnnotationPageBase2.class);
+        return page != null ? page.getProject() : null;
+    }
+
+    private boolean loadIsDocumentRandomAccessAllowed()
+    {
+        var project = getProject();
+        return workloadManagementService.getWorkloadManagerExtension(project)
+                .isDocumentRandomAccessAllowed(project);
+    }
+
+    @Override
+    protected void onDetach()
+    {
+        super.onDetach();
+        isDocumentRandomAccessAllowed.detach();
     }
 
     /**
@@ -135,12 +172,18 @@ public class SplitEditorWorkspace
         return unmodifiableList(panels);
     }
 
+    @Override
+    public boolean isShowingEditors()
+    {
+        return !getEditorPanels().isEmpty();
+    }
+
     /**
      * @return whether another editor may be added, i.e. whether the cap has not been reached.
      */
     public boolean canAddEditor()
     {
-        return editorPanels.size() < maxEditors;
+        return editorPanels.size() < getMaxEditors();
     }
 
     /**
@@ -266,7 +309,8 @@ public class SplitEditorWorkspace
     private DocumentEditorPanel addEditorPanel()
     {
         if (!canAddEditor()) {
-            throw new IllegalStateException("Cannot host more than [" + maxEditors + "] editors");
+            throw new IllegalStateException(
+                    "Cannot host more than [" + getMaxEditors() + "] editors");
         }
 
         var panel = editorPanelFactory.apply(editorPanels.newChildId());
@@ -373,26 +417,25 @@ public class SplitEditorWorkspace
         return Optional.empty();
     }
 
-    /**
-     * @return any editor showing the given document, regardless of whose annotations it shows.
-     */
-    private Optional<DocumentEditor> findEditorShowing(SourceDocument aDocument)
+    @Override
+    public List<DocumentEditor> findEditorsShowing(SourceDocument aDocument)
     {
+        var editors = new ArrayList<DocumentEditor>();
         for (var panel : getEditorPanels()) {
             if (Objects.equals(panel.getAnnotatorState().getDocument(), aDocument)) {
-                return Optional.of(panel);
+                editors.add(panel);
             }
         }
 
-        return Optional.empty();
+        return editors;
     }
 
     @Override
     public void actionShowDocument(AjaxRequestTarget aTarget, DocumentEditor aPreferredEditor,
-            SourceDocument aDocument, AnnotationSet aDataOwner)
+            SourceDocument aDocument, AnnotationSet aDataOwner, Range aRange)
         throws IOException, AnnotationException
     {
-        actionShowDocument(aTarget, aPreferredEditor, aDocument, aDataOwner, Range.UNDEFINED, null);
+        actionShowDocument(aTarget, aPreferredEditor, aDocument, aDataOwner, aRange, null);
     }
 
     @Override
@@ -414,10 +457,11 @@ public class SplitEditorWorkspace
         var requesting = aPreferredEditor instanceof DocumentEditorPanel panel ? panel : null;
         var editor = resolveEditorFor(aTarget, aDocument, aDataOwner, requesting);
 
+        // Opening the document notifies listeners and they must see which document is active
+        setActiveEditor(aTarget, editor);
+
         editor.actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange,
                 aAdditionalPingRanges);
-
-        setActiveEditor(aTarget, editor);
 
         fireEditorSetChanged(aTarget);
     }
@@ -487,7 +531,7 @@ public class SplitEditorWorkspace
 
         var panel = getEditorPanel(aIndex);
         if (panel == null) {
-            LOG.debug("Ignoring request for editor [{}]: the cap is [{}]", aIndex, maxEditors);
+            LOG.debug("Ignoring request for editor [{}]: the cap is [{}]", aIndex, getMaxEditors());
             return;
         }
 

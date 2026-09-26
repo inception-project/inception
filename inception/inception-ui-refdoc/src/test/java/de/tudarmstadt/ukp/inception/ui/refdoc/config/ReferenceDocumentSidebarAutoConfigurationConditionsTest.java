@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.ui.refdoc.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -25,6 +26,7 @@ import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 
 import de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarFactory;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Ensures the reference document sidebar stays behind its feature flag: it is an opt-in
@@ -35,7 +37,8 @@ class ReferenceDocumentSidebarAutoConfigurationConditionsTest
 {
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
             .withConfiguration(
-                    AutoConfigurations.of(ReferenceDocumentSidebarAutoConfiguration.class));
+                    AutoConfigurations.of(ReferenceDocumentSidebarAutoConfiguration.class))
+            .withBean(WorkloadManagementService.class, () -> mock(WorkloadManagementService.class));
 
     @Test
     void thatSidebarIsDisabledByDefault()

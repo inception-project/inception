@@ -41,10 +41,14 @@ import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.project.initializers.basic.BasicSpanRecommenderInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.config.InceptionTestScenariosAutoConfiguration;
 
 /**
  * A project with an enabled recommender that produces suggestions immediately, for exercising the
  * recommendation accept/reject round-trip and the auto-accept-on-document-open path.
+ * <p>
+ * <b>This class is exposed as a Spring Component via
+ * {@link InceptionTestScenariosAutoConfiguration#recommenderScenarioInitializer}.</b>
  */
 @Order(9000)
 public class RecommenderScenarioInitializer

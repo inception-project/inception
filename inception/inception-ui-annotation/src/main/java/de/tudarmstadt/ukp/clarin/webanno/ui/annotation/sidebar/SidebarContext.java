@@ -42,7 +42,7 @@ public record SidebarContext(AnnotationPageBase2 page, DocumentEditorManager man
     /**
      * @return the active editor, if any. Empty before the first document has been opened.
      */
-    public Optional<DocumentEditor> editorContext()
+    public Optional<DocumentEditor> activeEditor()
     {
         return manager.getActiveEditor();
     }
@@ -62,7 +62,7 @@ public record SidebarContext(AnnotationPageBase2 page, DocumentEditorManager man
      */
     public AnnotationSet getDataOwner()
     {
-        return editorContext() //
+        return activeEditor() //
                 .map(editor -> editor.getAnnotatorState().getDataOwner()) //
                 .orElseGet(page::getDefaultDataOwner);
     }
@@ -72,7 +72,7 @@ public record SidebarContext(AnnotationPageBase2 page, DocumentEditorManager man
      */
     public Project getProject()
     {
-        return editorContext() //
+        return activeEditor() //
                 .map(DocumentEditor::getProject) //
                 .orElseGet(page::getProject);
     }

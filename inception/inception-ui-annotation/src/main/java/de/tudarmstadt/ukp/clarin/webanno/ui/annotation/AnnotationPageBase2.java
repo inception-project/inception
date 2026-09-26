@@ -35,6 +35,7 @@ import static java.util.stream.Collectors.joining;
 import static org.apache.wicket.event.Broadcast.BREADTH;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +65,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import org.wicketstuff.jquery.core.Options;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarKeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.PagingKeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.preferences.UserPreferencesService;
 import de.tudarmstadt.ukp.clarin.webanno.constraints.ConstraintsService;
@@ -120,6 +122,7 @@ public abstract class AnnotationPageBase2
     private static final String MID_DOCUMENT_EDITOR_PANEL = "documentEditorPanel";
     private static final String MID_PAGING_KEY_BINDINGS = "pagingKeyBindings";
     private static final String MID_UNDO_KEY_BINDINGS = "undoKeyBindings";
+    private static final String MID_ACTION_BAR_KEY_BINDINGS = "actionBarKeyBindings";
 
     private static final String LEFT_SIDEBAR_COLLAPSED_SIZE = "52px";
     private static final String RIGHT_SIDEBAR_HIDDEN_SIZE = "0px";
@@ -144,7 +147,7 @@ public abstract class AnnotationPageBase2
 
     private SidebarPanel leftSidebar;
 
-    private boolean sidebarsVisible;
+    private SplitterLayout splitterLayout;
 
     private long currentProjectId;
 
@@ -241,8 +244,11 @@ public abstract class AnnotationPageBase2
         leftSidebar = createLeftSidebar("leftSidebar");
         splitterContainer.add(leftSidebar);
 
+        splitterLayout = currentSplitterLayout();
+
         add(new PagingKeyBindingsPanel(MID_PAGING_KEY_BINDINGS, workspace));
         add(new UndoKeyBindingsPanel(MID_UNDO_KEY_BINDINGS, workspace));
+        add(new ActionBarKeyBindingsPanel(MID_ACTION_BAR_KEY_BINDINGS, workspace));
     }
 
     protected Component createDocumentStatusBadges(String aId, IModel<AnnotatorState> aState)
@@ -384,14 +390,29 @@ public abstract class AnnotationPageBase2
         splitterBehavior.reconfigure(target, buildSplitterPanes());
     }
 
-    private boolean refreshSidebarVisibility(AjaxRequestTarget aTarget)
+    /**
+     * Which of the splitter's panes are rendered at all. The splitter is built client-side over the
+     * panes present in the markup, so whenever this changes the whole splitter has to be rebuilt -
+     * repainting a pane that the client never received does nothing.
+     */
+    private record SplitterLayout(boolean workspace, boolean leftSidebar, boolean rightSidebar)
+        implements Serializable
+    {}
+
+    private SplitterLayout currentSplitterLayout()
     {
-        var visible = isRightSidebarVisible();
-        if (visible == sidebarsVisible) {
+        return new SplitterLayout(workspace.isShowingEditors(), workspace.hasOpenDocument(),
+                isRightSidebarVisible());
+    }
+
+    private boolean refreshSplitterLayout(AjaxRequestTarget aTarget)
+    {
+        var layout = currentSplitterLayout();
+        if (layout.equals(splitterLayout)) {
             return false;
         }
 
-        sidebarsVisible = visible;
+        splitterLayout = layout;
 
         if (aTarget == null) {
             return false;
@@ -405,7 +426,7 @@ public abstract class AnnotationPageBase2
     @OnEvent
     public void onEditorContentReplaced(EditorContentReplacedEvent aEvent)
     {
-        refreshSidebarVisibility(aEvent.getRequestHandler());
+        refreshSplitterLayout(aEvent.getRequestHandler());
     }
 
     @OnEvent
@@ -444,7 +465,7 @@ public abstract class AnnotationPageBase2
 
         updateUrlFragment(target);
 
-        refreshSidebarVisibility(target);
+        refreshSplitterLayout(target);
     }
 
     @Override
@@ -473,7 +494,6 @@ public abstract class AnnotationPageBase2
         detailEditor = createDetailEditor();
         rightSidebar.add(detailEditor);
         rightSidebar.add(visibleWhen(this::isRightSidebarVisible));
-        sidebarsVisible = isRightSidebarVisible();
         return rightSidebar;
     }
 

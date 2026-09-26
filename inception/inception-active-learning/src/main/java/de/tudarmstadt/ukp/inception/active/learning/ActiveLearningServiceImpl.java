@@ -101,9 +101,10 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aUser, AnnotationLayer aLayer)
+    public List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aSessionOwner,
+            AnnotationLayer aLayer)
     {
-        var predictions = recommendationService.getPredictions(aUser, aLayer.getProject(),
+        var predictions = recommendationService.getPredictions(aSessionOwner, aLayer.getProject(),
                 RECOMMENDER_SOURCE);
 
         if (predictions == null) {
@@ -119,10 +120,9 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner,
-            AnnotationLayer aLayer)
+    public boolean hasSkippedSuggestions(User aDataOwner, AnnotationLayer aLayer)
     {
-        return learningHistoryService.hasSkippedSuggestions(aSessionOwner, aDataOwner, aLayer);
+        return learningHistoryService.hasSkippedSuggestions(aDataOwner, aLayer);
     }
 
     @Override
@@ -156,7 +156,7 @@ public class ActiveLearningServiceImpl
     }
 
     @Override
-    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner,
+    public Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aSessionOwner,
             User aDataOwner, ActiveLearningUserState alState, Long aCurrentDocumentId)
     {
         // Fetch the next suggestion to present to the user (if there is any)
@@ -167,8 +167,8 @@ public class ActiveLearningServiceImpl
                 (getRecommendationsFromRecommendationService - startTimer));
 
         // hide rejected recommendations
-        hideRejectedOrSkippedAnnotations(aSessionOwner, aDataOwner, alState.getLayer(), true,
-                suggestionGroups);
+        hideRejectedOrSkippedAnnotations(aSessionOwner.getUsername(), aDataOwner,
+                alState.getLayer(), true, suggestionGroups);
         long removeRejectedSkippedRecommendation = System.currentTimeMillis();
         LOG.trace("Hiding rejected or skipped ones took {} ms.",
                 (removeRejectedSkippedRecommendation
@@ -199,7 +199,7 @@ public class ActiveLearningServiceImpl
                     (filterByDocument - removeDuplicateRecommendation));
         }
 
-        var pref = recommendationService.getPreferences(aDataOwner,
+        var pref = recommendationService.getPreferences(aSessionOwner,
                 alState.getLayer().getProject());
         var nextSuggestion = alState.getStrategy().generateNextSuggestion(pref, suggestionGroups);
         assert !nextSuggestion.isPresent() || nextSuggestion.get().getFirst()
@@ -222,7 +222,7 @@ public class ActiveLearningServiceImpl
         // Load CAS in which to create the annotation. This might be different from the one that
         // is currently viewed by the user, e.g. if the user switched to another document after
         // the suggestion has been loaded into the sidebar.
-        var sessionOwner = userService.getCurrentUsername();
+        var sessionOwner = userService.getSessionOwnerName();
         var dataOwner = aDataOwner.getUsername();
         var cas = documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(aDataOwner));
 
@@ -253,7 +253,7 @@ public class ActiveLearningServiceImpl
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService
-                .getPredictions(aDataOwner, feature.getProject(), RECOMMENDER_SOURCE)
+                .getPredictions(sessionOwner, feature.getProject(), RECOMMENDER_SOURCE)
                 .getPredictionsByTokenAndFeature(suggestionWithUserSelectedLabel.getDocumentId(),
                         feature.getLayer(), suggestionWithUserSelectedLabel.getBegin(),
                         suggestionWithUserSelectedLabel.getEnd(),
@@ -302,7 +302,7 @@ public class ActiveLearningServiceImpl
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService
-                .getPredictions(aDataOwner, aLayer.getProject(), RECOMMENDER_SOURCE)
+                .getPredictions(aSessionOwner, aLayer.getProject(), RECOMMENDER_SOURCE)
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentId(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
         applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
@@ -324,7 +324,7 @@ public class ActiveLearningServiceImpl
         // Send an application event indicating if the user has accepted/skipped/corrected/rejected
         // the suggestion
         var alternativeSuggestions = recommendationService
-                .getPredictions(aDataOwner, aLayer.getProject(), RECOMMENDER_SOURCE)
+                .getPredictions(aSessionOwner, aLayer.getProject(), RECOMMENDER_SOURCE)
                 .getPredictionsByTokenAndFeature(aSuggestion.getDocumentId(), aLayer,
                         aSuggestion.getBegin(), aSuggestion.getEnd(), aSuggestion.getFeature());
         applicationEventPublisher.publishEvent(new ActiveLearningRecommendationEvent(this, document,
@@ -375,7 +375,6 @@ public class ActiveLearningServiceImpl
         private static final long serialVersionUID = -167705997822964808L;
 
         private boolean sessionActive = false;
-        private boolean doExistRecommenders = true;
         private boolean filterByCurrentDocument = false;
         private AnnotationLayer layer;
         private ActiveLearningStrategy strategy;
@@ -393,16 +392,6 @@ public class ActiveLearningServiceImpl
         public void setSessionActive(boolean sessionActive)
         {
             this.sessionActive = sessionActive;
-        }
-
-        public boolean isDoExistRecommenders()
-        {
-            return doExistRecommenders;
-        }
-
-        public void setDoExistRecommenders(boolean doExistRecommenders)
-        {
-            this.doExistRecommenders = doExistRecommenders;
         }
 
         public Optional<SpanSuggestion> getSuggestion()

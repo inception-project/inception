@@ -72,6 +72,7 @@ import org.wicketstuff.kendo.ui.widget.splitter.SplitterAdapter;
 import org.wicketstuff.kendo.ui.widget.splitter.SplitterBehavior;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBar;
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarKeyBindingsPanel;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.SentenceOrientedPagingStrategy;
@@ -145,6 +146,7 @@ public class LegacyCurationPage
 
     private static final String MID_NUMBER_OF_PAGES = "numberOfPages";
     private static final String MID_UNDO_KEY_BINDINGS = "undoKeyBindings";
+    private static final String MID_ACTION_BAR_KEY_BINDINGS = "actionBarKeyBindings";
 
     private final static Logger LOG = LoggerFactory.getLogger(LegacyCurationPage.class);
 
@@ -278,6 +280,7 @@ public class LegacyCurationPage
         add(leftSidebar);
 
         add(new UndoKeyBindingsPanel(MID_UNDO_KEY_BINDINGS, this));
+        add(new ActionBarKeyBindingsPanel(MID_ACTION_BAR_KEY_BINDINGS, this));
     }
 
     @Override
@@ -396,6 +399,18 @@ public class LegacyCurationPage
             LOG.error("Unable to load the annotator's documents", e);
             error("Unable to load the annotator's documents: " + e.getMessage());
         }
+
+        // The set of curatable annotators may have changed (e.g. an annotator's document state was
+        // toggled), so the unit states need to be recalculated.
+        try {
+            curationUnits.setObject(buildUnitOverview(getModelObject()));
+            if (aEvent.getRequestHandler() != null) {
+                aEvent.getRequestHandler().add(curationUnitOverview);
+            }
+        }
+        catch (Exception e) {
+            handleException(aEvent.getRequestHandler(), e);
+        }
     }
 
     @OnEvent
@@ -426,7 +441,6 @@ public class LegacyCurationPage
         }
 
         if (aEvent.isEditorStructureAffected()) {
-            // A changed editor or paging strategy does not survive a re-render.
             actionLoadDocument(target);
         }
         else {
@@ -611,6 +625,16 @@ public class LegacyCurationPage
     }
 
     @Override
+    public List<DocumentEditor> findEditorsShowing(SourceDocument aDocument)
+    {
+        if (!Objects.equals(getModelObject().getDocument(), aDocument)) {
+            return List.of();
+        }
+
+        return List.of(this);
+    }
+
+    @Override
     public DocumentEditorManager getDocumentEditorManager()
     {
         return this;
@@ -698,8 +722,7 @@ public class LegacyCurationPage
             // Initialize the visible content
             state.moveToUnit(mergeCas, aFocus + 1, TOP);
 
-            curationUnits.setObject(buildUnitOverview(state));
-
+            // Trigger unit overview update
             send(this, BREADTH, new EditorContentReplacedEvent(state, aTarget));
 
             // Re-render whole page as sidebar size preference may have changed

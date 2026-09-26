@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.diam.editor.actions;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.request.IRequestParameters;
@@ -122,13 +123,34 @@ public class ScrollToHandler
             Range aRange)
         throws IOException, AnnotationException
     {
-        if (aDocument != null) {
-            // Navigating to another document keeps the owner this editor is showing.
-            aContext.actionShowSelectedDocument(aTarget, aDocument,
-                    aContext.getAnnotatorState().getDataOwner(), aRange);
-        }
-        else {
+        if (aDocument == null) {
             aContext.actionJumpTo(aTarget, aRange.getBegin(), aRange.getEnd());
+            return;
+        }
+
+        // The request names a document, but not whose annotations. The range is a position in the
+        // text, which is the same whoever's annotations an editor shows - so every editor showing
+        // the document scrolls there, without changing which one is active.
+        var scrolled = false;
+        var hostingEditor = aContext.getHostingEditor().orElse(null);
+        if (Objects.equals(aContext.getAnnotatorState().getDocument(), aDocument)) {
+            aContext.actionJumpTo(aTarget, aRange.getBegin(), aRange.getEnd());
+            scrolled = true;
+        }
+
+        var manager = aContext.getDocumentEditorManager();
+        for (var editor : manager.findEditorsShowing(aDocument)) {
+            if (editor != hostingEditor) {
+                editor.actionJumpTo(aTarget, aRange.getBegin(), aRange.getEnd());
+                scrolled = true;
+            }
+        }
+
+        if (!scrolled) {
+            // Nothing shows the document yet, so open it, keeping the owner this editor shows.
+            // This does make the editor receiving it the active one.
+            manager.actionShowDocument(aTarget, hostingEditor, aDocument,
+                    aContext.getAnnotatorState().getDataOwner(), aRange);
         }
     }
 

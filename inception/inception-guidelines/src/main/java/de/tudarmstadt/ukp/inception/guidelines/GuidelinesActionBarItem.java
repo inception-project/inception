@@ -44,11 +44,12 @@ public class GuidelinesActionBarItem
     {
         super(aId);
 
-        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog",
-                () -> aContext.editor().getProject()));
+        var editor = aContext.editor();
+
+        add(guidelinesDialog = new GuidelinesDialog("guidelinesDialog", editor::getProject));
         add(new LambdaAjaxLink("showGuidelinesDialog", guidelinesDialog::show));
 
         // Hide the guidelines button if there are no guidelines
-        add(visibleWhen(() -> guidelinesService.hasGuidelines(aContext.editor().getProject())));
+        add(visibleWhen(() -> guidelinesService.hasGuidelines(editor.getProject())));
     }
 }
