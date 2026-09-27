@@ -106,7 +106,18 @@ public class ConceptFeatureEditor
         iriBadge.add(visibleWhen(iriBadge.getModel().map(urlValidator::isValid)));
         add(iriBadge);
 
-        openIriLink = new ExternalLink("openIri", iriModel);
+        openIriLink = new ExternalLink("openIri", iriModel)
+        {
+            private static final long serialVersionUID = -5585409516364934617L;
+
+            @Override
+            public boolean isEnabledInHierarchy()
+            {
+                // Following the link does not change the annotation, so it should also work when
+                // the editor is read-only. Otherwise, Wicket would render the link without href.
+                return true;
+            }
+        };
         openIriLink.setOutputMarkupPlaceholderTag(true);
         openIriLink.add(visibleWhen(() -> isNotBlank(iriBadge.getModelObject())));
         add(openIriLink);
