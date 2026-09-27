@@ -18,19 +18,31 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.event;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs;
 
 public class DefaultLayerChangedEvent
 {
     private final AnnotationLayer layer;
+    private final AnchoringModePrefs anchoringPrefs;
 
-    public DefaultLayerChangedEvent(AnnotationLayer aLayer)
+    public DefaultLayerChangedEvent(AnnotationLayer aLayer, AnchoringModePrefs aAnchoringPrefs)
     {
         super();
         layer = aLayer;
+        anchoringPrefs = aAnchoringPrefs;
     }
 
     public AnnotationLayer getLayer()
     {
         return layer;
+    }
+
+    /**
+     * @return the anchoring mode preferences, so consumers can pick the mode for the new layer
+     *         without re-reading them from the database. {@code null} if no layer was chosen.
+     */
+    public AnchoringModePrefs getAnchoringPrefs()
+    {
+        return anchoringPrefs;
     }
 }

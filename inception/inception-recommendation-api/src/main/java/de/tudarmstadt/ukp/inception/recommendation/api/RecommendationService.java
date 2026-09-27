@@ -325,11 +325,14 @@ public interface RecommendationService
     void triggerPrediction(String aSessionOwner, String aEventName, SourceDocument aDocument,
             String aDocumentOwner);
 
+    void triggerPrediction(String aSessionOwner, String aEventName, Project aProject,
+            String aDataOwner);
+
     void triggerTrainingAndPrediction(String aSessionOwner, Project aProject, String aEventName,
-            SourceDocument aCurrentDocument, String aDocumentOwner);
+            SourceDocument aCurrentDocument, String aDataOwner);
 
     void triggerSelectionTrainingAndPrediction(String aSessionOwner, Project aProject,
-            String aEventName, SourceDocument aCurrentDocument, String aDocumentOwner);
+            String aEventName, SourceDocument aCurrentDocument, String aDataOwner);
 
     boolean isPredictForAllDocuments(String aSessionOwner, Project aProject);
 

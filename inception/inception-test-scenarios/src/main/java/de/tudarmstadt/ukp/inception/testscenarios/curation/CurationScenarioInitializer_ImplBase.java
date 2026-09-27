@@ -24,6 +24,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.inception.support.uima.AnnotationBuilder.buildAnnotation;
 import static de.tudarmstadt.ukp.inception.testscenarios.ScenarioDocuments.importDocument;
+import static de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccount.ANNOTATOR_1;
+import static de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccount.ANNOTATOR_2;
 import static java.util.Arrays.asList;
 
 import java.io.IOException;
@@ -38,12 +40,12 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.project.initializers.QuickProjectInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.security.model.Role;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializationRequest;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
 
 /**
  * Builds a project that is ready for curation: one document, two annotators who have both marked
@@ -61,9 +63,6 @@ public abstract class CurationScenarioInitializer_ImplBase
 {
     private static final String DOCUMENT = "curation-sample.txt";
 
-    private static final String ANNOTATOR_1 = "test-annotator-1";
-    private static final String ANNOTATOR_2 = "test-annotator-2";
-
     private static final String TYPE_NAMED_ENTITY = //
             "de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity";
     private static final String FEAT_VALUE = "value";
@@ -71,13 +70,16 @@ public abstract class CurationScenarioInitializer_ImplBase
     private final DocumentService documentService;
     private final ProjectService projectService;
     private final UserDao userService;
+    private final ScenarioAccountService scenarioAccountService;
 
     public CurationScenarioInitializer_ImplBase(DocumentService aDocumentService,
-            ProjectService aProjectService, UserDao aUserService)
+            ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
     {
         documentService = aDocumentService;
         projectService = aProjectService;
         userService = aUserService;
+        scenarioAccountService = aScenarioAccountService;
     }
 
     /**
@@ -168,10 +170,10 @@ public abstract class CurationScenarioInitializer_ImplBase
         project.setDescription("""
                 Curation test scenario.
 
-                The document `curation-sample.txt` has been finished by **test-annotator-1** and
-                **test-annotator-2**. Their named-entity annotations agree on some sentences and
-                disagree on others, so the curation unit overview shows a mix of states and a
-                re-merge has something to do.
+                The document `curation-sample.txt` has been finished by **scenario-annotator-1**
+                and **scenario-annotator-2** (password `admin`). Their named-entity annotations
+                agree on some sentences and disagree on others, so the curation unit overview
+                shows a mix of states and a re-merge has something to do.
 
                 The current user is a curator and a manager on this project.
                 """);
@@ -192,8 +194,8 @@ public abstract class CurationScenarioInitializer_ImplBase
 
         configureVariant(project);
 
-        var annotator1 = createAnnotator(project, ANNOTATOR_1, "Test Annotator 1");
-        var annotator2 = createAnnotator(project, ANNOTATOR_2, "Test Annotator 2");
+        var annotator1 = scenarioAccountService.join(project, ANNOTATOR_1);
+        var annotator2 = scenarioAccountService.join(project, ANNOTATOR_2);
 
         for (var i = 0; i < documents.size(); i++) {
             var document = documents.get(i);
@@ -211,26 +213,6 @@ public abstract class CurationScenarioInitializer_ImplBase
 
             finalizeDocument(document, i);
         }
-    }
-
-    private User createAnnotator(Project aProject, String aUsername, String aUiName)
-    {
-        var user = userService.get(aUsername);
-
-        if (user == null) {
-            user = User.builder() //
-                    .withUsername(aUsername) //
-                    .withUiName(aUiName) //
-                    .withPassword(aUsername) //
-                    .withEnabled(true) //
-                    .withRoles(Role.ROLE_USER) //
-                    .build();
-            user = userService.create(user);
-        }
-
-        projectService.assignRole(aProject, user, ANNOTATOR);
-
-        return user;
     }
 
     /**

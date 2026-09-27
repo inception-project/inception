@@ -21,9 +21,11 @@ import java.io.Serializable;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import de.tudarmstadt.ukp.inception.support.uima.IRange;
+
 public class SpanSuggestion
     extends AnnotationSuggestion
-    implements Serializable
+    implements Serializable, IRange
 {
     private static final long serialVersionUID = -1904645143661843249L;
 

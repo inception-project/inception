@@ -22,8 +22,10 @@ import java.io.Serializable;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import de.tudarmstadt.ukp.inception.support.uima.IRange;
+
 public class SearchResult
-    implements Serializable
+    implements Serializable, IRange
 {
     private static final long serialVersionUID = 2698492628701213714L;
 
@@ -84,6 +86,18 @@ public class SearchResult
     public void setOffsetEnd(int offsetEnd)
     {
         this.offsetEnd = offsetEnd;
+    }
+
+    @Override
+    public int getBegin()
+    {
+        return getOffsetStart();
+    }
+
+    @Override
+    public int getEnd()
+    {
+        return getOffsetEnd();
     }
 
     public String getText()

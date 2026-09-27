@@ -31,29 +31,45 @@ public class AnnotationPreferencesChangedEvent
 
     private final String sessionOwnerName;
 
-    private final AnnotatorState source;
-
     private final AjaxRequestTarget requestHandler;
+
+    private final boolean editorStructureAffected;
 
     /**
      * @param aProject
      *            the project the preferences apply to.
      * @param aSessionOwnerName
      *            the user whose preferences were changed.
-     * @param aSource
-     *            the editor state the preferences dialog was opened on and which has therefore
-     *            already been updated in place, or {@code null} if unknown. Consumers holding this
-     *            very state can skip reloading.
+     * @param aRequestHandler
+     *            the current AJAX target, or {@code null} outside a partial page update.
+     * @param aEditorStructureAffected
+     *            whether a change was made that requires the editor component to be <b>rebuilt</b>
+     *            rather than merely re-rendered - see {@link #isEditorStructureAffected()}.
+     */
+    public AnnotationPreferencesChangedEvent(Project aProject, String aSessionOwnerName,
+            AjaxRequestTarget aRequestHandler, boolean aEditorStructureAffected)
+    {
+        project = aProject;
+        sessionOwnerName = aSessionOwnerName;
+        requestHandler = aRequestHandler;
+        editorStructureAffected = aEditorStructureAffected;
+    }
+
+    /**
+     * Convenience constructor for senders that cannot tell what changed and must therefore assume
+     * the worst.
+     *
+     * @param aProject
+     *            the project the preferences apply to.
+     * @param aSessionOwnerName
+     *            the user whose preferences were changed.
      * @param aRequestHandler
      *            the current AJAX target, or {@code null} outside a partial page update.
      */
     public AnnotationPreferencesChangedEvent(Project aProject, String aSessionOwnerName,
-            AnnotatorState aSource, AjaxRequestTarget aRequestHandler)
+            AjaxRequestTarget aRequestHandler)
     {
-        project = aProject;
-        sessionOwnerName = aSessionOwnerName;
-        source = aSource;
-        requestHandler = aRequestHandler;
+        this(aProject, aSessionOwnerName, aRequestHandler, true);
     }
 
     public Project getProject()
@@ -70,15 +86,6 @@ public class AnnotationPreferencesChangedEvent
     }
 
     /**
-     * @return the editor state that was already updated in place, or {@code null} if unknown. A
-     *         consumer whose own state is this one has nothing to reload.
-     */
-    public AnnotatorState getSource()
-    {
-        return source;
-    }
-
-    /**
      * @return the current AJAX target, or {@code null} if the change happened outside an AJAX
      *         request.
      */
@@ -88,13 +95,13 @@ public class AnnotationPreferencesChangedEvent
     }
 
     /**
-     * @param aState
-     *            the editor state to test.
-     * @return whether the given state already carries the new preferences, i.e. whether it is the
-     *         one the dialog was opened on.
+     * @return whether the editor component must be rebuilt rather than re-rendered. Senders that
+     *         cannot tell should say {@code true}: rebuilding when it was unnecessary costs the
+     *         reading position, but re-rendering when a rebuild was needed leaves the editor
+     *         disagreeing with the preferences it is supposed to follow.
      */
-    public boolean isAlreadyApplied(AnnotatorState aState)
+    public boolean isEditorStructureAffected()
     {
-        return source != null && source == aState;
+        return editorStructureAffected;
     }
 }

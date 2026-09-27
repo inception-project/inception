@@ -77,6 +77,7 @@ import org.apache.wicket.util.resource.ResourceStreamNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.BootstrapPagingNavigator.Size;
 import de.agilecoders.wicket.core.markup.html.bootstrap.navigation.ajax.BootstrapAjaxPagingNavigator;
@@ -89,8 +90,9 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.annotation.events.BulkAnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.CreateSpanAnnotationRequest;
@@ -102,10 +104,12 @@ import de.tudarmstadt.ukp.inception.bootstrap.IconToggleBox;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
+import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
@@ -119,6 +123,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHolder;
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
@@ -147,6 +152,7 @@ public class SearchAnnotationSidebar
     private static final String MID_ANNOTATE_FORM = "annotateForm";
     private static final String MID_NUMBER_OF_RESULTS = "numberOfResults";
     private static final String MID_PAGING_NAVIGATOR = "pagingNavigator";
+    private static final String MID_DATA_OWNER = "dataOwner";
 
     private static final long serialVersionUID = -3358207848681467993L;
 
@@ -188,9 +194,9 @@ public class SearchAnnotationSidebar
     private LambdaAjaxButton<Void> annotateButton;
     private LambdaAjaxLink deleteOptionsLink;
 
-    public SearchAnnotationSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public SearchAnnotationSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
     }
 
     @Override
@@ -206,7 +212,7 @@ public class SearchAnnotationSidebar
 
         var historyState = preferencesService.loadTraitsForUserAndProject(
                 SearchHistoryState.KEY_SEARCH_HISTORY, userRepository.getCurrentUser(),
-                getModelObject().getProject());
+                getProject());
         history.setObject(historyState.getHistoryItems());
 
         mainContainer = new WebMarkupContainer(MID_MAIN_CONTAINER);
@@ -225,10 +231,9 @@ public class SearchAnnotationSidebar
                 .setCheckedTitle(Model.of("Search in current document"))
                 .setUncheckedIcon(FontAwesome7IconType.copy_s)
                 .setUncheckedTitle(Model.of("Search in all documents"))
-                .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT))
-                .add(visibleWhen(() -> workloadService
-                        .getWorkloadManagerExtension(getModelObject().getProject())
-                        .isDocumentRandomAccessAllowed(getModelObject().getProject())))
+                .setModel(searchOptions.bind(MID_LIMITED_TO_CURRENT_DOCUMENT)).add(visibleWhen( //
+                        () -> workloadService.getWorkloadManagerExtension(getProject())
+                                .isDocumentRandomAccessAllowed(getProject())))
                 .add(new LambdaAjaxFormComponentUpdatingBehavior()));
 
         resultsTable = new WebMarkupContainer(MID_RESULTS_TABLE);
@@ -268,6 +273,7 @@ public class SearchAnnotationSidebar
 
         queue(resultCountLabel = createNumberOfResults(MID_NUMBER_OF_RESULTS));
         queue(createPagingNavigator(MID_PAGING_NAVIGATOR));
+        queue(createDataOwnerLabel(MID_DATA_OWNER));
 
         // create annotate-button and options form
         annotateButton = new LambdaAjaxButton<>(MID_ANNOTATE_ALL_BUTTON,
@@ -308,7 +314,12 @@ public class SearchAnnotationSidebar
 
         annotationForm = new Form<>(MID_ANNOTATE_FORM);
         annotationForm.setOutputMarkupPlaceholderTag(true);
-        annotationForm.add(visibleWhen(() -> resultsView.getItemCount() > 0));
+        // Users can only edit their own annotations, so bulk actions are only offered on results
+        // that describe the session owner's annotations
+        annotationForm.add(visibleWhen(() -> resultsView.getItemCount() > 0 && isOnAnnotationPage()
+                && !isSearchForOtherDataOwner()));
+        annotationForm.add(LambdaBehavior
+                .onConfigure(() -> setChangeAnnotationsElementsEnabled(isSpanTemplateSelected())));
         annotationForm.setDefaultButton(annotateButton);
 
         var clearButton = new LambdaAjaxLink(MID_CLEAR_BUTTON, this::actionClearResults);
@@ -335,6 +346,33 @@ public class SearchAnnotationSidebar
         }));
         label.add(visibleWhen(() -> resultsView.getItemCount() > 0));
         return label;
+    }
+
+    private Label createDataOwnerLabel(String aId)
+    {
+        // The search is pinned to the data owner of the pane that was active when it ran. Name
+        // that owner unless it is the session owner, so that after switching panes the user can
+        // still tell whose annotations the results are about.
+        var dataOwnerName = LoadableDetachableModel.of(() -> {
+            var dataOwner = resultsProvider.getDataOwner();
+            return dataOwner != null ? AnnotationSet.forUser(dataOwner).displayName() : null;
+        });
+        var label = new Label(aId,
+                new StringResourceModel(MID_DATA_OWNER, this).setParameters(dataOwnerName));
+        label.setOutputMarkupPlaceholderTag(true);
+        label.add(visibleWhen(this::isSearchForOtherDataOwner));
+        return label;
+    }
+
+    /**
+     * @return whether the current search is about the annotations of someone other than the session
+     *         owner, e.g. another annotator or the curation user.
+     */
+    private boolean isSearchForOtherDataOwner()
+    {
+        var dataOwner = resultsProvider.getDataOwner();
+        return dataOwner != null
+                && !dataOwner.getUsername().equals(userRepository.getSessionOwnerName());
     }
 
     private BootstrapAjaxPagingNavigator createPagingNavigator(String aId)
@@ -405,7 +443,7 @@ public class SearchAnnotationSidebar
     {
         var searchOptionsForm = new Form<>(aId, searchOptions);
         searchOptionsForm.add(createLayerDropDownChoice("groupingLayer",
-                schemaService.listAnnotationLayer(getModelObject().getProject())));
+                schemaService.listAnnotationLayer(getProject())));
 
         groupingFeatureChoice = new DropDownChoice<>("groupingFeature", emptyList(),
                 new ChoiceRenderer<>("uiName"));
@@ -420,15 +458,37 @@ public class SearchAnnotationSidebar
         return searchOptionsForm;
     }
 
-    @Override
-    protected void onConfigure()
+    private boolean isSpanTemplateSelected()
     {
-        super.onConfigure();
+        return getActiveEditor() //
+                .map(DiamContext::getAnnotatorState) //
+                .filter(state -> state.getSelection().getAnnotation().isSet()) //
+                .map(AnnotatorState::getSelectedAnnotationLayer) //
+                .map(schemaService::getAdapter) //
+                .filter(SpanAdapter.class::isInstance) //
+                .isPresent();
+    }
 
-        setChangeAnnotationsElementsEnabled(getActiveContext() //
-                .map(DiamContext::getActionHandler) //
-                .map(AnnotationActionHandler::isEditable) //
-                .orElse(false));
+    @OnEvent
+    public void onActiveEditorChanged(ActiveEditorChangedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() != null) {
+            aEvent.getRequestHandler().add(annotationForm);
+        }
+    }
+
+    @OnEvent
+    public void onSelectionChanged(SelectionChangedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() != null) {
+            aEvent.getRequestHandler().add(annotationForm);
+        }
+    }
+
+    private boolean isOnAnnotationPage()
+    {
+        // Bulk actions only supported on annotation page, not on curation pages
+        return getPage() instanceof AnnotationPage;
     }
 
     @Override
@@ -584,6 +644,12 @@ public class SearchAnnotationSidebar
                 .isDocumentRandomAccessAllowed(project) && !opt.isLimitedToCurrentDocument()) {
             limitToDocument = null;
         }
+        else if (limitToDocument == null) {
+            info("Open a document to search in it.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            resultsProvider.emptyQuery();
+            return;
+        }
 
         var request = SearchRequest.builder() //
                 .withDataOwner(getModelObject().getUser()) //
@@ -634,7 +700,7 @@ public class SearchAnnotationSidebar
         aTarget.add(mainContainer);
 
         // Need to re-render because we want to highlight the match
-        getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
+        getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
     }
 
     private void executeSearch(AjaxRequestTarget aTarget, SearchRequest aRequest)
@@ -650,7 +716,7 @@ public class SearchAnnotationSidebar
             aTarget.addChildren(getPage(), IFeedback.class);
 
             // Need to re-render because we want to highlight the match
-            getActiveContext().orElseThrow().actionRefreshDocument(aTarget);
+            getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
 
             updateSearchHistory(aTarget, aRequest);
 
@@ -716,19 +782,25 @@ public class SearchAnnotationSidebar
     public void actionApplyToSelectedResults(AjaxRequestTarget aTarget, Operation aConsumer)
     {
         aTarget.addChildren(getPage(), IFeedback.class);
-        var context = getActiveContext().orElseThrow();
+        var context = getActiveEditor().orElseThrow();
         if (VID.NONE_ID.equals(context.getAnnotatorState().getSelection().getAnnotation())) {
             error("No annotation selected. Please select an annotation first");
             context.actionRefreshDocument(aTarget);
             return;
         }
 
+        // The results describe the annotations of the data owner the search ran for, which is
+        // not necessarily the data owner of the pane that is active now
+        var dataOwner = resultsProvider.getDataOwner();
+        if (dataOwner == null) {
+            return;
+        }
+
         var sessionOwner = userRepository.getCurrentUser();
-        var dataOwner = getModelObject().getUser();
         var layer = getModelObject().getSelectedAnnotationLayer();
 
         // Editors whose CAS we modified - they need to re-render to show the changes
-        var dirtyEditors = new ArrayList<DiamContext>();
+        var dirtyEditors = new ArrayList<DocumentEditor>();
 
         try {
             var adapter = (SpanAdapter) schemaService.getAdapter(layer);
@@ -745,11 +817,27 @@ public class SearchAnnotationSidebar
 
             var state = getModelObject();
             for (var resultsGroup : resultsByDocument.entrySet()) {
+                // Read-only results are never selected for annotation (the index deselects them),
+                // so they need to be counted before the selection is taken into account
+                var selectedResults = new ArrayList<SearchResult>();
+                for (var result : resultsGroup.getValue()) {
+                    if (result.isReadOnly()) {
+                        bulkResult.skippedReadOnly++;
+                    }
+                    else if (result.isSelectedForAnnotation()) {
+                        selectedResults.add(result);
+                    }
+                }
+                if (selectedResults.isEmpty()) {
+                    continue;
+                }
+
                 var documentId = resultsGroup.getKey();
                 var sourceDoc = documentService.getSourceDocument(state.getProject().getId(),
                         documentId);
 
                 if (!canAccessDocument(sessionOwner, sourceDoc, dataOwner)) {
+                    bulkResult.skippedDocuments++;
                     continue;
                 }
 
@@ -762,11 +850,7 @@ public class SearchAnnotationSidebar
                 Optional<CAS> cas = Optional.empty();
 
                 // Apply bulk operations to all hits from this document
-                for (var result : resultsGroup.getValue()) {
-                    if (result.isReadOnly() || !result.isSelectedForAnnotation()) {
-                        continue;
-                    }
-
+                for (var result : selectedResults) {
                     if (!cas.isPresent()) {
                         // Lazily load annotated document
                         cas = Optional.of(editor.isPresent()
@@ -774,12 +858,12 @@ public class SearchAnnotationSidebar
                                 : documentService.readAnnotationCas(annoDoc, AUTO_CAS_UPGRADE));
                     }
 
-                    aConsumer.apply(sourceDoc, cas.get(), adapter, result, bulkResult);
+                    aConsumer.apply(sourceDoc, dataOwner, cas.get(), adapter, result, bulkResult);
                 }
 
                 // Persist annotated document
                 if (cas.isPresent()) {
-                    writeJCasAndUpdateTimeStamp(editor, sourceDoc, cas.get());
+                    writeJCasAndUpdateTimeStamp(editor, sourceDoc, dataOwner, cas.get());
                     editor.ifPresent(dirtyEditors::add);
                 }
             }
@@ -795,6 +879,13 @@ public class SearchAnnotationSidebar
             }
             if (bulkResult.conflict > 0) {
                 warn("Annotations skipped due to conflicts: " + bulkResult.conflict);
+            }
+            if (bulkResult.skippedDocuments > 0) {
+                warn("Documents skipped because they are not editable: "
+                        + bulkResult.skippedDocuments);
+            }
+            if (bulkResult.skippedReadOnly > 0) {
+                warn("Results skipped because they are read-only: " + bulkResult.skippedReadOnly);
             }
 
             if (bulkResult.created == 0 && bulkResult.updated == 0 && bulkResult.deleted == 0) {
@@ -816,7 +907,7 @@ public class SearchAnnotationSidebar
         // The active editor always refreshes - the selection may have changed even if no
         // annotations did. Any other editor we wrote to needs to refresh as well, otherwise it
         // keeps displaying the state from before the bulk operation.
-        getActiveContext().ifPresent(activeEditor -> {
+        getActiveEditor().ifPresent(activeEditor -> {
             activeEditor.actionRefreshDocument(aTarget);
             dirtyEditors.remove(activeEditor);
         });
@@ -838,7 +929,7 @@ public class SearchAnnotationSidebar
         }
     }
 
-    private void createAnnotationAtSearchResult(SourceDocument aDocument, CAS aCas,
+    private void createAnnotationAtSearchResult(SourceDocument aDocument, User aDataOwner, CAS aCas,
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
         throws AnnotationException
     {
@@ -864,7 +955,7 @@ public class SearchAnnotationSidebar
         for (var eannoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
                 aSearchResult.getOffsetEnd())) {
             if (overrideExisting) {
-                setFeatureValues(aDocument, aCas, aAdapter, state, eannoFS);
+                setFeatureValues(aDocument, aDataOwner, aCas, aAdapter, state, eannoFS);
                 aBulkResult.updated++;
             }
             else if (featureValuesMatchCurrentState(eannoFS)) {
@@ -875,7 +966,7 @@ public class SearchAnnotationSidebar
         if (annoFS == null || (!match && !overrideExisting)) {
             try {
                 annoFS = aAdapter.handle(CreateSpanAnnotationRequest.builder() //
-                        .withDocument(aDocument, state.getUser().getUsername(), aCas) //
+                        .withDocument(aDocument, aDataOwner.getUsername(), aCas) //
                         .withRange(aSearchResult.getOffsetStart(), aSearchResult.getOffsetEnd()) //
                         .withAnchoringMode(state.getAnchoringMode()) //
                         .build());
@@ -887,15 +978,15 @@ public class SearchAnnotationSidebar
             }
 
             // set values for all features according to current state
-            setFeatureValues(aDocument, aCas, aAdapter, state, annoFS);
+            setFeatureValues(aDocument, aDataOwner, aCas, aAdapter, state, annoFS);
         }
     }
 
-    private void setFeatureValues(SourceDocument aDocument, CAS aCas, SpanAdapter aAdapter,
-            AnnotatorState state, AnnotationFS annoFS)
+    private void setFeatureValues(SourceDocument aDocument, User aDataOwner, CAS aCas,
+            SpanAdapter aAdapter, AnnotatorState state, AnnotationFS annoFS)
         throws AnnotationException
     {
-        try (var ctx = aAdapter.updateFeatureValues(aDocument, state.getUser().getUsername(), aCas,
+        try (var ctx = aAdapter.updateFeatureValues(aDocument, aDataOwner.getUsername(), aCas,
                 ICasUtil.getAddr(annoFS))) {
             for (var featureState : state.getFeatureStates()) {
                 var featureValue = featureState.value;
@@ -914,25 +1005,24 @@ public class SearchAnnotationSidebar
         }
     }
 
-    private void deleteAnnotationAtSearchResult(SourceDocument aDocument, CAS aCas,
+    private void deleteAnnotationAtSearchResult(SourceDocument aDocument, User aDataOwner, CAS aCas,
             SpanAdapter aAdapter, SearchResult aSearchResult, BulkOperationResult aBulkResult)
         throws AnnotationException
     {
-        var dataOwner = getModelObject().getUser();
         var type = CasUtil.getAnnotationType(aCas, aAdapter.getAnnotationTypeName());
 
         for (var annoFS : selectAt(aCas, type, aSearchResult.getOffsetStart(),
                 aSearchResult.getOffsetEnd())) {
             if ((annoFS != null && featureValuesMatchCurrentState(annoFS))
                     || !deleteOptions.getObject().isDeleteOnlyMatchingFeatureValues()) {
-                aAdapter.delete(aDocument, dataOwner.getUsername(), aCas, VID.of(annoFS));
+                aAdapter.delete(aDocument, aDataOwner.getUsername(), aCas, VID.of(annoFS));
                 aBulkResult.deleted++;
             }
         }
     }
 
-    private void writeJCasAndUpdateTimeStamp(Optional<DiamContext> aEditor,
-            SourceDocument aSourceDoc, CAS aCas)
+    private void writeJCasAndUpdateTimeStamp(Optional<DocumentEditor> aEditor,
+            SourceDocument aSourceDoc, User aDataOwner, CAS aCas)
         throws IOException, AnnotationException
     {
         if (aEditor.isPresent()) {
@@ -942,8 +1032,8 @@ public class SearchAnnotationSidebar
             return;
         }
 
-        documentService.writeAnnotationCas(aCas, aSourceDoc,
-                AnnotationSet.forUser(getModelObject().getUser()), EXPLICIT_ANNOTATOR_USER_ACTION);
+        documentService.writeAnnotationCas(aCas, aSourceDoc, AnnotationSet.forUser(aDataOwner),
+                EXPLICIT_ANNOTATOR_USER_ACTION);
     }
 
     private boolean featureValuesMatchCurrentState(AnnotationFS aAnnotationFS)
@@ -983,7 +1073,7 @@ public class SearchAnnotationSidebar
     private void actionSelectHistoryItem(AjaxRequestTarget aTarget, SearchHistoryItem aItem)
     {
         var opt = searchOptions.getObject();
-        var project = getModelObject().getProject();
+        var project = getProject();
 
         var layer = aItem.groupingLayer() != null
                 ? schemaService.findLayer(project, aItem.groupingLayer())
@@ -1019,7 +1109,7 @@ public class SearchAnnotationSidebar
         var historyState = new SearchHistoryState();
         historyState.setHistoryItems(history.getObject());
         var sessionOwner = userRepository.getCurrentUser();
-        var project = getModelObject().getProject();
+        var project = getProject();
         preferencesService.saveTraitsForUserAndProject(SearchHistoryState.KEY_SEARCH_HISTORY,
                 sessionOwner, project, historyState);
     }
@@ -1104,15 +1194,17 @@ public class SearchAnnotationSidebar
                     throws IOException, AnnotationException
                 {
                     var selectedResult = aItem.getModelObject();
-                    searchOptions.getObject().setSelectedResult(selectedResult, AnnotationSet
-                            .forUser(SearchAnnotationSidebar.this.getModelObject().getUser()));
-                    var context = getActiveContext().orElseThrow();
-                    context.actionShowSelectedDocument(t,
+                    // The result belongs to the owner the search ran for, which need not be the
+                    // owner of the active pane any more
+                    var dataOwner = AnnotationSet.forUser(resultsProvider.getDataOwner());
+                    searchOptions.getObject().setSelectedResult(selectedResult, dataOwner);
+                    actionJumpToDocument(t,
                             documentService.getSourceDocument(currentProject,
                                     selectedResult.getDocumentTitle()),
-                            selectedResult.getOffsetStart(), selectedResult.getOffsetEnd());
-                    // Need to re-render because we want to highlight the match
-                    context.actionRefreshDocument(t);
+                            dataOwner, new Range(selectedResult));
+                    // Need to re-render because we want to highlight the match. The editor
+                    // showing the result is the active one now.
+                    getActiveEditor().orElseThrow().actionRefreshDocument(t);
                 }
             };
             statementList
@@ -1124,8 +1216,8 @@ public class SearchAnnotationSidebar
     @FunctionalInterface
     private interface Operation
     {
-        void apply(SourceDocument aSourceDoc, CAS aCas, SpanAdapter aAdapter, SearchResult aResult,
-                BulkOperationResult aBulkResult)
+        void apply(SourceDocument aSourceDoc, User aDataOwner, CAS aCas, SpanAdapter aAdapter,
+                SearchResult aResult, BulkOperationResult aBulkResult)
             throws AnnotationException;
     }
 
@@ -1135,5 +1227,7 @@ public class SearchAnnotationSidebar
         int deleted = 0;
         int updated = 0;
         int conflict = 0;
+        int skippedDocuments = 0;
+        int skippedReadOnly = 0;
     }
 }

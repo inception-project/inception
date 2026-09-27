@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -41,6 +42,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 
 public class CurationSidebarBehavior
@@ -105,7 +107,7 @@ public class CurationSidebarBehavior
         var prefs = preferencesService
                 .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
         if (prefs.isAutoMergeCurationSidebar()) {
-            if (userService.getCurationUser().equals(page.getModelObject().getUser())) {
+            if (CURATION_USER.equals(dataOwner)) {
                 autoMerge(aEvent, page);
             }
         }
@@ -124,18 +126,26 @@ public class CurationSidebarBehavior
         }
 
         try {
-            var state = page.getModelObject();
+            var editorState = page.getWorkspace().getActiveEditor() //
+                    .map(DiamContext::getAnnotatorState) //
+                    .orElse(null);
+
+            if (editorState == null) {
+                LOG.trace("No editor to merge into - skipping auto-merge");
+                return;
+            }
+
             // We need to force upgrade the editor CAS here already so the merge can succeed
             // The annotation page will do this again in the actionLoadDocument, but I don't
             // currently see a good way to avoid this duplication. At least we only do it twice
             // if an initial merge is required.
-            documentService.readAnnotationCas(state.getDocument(),
-                    AnnotationSet.forUser(state.getUser()), FORCE_CAS_UPGRADE);
+            documentService.readAnnotationCas(doc, AnnotationSet.forUser(editorState.getUser()),
+                    FORCE_CAS_UPGRADE);
             var selectedDataOwners = curationSessionService
                     .listDataOwnersReadyForCuration(sessionOwner, project, doc);
 
-            var workflow = curationService.readOrCreateCurationWorkflow(state.getProject());
-            var mergeStrategyFactory = curationSidebarService.merge(state, workflow,
+            var workflow = curationService.readOrCreateCurationWorkflow(project);
+            var mergeStrategyFactory = curationSidebarService.merge(editorState, workflow,
                     selectedDataOwners, true);
 
             page.success(

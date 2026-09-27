@@ -36,19 +36,19 @@ public class ActiveLearningSuggestionOfferedEvent
 
     private final SourceDocument document;
     private final SpanSuggestion currentRecommendation;
-    private final String user;
+    private final String dataOwner;
     private final AnnotationLayer layer;
     private final String annotationFeature;
     private final List<SpanSuggestion> allRecommendations;
 
     public ActiveLearningSuggestionOfferedEvent(Object aSource, SourceDocument aDocument,
-            SpanSuggestion aCurrentRecommendation, String aUser, AnnotationLayer aLayer,
+            SpanSuggestion aCurrentRecommendation, String aDataOwner, AnnotationLayer aLayer,
             String aAnnotationFeature, List<SpanSuggestion> aAllRecommendations)
     {
         super(aSource);
         document = aDocument;
         currentRecommendation = aCurrentRecommendation;
-        user = aUser;
+        dataOwner = aDataOwner;
         layer = aLayer;
         annotationFeature = aAnnotationFeature;
         allRecommendations = aAllRecommendations;
@@ -66,7 +66,7 @@ public class ActiveLearningSuggestionOfferedEvent
 
     public String getUser()
     {
-        return user;
+        return dataOwner;
     }
 
     public AnnotationLayer getLayer()

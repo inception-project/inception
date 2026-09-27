@@ -22,10 +22,11 @@ import java.util.List;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.model.IModel;
+import org.danekja.java.util.function.serializable.SerializableBiConsumer;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 
 public class CurationOpenDocumentDialog
     extends BootstrapModalDialog
@@ -33,23 +34,26 @@ public class CurationOpenDocumentDialog
     private static final long serialVersionUID = 2767538203924633288L;
 
     private final IModel<List<SourceDocument>> documentList;
-    private final IModel<AnnotatorState> state;
+    private final IModel<Project> project;
+    private final SerializableBiConsumer<AjaxRequestTarget, SourceDocument> onDocumentSelected;
 
-    public CurationOpenDocumentDialog(String aId, IModel<AnnotatorState> aModel,
-            IModel<List<SourceDocument>> aDocumentList)
+    public CurationOpenDocumentDialog(String aId, IModel<Project> aProject,
+            IModel<List<SourceDocument>> aDocumentList,
+            SerializableBiConsumer<AjaxRequestTarget, SourceDocument> aOnDocumentSelected)
     {
         super(aId);
         setOutputMarkupId(true);
         trapFocus();
 
         documentList = aDocumentList;
-        state = aModel;
+        project = aProject;
+        onDocumentSelected = aOnDocumentSelected;
     }
 
     public void show(AjaxRequestTarget aTarget)
     {
-        var content = new CurationOpenDocumentDialogPanel(ModalDialog.CONTENT_ID, state,
-                documentList);
+        var content = new CurationOpenDocumentDialogPanel(ModalDialog.CONTENT_ID, project,
+                documentList, onDocumentSelected);
         super.open(content, aTarget);
     }
 }

@@ -30,6 +30,7 @@ import org.apache.wicket.model.IModel;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.paging.PagingStrategy_ImplBase;
 import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class TokenWrappingPagingStrategy

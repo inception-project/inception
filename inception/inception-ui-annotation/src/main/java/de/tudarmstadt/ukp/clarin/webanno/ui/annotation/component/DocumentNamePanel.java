@@ -57,7 +57,9 @@ public class DocumentNamePanel
         super(id, aModel);
         setOutputMarkupId(true);
 
-        queue(new WebMarkupContainer("read-only").add(visibleWhen(() -> !aEditable.getObject())));
+        queue(new WebMarkupContainer("read-only").add(
+                visibleWhen(() -> aModel.map(AnnotatorState::getDocument).isPresent().getObject()
+                        && !aEditable.getObject())));
         queue(new Label("user", aModel.map(AnnotatorState::getUser).map(User::getUiName))
                 .add(visibleWhenNot(aModel.map(AnnotatorState::getUser)
                         .map(u -> u.getUsername().equals(userService.getCurrentUsername())))));

@@ -46,8 +46,10 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7CssReference;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.diam.editor.DiamAjaxBehavior;
@@ -73,6 +75,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandle
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.selection.ScrollToEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
@@ -192,19 +195,43 @@ public abstract class ExternalAnnotationEditorBase
     }
 
     @Override
-    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
+    public Optional<DocumentEditor> getHostingEditor()
+    {
+        return getActionHandler() instanceof DocumentEditor editor ? Optional.of(editor)
+                : Optional.empty();
+    }
+
+    @Override
+    public void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus)
+    {
+        var ctx = getEditorContext();
+        if (ctx != null) {
+            ctx.actionLoadDocument(aTarget, aFocus);
+        }
+    }
+
+    @Override
+    public void actionJumpTo(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            List<VRange> aAdditionalPingRanges)
         throws IOException, AnnotationException
     {
-        getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd);
+        getActionHandler().actionJumpTo(aTarget, aBegin, aEnd, aAdditionalPingRanges);
     }
 
     @Override
     public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
+            AnnotationSet aDataOwner, Range aRange)
         throws IOException, AnnotationException
     {
-        getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd,
+        getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange);
+    }
+
+    @Override
+    public void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException
+    {
+        getActionHandler().actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange,
                 aAdditionalPingRanges);
     }
 

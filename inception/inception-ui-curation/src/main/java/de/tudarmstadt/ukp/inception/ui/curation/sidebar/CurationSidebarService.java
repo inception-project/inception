@@ -26,6 +26,7 @@ import java.util.Collection;
 
 import org.apache.uima.UIMAException;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -49,7 +50,27 @@ public interface CurationSidebarService
 
     boolean isShowScore(String aUsername, Long aProjectId);
 
+    /**
+     * Merge the annotations of the given data owners into the curation CAS of the document in the
+     * given state.
+     *
+     * @param aState
+     *            the annotator state
+     * @param aWorkflow
+     *            the curation workflow providing the merge strategy
+     * @param aDataOwners
+     *            the data owners whose annotations to merge
+     * @param aClearTargetCas
+     *            whether to clear the curation CAS before merging
+     * @return the factory of the merge strategy used
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws UIMAException
+     *             if there was a UIMA-level problem
+     * @throws NotEditableException
+     *             if curation of the document is already finished.
+     */
     MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
             Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
-        throws IOException, UIMAException;
+        throws IOException, UIMAException, NotEditableException;
 }

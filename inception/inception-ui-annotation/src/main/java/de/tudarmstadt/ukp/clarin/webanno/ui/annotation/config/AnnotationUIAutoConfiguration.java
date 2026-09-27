@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageMenuItem;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.layer.LayerVisibilitySidebarFactory;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.addeditor.AddEditorSidebarFooterItemFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.closesession.CloseSessionSidebarFooterItemFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.preferences.PreferencesSidebarFooterItemFactory;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.undo.AnnotationUndoActionBarExtension;
@@ -52,6 +53,12 @@ public class AnnotationUIAutoConfiguration
     public LayerVisibilitySidebarFactory layerVisibilitySidebarFactory()
     {
         return new LayerVisibilitySidebarFactory();
+    }
+
+    @Bean
+    public AddEditorSidebarFooterItemFactory addEditorSidebarFooterItemFactory()
+    {
+        return new AddEditorSidebarFooterItemFactory();
     }
 
     @Bean

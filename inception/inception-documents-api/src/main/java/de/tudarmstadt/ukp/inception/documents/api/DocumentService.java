@@ -769,6 +769,24 @@ public interface DocumentService
      */
     List<AnnotationDocument> listAllAnnotationDocuments(SourceDocument document);
 
+    /**
+     * List the documents of the given project that the session owner may open for the given data
+     * owner.
+     * <p>
+     * Annotators only see their own non-locked documents. Managers and curators can see all
+     * documents, even locked ones and even documents belonging to other users.
+     * 
+     * @see DocumentAccess#canEditAnnotationDocument
+     *
+     * @param aProject
+     *            the project.
+     * @param aDataOwner
+     *            the user whose annotations would be shown.
+     * @param aSessionOwner
+     *            the user asking.
+     * @return the accessible documents. Documents without an annotation document record yet are
+     *         included, represented by a transient {@link AnnotationDocument}.
+     */
     List<AnnotationDocument> listAccessibleDocuments(Project aProject, User aDataOwner,
             User aSessionOwner);
 

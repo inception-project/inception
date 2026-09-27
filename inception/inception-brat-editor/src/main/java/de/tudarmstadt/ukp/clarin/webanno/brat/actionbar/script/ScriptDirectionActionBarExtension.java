@@ -54,7 +54,7 @@ public class ScriptDirectionActionBarExtension
             return false;
         }
 
-        var state = aContext.editorContext().getAnnotatorState();
+        var state = aContext.editor().getAnnotatorState();
 
         if (state == null) {
             return false;
@@ -76,6 +76,6 @@ public class ScriptDirectionActionBarExtension
     @Override
     public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new ScriptDirectionActionBarItem(aId, aContext.editorContext());
+        return new ScriptDirectionActionBarItem(aId, aContext.editor());
     }
 }

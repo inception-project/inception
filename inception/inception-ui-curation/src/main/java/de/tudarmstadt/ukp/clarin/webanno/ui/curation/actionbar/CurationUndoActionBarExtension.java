@@ -46,7 +46,7 @@ public class CurationUndoActionBarExtension
             return false;
         }
 
-        if (!aContext.editorContext().getActionHandler().isEditable()) {
+        if (!aContext.editor().getActionHandler().isEditable()) {
             return false;
         }
 
@@ -58,6 +58,6 @@ public class CurationUndoActionBarExtension
     @Override
     public Panel createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new UndoPanel(aId, aContext.editorContext());
+        return new UndoPanel(aId, aContext.editor());
     }
 }

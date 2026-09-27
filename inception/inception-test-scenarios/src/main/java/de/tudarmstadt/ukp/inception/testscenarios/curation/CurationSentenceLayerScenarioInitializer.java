@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
 import de.tudarmstadt.ukp.inception.testscenarios.config.InceptionTestScenariosAutoConfiguration;
 
 /**
@@ -61,9 +62,10 @@ public class CurationSentenceLayerScenarioInitializer
 
     public CurationSentenceLayerScenarioInitializer(DocumentService aDocumentService,
             ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService,
             AnnotationSchemaService aAnnotationSchemaService)
     {
-        super(aDocumentService, aProjectService, aUserService);
+        super(aDocumentService, aProjectService, aUserService, aScenarioAccountService);
         annotationSchemaService = aAnnotationSchemaService;
     }
 

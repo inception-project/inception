@@ -19,7 +19,9 @@ package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.rendering.editorstate.AnchoringModePrefs.KEY_ANCHORING_MODE;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenModelIsNotNull;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectAnnotationByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectByAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
@@ -82,6 +84,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.DocumentStateChangedInEditorEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.selection.SelectionChangedEvent;
@@ -125,15 +128,15 @@ public class AnnotationDetailEditorPanel
     private final BootstrapModalDialog confirmationDialog;
     private final DocumentEditorManager editorPage;
 
-    public AnnotationDetailEditorPanel(String id, DocumentEditorManager aManager,
-            IModel<AnnotatorState> aModel)
+    public AnnotationDetailEditorPanel(String id, DocumentEditorManager aManager)
     {
-        super(id, new CompoundPropertyModel<>(new ActiveStateModel(aManager, aModel)));
+        super(id, new CompoundPropertyModel<>(new ActiveStateModel(aManager)));
 
         editorPage = aManager;
 
         setOutputMarkupPlaceholderTag(true);
         setMarkupId("annotationDetailEditorPanel");
+        add(visibleWhenModelIsNotNull(this));
 
         queue(new WebMarkupContainer("header")
                 .add(visibleWhen(() -> getModelObject().getSelection().getAnnotation().isSet())));
@@ -148,11 +151,13 @@ public class AnnotationDetailEditorPanel
         queue(new AnnotationInfoPanel("infoContainer", getModel(), this));
         queue(featureEditorListPanel = new FeatureEditorListPanel("featureEditorListPanel",
                 getModel(), this));
+        featureEditorListPanel.add(enabledWhen(this::isSelectedAnnotationEditable));
         queue(relationListPanel = new AttachedAnnotationListPanel("relationListContainer", aManager,
                 getModel()));
         relationListPanel.setOutputMarkupPlaceholderTag(true);
 
         buttonContainer = new WebMarkupContainer("buttonContainer");
+        buttonContainer.add(enabledWhen(this::isSelectedAnnotationEditable));
         buttonContainer.setOutputMarkupPlaceholderTag(true);
         queue(createDeleteButton());
         queue(createReverseButton());
@@ -307,9 +312,25 @@ public class AnnotationDetailEditorPanel
         activeActionHandler().ensureIsEditable();
     }
 
+    private boolean isSelectedAnnotationEditable()
+    {
+        var selectedLayerIsReadOnly = getModel() //
+                .map(AnnotatorState::getSelectedAnnotationLayer) //
+                .map(AnnotationLayer::isReadonly) //
+                .orElse(false) //
+                .getObject();
+
+        return isActiveEditorEditable() && !selectedLayerIsReadOnly;
+    }
+
+    boolean hasActiveEditor()
+    {
+        return editorPage.getActiveEditor().isPresent();
+    }
+
     boolean isActiveEditorEditable()
     {
-        return editorPage.getActiveContext() //
+        return editorPage.getActiveEditor() //
                 .map(DiamContext::getActionHandler) //
                 .map(AnnotationActionHandler::isEditable) //
                 .orElse(false);
@@ -317,12 +338,12 @@ public class AnnotationDetailEditorPanel
 
     AnnotationActionHandler activeActionHandler()
     {
-        return editorPage.getActiveContext().orElseThrow().getActionHandler();
+        return editorPage.getActiveEditor().orElseThrow().getActionHandler();
     }
 
     CAS activeEditorCas() throws IOException
     {
-        return editorPage.getActiveContext().orElseThrow().getEditorCas();
+        return editorPage.getActiveEditor().orElseThrow().getEditorCas();
     }
 
     /**
@@ -364,16 +385,14 @@ public class AnnotationDetailEditorPanel
         actionSelect(aTarget, new VID(annoFs));
 
         var state = getModelObject();
-        var doc = state.getDocument();
 
-        var context = editorPage.getActiveContext().orElseThrow();
+        var context = editorPage.getActiveEditor().orElseThrow();
 
         // Resolve the ping ranges in the active context's CAS - that is where the selection's
         // origin/target addresses come from.
         var pingRanges = state.getSelection().pingRanges(activeEditorCas());
 
-        context.actionShowSelectedDocument(aTarget, doc, annoFs.getBegin(), annoFs.getEnd(),
-                pingRanges);
+        context.actionJumpTo(aTarget, annoFs.getBegin(), annoFs.getEnd(), pingRanges);
     }
 
     public void actionSelectAndJump(AjaxRequestTarget aTarget, VID aVid)
@@ -660,23 +679,6 @@ public class AnnotationDetailEditorPanel
     }
 
     @Override
-    protected void onConfigure()
-    {
-        super.onConfigure();
-
-        // Only show sidebar if a document is selected
-        setVisible(getModelObject() != null && getModelObject().getDocument() != null);
-
-        // Set read only if annotation is finished or the user is viewing other's work
-        var selectedLayerIsReadOnly = getModel() //
-                .map(AnnotatorState::getSelectedAnnotationLayer) //
-                .map(AnnotationLayer::isReadonly) //
-                .orElse(true) //
-                .getObject();
-        setEnabled(isActiveEditorEditable() && !selectedLayerIsReadOnly);
-    }
-
-    @Override
     public void onEvent(IEvent<?> aEvent)
     {
         super.onEvent(aEvent);
@@ -692,13 +694,22 @@ public class AnnotationDetailEditorPanel
         else if (payload instanceof EditorContentReplacedEvent contentReplaced) {
             onEditorContentReplacedEvent(contentReplaced);
         }
+        else if (payload instanceof DocumentStateChangedInEditorEvent stateChanged) {
+            onDocumentStateChangedInEditorEvent(stateChanged);
+        }
     }
 
-    /**
-     * Drops the current selection when the editor we are bound to has loaded a different document -
-     * or unloaded the one it was showing. The feature editors hold values read from the previous
-     * CAS, and the selection holds addresses into it, so neither survives the replacement.
-     */
+    void onDocumentStateChangedInEditorEvent(DocumentStateChangedInEditorEvent aEvent)
+    {
+        if (!aEvent.isFor(getModelObject())) {
+            return;
+        }
+
+        if (aEvent.getRequestHandler() != null) {
+            refresh(aEvent.getRequestHandler());
+        }
+    }
+
     void onEditorContentReplacedEvent(EditorContentReplacedEvent aEvent)
     {
         if (!aEvent.isFor(getModelObject())) {
@@ -970,18 +981,16 @@ public class AnnotationDetailEditorPanel
         private static final long serialVersionUID = -7069428645365760907L;
 
         private final DocumentEditorManager manager;
-        private final IModel<AnnotatorState> activeEditorState;
 
-        ActiveStateModel(DocumentEditorManager aManager, IModel<AnnotatorState> aActiveEditorState)
+        ActiveStateModel(DocumentEditorManager aManager)
         {
             manager = aManager;
-            activeEditorState = aActiveEditorState;
         }
 
         @Override
         public AnnotatorState getObject()
         {
-            return manager.getActiveContext() //
+            return manager.getActiveEditor() //
                     .map(DiamContext::getAnnotatorState) //
                     .orElse(null);
         }
@@ -989,13 +998,10 @@ public class AnnotationDetailEditorPanel
         @Override
         public void detach()
         {
-            activeEditorState.detach();
-
-            manager.getActiveContext() //
+            // Detach only the active editor's model the detail panel is bound to
+            manager.getActiveEditor() //
                     .map(DiamContext::getStateModel) //
-                    .filter(activeState -> activeState != activeEditorState) //
                     .ifPresent(IModel::detach);
         }
     }
-
 }

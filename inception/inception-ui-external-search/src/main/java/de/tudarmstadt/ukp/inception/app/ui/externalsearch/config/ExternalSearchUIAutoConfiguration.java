@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.inception.app.ui.externalsearch.utils.DocumentImporter
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.externalsearch.ExternalSearchService;
 import de.tudarmstadt.ukp.inception.externalsearch.config.ExternalSearchAutoConfiguration;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Provides all UI-level Spring beans for the external search functionality.
@@ -56,9 +57,11 @@ public class ExternalSearchUIAutoConfiguration
 
     @Bean
     public ExternalSearchAnnotationSidebarFactory externalSearchAnnotationSidebarFactory(
-            ExternalSearchService aExternalSearchService)
+            ExternalSearchService aExternalSearchService,
+            WorkloadManagementService aWorkloadManagementService)
     {
-        return new ExternalSearchAnnotationSidebarFactory(aExternalSearchService);
+        return new ExternalSearchAnnotationSidebarFactory(aExternalSearchService,
+                aWorkloadManagementService);
     }
 
     @Bean

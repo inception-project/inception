@@ -62,7 +62,7 @@ public class MoveSpanAnnotationAction
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
         var fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
         adapter.handle(MoveSpanAnnotationRequest.builder() //
-                .withDocument(getDocument(), getUser(), aCas) //
+                .withDocument(getDocument(), getDataOwner(), aCas) //
                 .withAnnotation(fs) //
                 .withRange(oldRange.getBegin(), oldRange.getEnd()) //
                 .build());
@@ -78,7 +78,7 @@ public class MoveSpanAnnotationAction
         var adapter = (SpanAdapter) aSchemaService.getAdapter(getLayer());
         var fs = ICasUtil.selectAnnotationByAddr(aCas, getVid().getId());
         adapter.handle(MoveSpanAnnotationRequest.builder() //
-                .withDocument(getDocument(), getUser(), aCas) //
+                .withDocument(getDocument(), getDataOwner(), aCas) //
                 .withAnnotation(fs) //
                 .withRange(range.getBegin(), range.getEnd()) //
                 .build());

@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging;
+package de.tudarmstadt.ukp.inception.rendering.paging;
 
 import static java.util.Arrays.asList;
 
@@ -28,7 +28,6 @@ import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
-import de.tudarmstadt.ukp.inception.rendering.paging.Unit;
 
 public class NoPagingStrategy
     extends PagingStrategy_ImplBase
@@ -50,16 +49,17 @@ public class NoPagingStrategy
         return emptyPanel;
     }
 
+    /**
+     * There is nothing to navigate when the whole document is a single unit, so this contributes an
+     * invisible placeholder rather than a hidden navigator. Mind that it still has to occupy the
+     * slot: the action bar adds the component unconditionally, and it may be re-rendered via AJAX.
+     */
     @Override
-    public DefaultPagingNavigator createPageNavigator(String aId, DiamContext aEditor)
+    public Component createPageNavigator(String aId, DiamContext aEditor)
     {
-        return hidden(new DefaultPagingNavigator(aId, aEditor));
-    }
-
-    private static DefaultPagingNavigator hidden(DefaultPagingNavigator navi)
-    {
-        navi.setOutputMarkupPlaceholderTag(true);
-        navi.setVisible(false);
-        return navi;
+        var emptyPanel = new EmptyPanel(aId);
+        emptyPanel.setOutputMarkupPlaceholderTag(true);
+        emptyPanel.setVisible(false);
+        return emptyPanel;
     }
 }

@@ -17,11 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.documents;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IGNORE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.DEACTIVATED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.FORMER_ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSetMarker.MISSING;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
@@ -217,6 +220,62 @@ class DocumentServiceImplDatabaseTest
         assertThat(map).containsEntry(doc1, ann);
         assertThat(map).containsKey(doc2);
         assertThat(map.get(doc2)).isNull();
+    }
+
+    @Test
+    void thatListAccessibleDocumentsHidesOwnLockedDocumentsFromAnnotator()
+    {
+        var doc1 = sut.createSourceDocument(new SourceDocument("doc1", project, "text"));
+        var doc2 = sut.createSourceDocument(new SourceDocument("doc2", project, "text"));
+
+        var set = AnnotationSet.forUser(annotator1);
+        var ann1 = sut.createOrGetAnnotationDocument(doc1, set);
+        ann1.setState(IGNORE);
+        sut.createOrGetAnnotationDocument(doc2, set);
+
+        when(projectService.hasRole(annotator1, project, MANAGER, CURATOR)).thenReturn(false);
+
+        assertThat(sut.listAccessibleDocuments(project, annotator1, annotator1)) //
+                .extracting(AnnotationDocument::getDocument) //
+                .containsExactly(doc2);
+    }
+
+    @Test
+    void thatListAccessibleDocumentsShowsOwnLockedDocumentsToManager()
+    {
+        var doc1 = sut.createSourceDocument(new SourceDocument("doc1", project, "text"));
+        var doc2 = sut.createSourceDocument(new SourceDocument("doc2", project, "text"));
+
+        var set = AnnotationSet.forUser(annotator1);
+        var ann1 = sut.createOrGetAnnotationDocument(doc1, set);
+        ann1.setState(IGNORE);
+        sut.createOrGetAnnotationDocument(doc2, set);
+
+        when(projectService.hasRole(annotator1, project, MANAGER, CURATOR)).thenReturn(true);
+
+        assertThat(sut.listAccessibleDocuments(project, annotator1, annotator1)) //
+                .extracting(AnnotationDocument::getDocument) //
+                .containsExactlyInAnyOrder(doc1, doc2);
+    }
+
+    @Test
+    void thatListAccessibleDocumentsShowsForeignLockedDocuments()
+    {
+        var manager = new User("mgr");
+        testEntityManager.persist(manager);
+
+        var doc1 = sut.createSourceDocument(new SourceDocument("doc1", project, "text"));
+
+        var set = AnnotationSet.forUser(annotator1);
+        var ann1 = sut.createOrGetAnnotationDocument(doc1, set);
+        ann1.setState(IGNORE);
+
+        when(projectService.hasRole(manager, project, MANAGER, CURATOR)).thenReturn(true);
+
+        // The data owner's lock does not hide the document from someone else looking at it.
+        assertThat(sut.listAccessibleDocuments(project, annotator1, manager)) //
+                .extracting(AnnotationDocument::getDocument) //
+                .containsExactly(doc1);
     }
 
     @Test

@@ -276,7 +276,7 @@ public class KnowledgeBaseCreationWizard
                 }
             }
             catch (Exception e) {
-                error("Failed to create knowledge base: " + e.getMessage());
+                getPage().error("Failed to create knowledge base: " + e.getMessage());
             }
         }
 
@@ -285,7 +285,7 @@ public class KnowledgeBaseCreationWizard
         {
             RepositoryImplConfig cfg = kbService.getRemoteConfig(wrapper.getUrl());
             kbService.registerKnowledgeBase(kb, cfg);
-            success("Created knowledge base: " + kb.getName());
+            getPage().success("Created knowledge base: " + kb.getName());
         }
 
         private void finalizeLocalRepositoryConfiguration(KnowledgeBaseWrapper wrapper,
@@ -293,17 +293,17 @@ public class KnowledgeBaseCreationWizard
         {
             RepositoryImplConfig cfg = kbService.getNativeConfig();
             kbService.registerKnowledgeBase(kb, cfg);
-            success("Created knowledge base: " + kb.getName());
+            getPage().success("Created knowledge base: " + kb.getName());
 
             kbService.defineBaseProperties(kb);
 
             for (Pair<String, File> f : wrapper.getFiles()) {
                 try (InputStream is = new FileInputStream(f.getValue())) {
                     kbService.importData(kb, f.getValue().getName(), is);
-                    success("Imported: " + f.getKey());
+                    getPage().success("Imported: " + f.getKey());
                 }
                 catch (Exception e) {
-                    error("Failed to import: " + f.getKey());
+                    getPage().error("Failed to import: " + f.getKey());
                 }
             }
         }

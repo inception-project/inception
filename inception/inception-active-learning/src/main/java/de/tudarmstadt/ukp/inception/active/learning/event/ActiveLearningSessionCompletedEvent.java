@@ -29,22 +29,15 @@ public class ActiveLearningSessionCompletedEvent
     private static final long serialVersionUID = -4736560772442881663L;
 
     private final Project project;
-    private final String user;
 
-    public ActiveLearningSessionCompletedEvent(Object source, Project aProject, String aUser)
+    public ActiveLearningSessionCompletedEvent(Object source, Project aProject)
     {
         super(source);
         project = aProject;
-        user = aUser;
     }
 
     public Project getProject()
     {
         return project;
-    }
-
-    public String getUser()
-    {
-        return user;
     }
 }

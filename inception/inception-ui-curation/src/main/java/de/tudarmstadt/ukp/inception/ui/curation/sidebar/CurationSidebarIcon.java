@@ -30,6 +30,7 @@ import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
@@ -54,7 +55,7 @@ public class CurationSidebarIcon
 
     private boolean isSessionActive()
     {
-        var project = getModelObject().getProject();
+        var project = getPage() instanceof ProjectPageBase page ? page.getProject() : null;
 
         if (project != null && curationSessionService
                 .existsSession(userService.getCurrentUsername(), project.getId())) {

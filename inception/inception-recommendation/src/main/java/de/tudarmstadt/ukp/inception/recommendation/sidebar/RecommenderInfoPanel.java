@@ -44,6 +44,7 @@ import org.wicketstuff.event.annotation.OnEvent;
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
@@ -59,7 +60,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup;
 import de.tudarmstadt.ukp.inception.recommendation.api.model.SuggestionGroup.GroupKey;
 import de.tudarmstadt.ukp.inception.recommendation.api.recommender.RecommendationEngineFactory;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadLink;
@@ -78,16 +79,24 @@ public class RecommenderInfoPanel
 
     private ModalDialog detailsDialog;
 
-    public RecommenderInfoPanel(String aId, IModel<AnnotatorState> aModel)
+    private final DocumentEditorManager manager;
+
+    private final IModel<Project> project;
+
+    public RecommenderInfoPanel(String aId, IModel<Project> aProject,
+            DocumentEditorManager aManager)
     {
-        super(aId, aModel);
+        super(aId);
+
+        manager = aManager;
+        project = aProject;
 
         setOutputMarkupId(true);
 
-        var sessionOwner = userService.getCurrentUser();
+        var sessionOwner = userService.getSessionOwner();
 
         var settings = preferencesService.loadDefaultTraitsForProject(
-                KEY_RECOMMENDER_GENERAL_SETTINGS, aModel.getObject().getProject());
+                KEY_RECOMMENDER_GENERAL_SETTINGS, aProject.getObject());
 
         detailsDialog = new BootstrapModalDialog("detailsDialog").trapFocus().closeOnEscape()
                 .closeOnClick();
@@ -110,7 +119,7 @@ public class RecommenderInfoPanel
 
                 var state = new WebMarkupContainer("state");
                 if (evaluatedRecommender.isPresent()) {
-                    EvaluatedRecommender evalRec = evaluatedRecommender.get();
+                    var evalRec = evaluatedRecommender.get();
                     if (evalRec.isActive()) {
                         state.add(new Icon("icon", FontAwesome7IconType.play_circle_s));
                         state.add(AttributeModifier.replace("title", "[Active]"));
@@ -156,10 +165,10 @@ public class RecommenderInfoPanel
 
                 item.add(resultsContainer);
 
+                var active = evaluatedRecommender.map(EvaluatedRecommender::isActive).orElse(false);
                 item.add(new LambdaAjaxLink("acceptBest",
                         _tgt -> actionAcceptBest(_tgt, recommender))
-                                .setVisible(evaluatedRecommender.map(EvaluatedRecommender::isActive)
-                                        .orElse(false)));
+                                .add(visibleWhen(() -> active && isActiveEditorEditable())));
 
                 item.add(new LambdaAjaxLink("showDetails",
                         _tgt -> actionShowDetails(_tgt, recommender))
@@ -181,8 +190,8 @@ public class RecommenderInfoPanel
                                 .add(visibleWhen(() -> !resultsContainer.isVisible())));
             }
         };
-        var recommenders = LoadableDetachableModel.of(() -> recommendationService
-                .listEnabledRecommenders(aModel.getObject().getProject()));
+        var recommenders = LoadableDetachableModel
+                .of(() -> recommendationService.listEnabledRecommenders(project.getObject()));
         searchResultGroups.setModel(recommenders);
 
         recommenderContainer.add(visibleWhen(() -> !recommenders.getObject().isEmpty()));
@@ -230,15 +239,25 @@ public class RecommenderInfoPanel
         return new TempFileResource((os) -> engine.exportModel(context.get(), os));
     }
 
-    public AnnotatorState getModelObject()
+    private boolean isActiveEditorEditable()
     {
-        return (AnnotatorState) getDefaultModelObject();
+        return manager.getActiveEditor() //
+                .map(context -> context.getActionHandler().isEditable()) //
+                .orElse(false);
     }
 
     @OnEvent
     public void onPredictionsSwitched(PredictionsSwitchedEvent aEvent)
     {
         aEvent.getRequestTarget().ifPresent(target -> target.add(this));
+    }
+
+    @OnEvent
+    public void onActiveEditorChanged(ActiveEditorChangedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() != null) {
+            aEvent.getRequestHandler().add(this);
+        }
     }
 
     private void actionShowDetails(AjaxRequestTarget aTarget, Recommender aRecommender)
@@ -253,14 +272,24 @@ public class RecommenderInfoPanel
     private void actionAcceptBest(AjaxRequestTarget aTarget, Recommender aRecommender)
         throws AnnotationException, IOException
     {
-        var sessionOwner = userService.getCurrentUser();
-        var state = getModelObject();
+        var sessionOwner = userService.getSessionOwner();
+        var context = manager.getActiveEditor().orElseThrow();
+        var state = context.getAnnotatorState();
 
-        var context = findParent(DocumentEditorManager.class).getActiveContext().orElseThrow();
+        // Check before touching the CAS - accepting modifies it in memory and would only be
+        // rejected when the result is written.
+        try {
+            context.getActionHandler().ensureIsEditable();
+        }
+        catch (AnnotationException e) {
+            error(e.getMessage());
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
 
         var cas = context.getEditorCas();
 
-        var predictions = recommendationService.getPredictions(sessionOwner, state.getProject(),
+        var predictions = recommendationService.getPredictions(sessionOwner, project.getObject(),
                 RECOMMENDER_SOURCE);
         if (predictions == null) {
             error("Recommenders did not yet provide any suggestions.");
@@ -268,7 +297,7 @@ public class RecommenderInfoPanel
             return;
         }
 
-        var pref = recommendationService.getPreferences(sessionOwner, state.getProject());
+        var pref = recommendationService.getPreferences(sessionOwner, project.getObject());
 
         var sourceDocumentId = CasMetadataUtils.getSourceDocumentId(cas).orElseThrow();
 

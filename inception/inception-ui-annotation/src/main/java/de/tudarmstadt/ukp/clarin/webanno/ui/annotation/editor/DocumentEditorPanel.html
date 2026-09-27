@@ -35,6 +35,15 @@
     mid-word.
   -->
   <style>
+    /*
+      Side-by-side panes share the width via flex:1, but a flex item defaults to min-width:auto,
+      which refuses to shrink below its content. Without this a long line in one editor pushes the
+      other pane off-screen instead of scrolling inside its own pane.
+    */
+    .document-editor-panel-root {
+      min-width: 0;
+    }
+
     .document-editor-panel-document-name {
       min-width: 0;
       display: flex;
@@ -51,10 +60,18 @@
       align-items: center;
       gap: 0.25rem;
     }
+
+    .document-editor-panel-root.active-editor > .card {
+      border-color: var(--bs-primary);
+    }
+
+    .document-editor-panel-root.active-editor .card-header {
+      background-color: rgba(var(--bs-primary-rgb), 0.08);
+    }
   </style>
 </wicket:head>
 <wicket:panel>
-  <div class="flex-content flex-v-container flex-gutter flex-only-internal-gutter">
+  <div wicket:id="editorPanelRoot" class="flex-content flex-v-container flex-gutter flex-only-internal-gutter document-editor-panel-root">
     <div class="flex-content flex-v-container card overflow-hidden">
       <div class="card-header d-flex justify-content-between border-bottom-0 pt-2">
         <div class="document-editor-panel-document-name">
@@ -71,6 +88,10 @@
           <button wicket:id="toggleActionBar" class="btn btn-sm btn-outline-secondary border-0">
             <i wicket:id="toggleActionBarIcon"/>
           </button>
+          <button wicket:id="closeEditor" class="btn btn-sm btn-outline-secondary border-0"
+                  wicket:message="title:closeEditor">
+            <i class="fas fa-xmark"></i>
+          </button>
         </div>
       </div>
       <div class="card-body flex-v-container" style="padding: 0px;">
@@ -83,6 +104,19 @@
           <div wicket:id="actionBarItems" class="action-bar-items"></div>
         </nav>
         <div wicket:id="editorContainer" class="flex-content flex-v-container" style="padding: 0px;">
+          <!--
+            Shown instead of the editor while this pane holds no document. A pane can be empty only
+            transiently - between being added and having something opened into it - but that state
+            is reachable in the UI, so it needs to say what to do next rather than render blank.
+          -->
+          <div wicket:id="noDocumentPrompt"
+               class="flex-content d-flex flex-column justify-content-center align-items-center text-muted">
+            <p class="mb-2"><wicket:message key="noDocumentOpen">No document open</wicket:message></p>
+            <a wicket:id="openDocumentFromPrompt" href="#" class="btn btn-outline-secondary btn-sm">
+              <i class="fas fa-folder-open me-1"></i>
+              <wicket:message key="openDocument">Open a document...</wicket:message>
+            </a>
+          </div>
           <div wicket:id="editor" class="flex-content flex-v-container" style="padding: 0px;"></div>
         </div>
       </div>

@@ -35,28 +35,46 @@ import org.slf4j.LoggerFactory;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationEditingService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode;
 import de.tudarmstadt.ukp.inception.curation.service.DocumentNotCuratableException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 public interface CuratableDocumentPage
 {
     Project getProject();
 
-    List<SourceDocument> getListOfDocs();
-
     Session getSession();
 
     Class<? extends Page> getPageClass();
-
-    AnnotatorState getModelObject();
 
     /**
      * @return the service used to look for the next curatable document.
      */
     CurationEditingService getCurationEditingService();
+
+    /**
+     * @return the service used to list curatable documents.
+     */
+    CurationDocumentService getCurationDocumentService();
+
+    /**
+     * @return the service used to bring the document state up to date before listing.
+     */
+    WorkloadManagementService getWorkloadManagementService();
+
+    /**
+     * @return the documents of this page's project that are ready to be curated.
+     */
+    default List<SourceDocument> listCuratableDocuments()
+    {
+        var project = getProject();
+        getWorkloadManagementService().getWorkloadManagerExtension(project).freshenStatus(project);
+        return getCurationDocumentService().listCuratableSourceDocuments(project);
+    }
 
     /**
      * Provide the curation CAS for the given document, creating or (re-)merging it as requested,
@@ -66,23 +84,23 @@ public interface CuratableDocumentPage
      * switch to another suitable document if one cannot be opened.
      *
      * @param aDocument
-     *            the document to merge into. Taken explicitly rather than from the page state
-     *            because the initial merge runs while that state is still being set up.
+     *            the document to merge into.
+     * @param aState
+     *            the state of the merge target editor - it identifies the data owner to merge into
+     *            and the layers to consider.
      * @param aMergeStrategy
      *            how to reconcile disagreeing annotators.
      * @param aMergeMode
      *            whether to rebuild the curation document or only fill its gaps.
      * @return the curation CAS.
      */
-    default CAS readOrCreateCurationCas(SourceDocument aDocument, MergeStrategy aMergeStrategy,
-            CurationMergeMode aMergeMode)
+    default CAS readOrCreateCurationCas(SourceDocument aDocument, AnnotatorState aState,
+            MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
         throws IOException, UIMAException, AnnotationException
     {
-        var state = getModelObject();
-
         try {
             return getCurationEditingService().readOrCreateCurationCas(aDocument,
-                    state.getUser().getUsername(), state.getAnnotationLayers(), aMergeStrategy,
+                    aState.getUser().getUsername(), aState.getAnnotationLayers(), aMergeStrategy,
                     aMergeMode);
         }
         catch (DocumentNotCuratableException e) {
@@ -96,7 +114,7 @@ public interface CuratableDocumentPage
             // subclass on its own mount.
             try {
                 getCurationEditingService()
-                        .findNextCuratableDocument(getListOfDocs(), e.getDocument())
+                        .findNextCuratableDocument(listCuratableDocuments(), e.getDocument())
                         .ifPresent(next -> pageParameters.set(PAGE_PARAM_DOCUMENT, next.getId()));
             }
             catch (Exception ex) {

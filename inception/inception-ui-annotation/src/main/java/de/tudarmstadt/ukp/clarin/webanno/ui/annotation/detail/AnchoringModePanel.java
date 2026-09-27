@@ -17,15 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.config.KeyBindingsUtil.formatShortcut;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static java.util.Arrays.asList;
-import static java.util.stream.Collectors.joining;
 import static wicket.contrib.input.events.EventType.click;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -95,8 +94,8 @@ public class AnchoringModePanel
                 link.add(new AttributeAppender("class",
                         () -> AnchoringModePanel.this.getModelObject() == mode ? "active" : "",
                         " "));
-                var shortcutStr = " [" + Stream.of(getShortcutForMode(mode)).map(Object::toString)
-                        .collect(joining(" + ")) + "]";
+                var shortcut = formatShortcut(getShortcutForMode(mode));
+                var shortcutStr = shortcut.isEmpty() ? "" : " [" + shortcut + "]";
                 link.add(AttributeModifier.replace("title",
                         new ResourceModel(mode.getClass().getSimpleName() + "." + mode.name())
                                 .getObject() + shortcutStr));

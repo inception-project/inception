@@ -35,31 +35,29 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 public interface ActiveLearningService
 {
     /**
-     * @param aDataOwner
+     * @param aSessionOwner
      *            annotator user to get suggestions for
      * @param aLayer
      *            layer to get suggestions for
      * @return all suggestions for the given layer and user as a flat list (i.e. not grouped by
      *         documents, but grouped by alternatives).
      */
-    List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aDataOwner, AnnotationLayer aLayer);
+    List<SuggestionGroup<SpanSuggestion>> getSuggestions(User aSessionOwner,
+            AnnotationLayer aLayer);
 
     /**
-     * @return if the are any records of type {@link LearningRecordUserAction#SKIPPED} in the
-     *         history of the given layer for the given user.
-     * 
-     * @param aDataOwner
-     *            annotator user to check suggestions for
      * @param aLayer
      *            layer to check suggestions for
+     * @return if the are any records of type {@link LearningRecordUserAction#SKIPPED} in the
+     *         history of the given layer for the given user.
      */
-    boolean hasSkippedSuggestions(String aSessionOwner, User aDataOwner, AnnotationLayer aLayer);
+    boolean hasSkippedSuggestions(User aDataOwner, AnnotationLayer aLayer);
 
     void hideRejectedOrSkippedAnnotations(String aSessionOwner, User aDataOwner,
             AnnotationLayer aLayer, boolean aFilterSkippedRecommendation,
             List<SuggestionGroup<SpanSuggestion>> aSuggestionGroups);
 
-    Optional<Delta<SpanSuggestion>> generateNextSuggestion(String aSessionOwner, User aDataOwner,
+    Optional<Delta<SpanSuggestion>> generateNextSuggestion(User aSessionOwner, User aDataOwner,
             ActiveLearningUserState aAlState, Long aCurrentDocumentId);
 
     void acceptSpanSuggestion(SourceDocument aDocument, User aDataOwner, Predictions aPredictions,

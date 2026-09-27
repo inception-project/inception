@@ -31,6 +31,12 @@ public class AnnotationNavigationUserPrefs
     public static final PreferenceKey<AnnotationNavigationUserPrefs> KEY_ANNOTATION_NAVIGATION_USER_PREFS = new PreferenceKey<>(
             AnnotationNavigationUserPrefs.class, "annotation/navigation");
 
+    /**
+     * Skip documents in a TERMINAL state - which is FINISHED as well as IGNORE (locked) - when
+     * navigating. The field name only mentions "finished" for historical reasons: renaming it would
+     * silently discard the stored preference of every user, so the name stays and the labels say
+     * "finished and locked".
+     */
     private boolean finishedDocumentsSkippedByNavigation = false;
 
     public boolean isFinishedDocumentsSkippedByNavigation()

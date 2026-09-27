@@ -15,7 +15,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package de.tudarmstadt.ukp.clarin.webanno.api.annotation.action;
+package de.tudarmstadt.ukp.inception.rendering.editorstate;
 
 import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CENTERED;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
@@ -28,16 +28,15 @@ import java.util.List;
 import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.inception.support.uima.Range;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 
-public interface DocumentEditorActionHandler
+public interface DocumentEditor
     extends AnnotationActionHandler, DiamContext
 {
     /**
@@ -48,19 +47,6 @@ public interface DocumentEditorActionHandler
      * @return the selection for the given annotation.
      */
     Selection selectionFor(VID aVid, AnnotationFS aAnnotation);
-
-    /**
-     * Open the given document in the editor.
-     *
-     * @param aTarget
-     *            the AJAX target
-     * @param aDocument
-     *            the document to open
-     * @throws AnnotationException
-     *             if the document cannot be opened in this editor
-     */
-    void actionOpenDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
-        throws AnnotationException;
 
     @Override
     default void actionSelect(AjaxRequestTarget aTarget, VID aVid)
@@ -101,10 +87,9 @@ public interface DocumentEditorActionHandler
      *
      * @param aTarget
      *            the AJAX target
-     * @param aBegin
-     *            the offset to scroll to
-     * @param aEnd
-     *            the corresponding end offset
+     * @param aRange
+     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
+     *            opening the document placed it.
      * @param aAdditionalPingRanges
      *            additional ranges that should ideally be visible. May be {@code null} or empty.
      * @throws IOException
@@ -154,11 +139,20 @@ public interface DocumentEditorActionHandler
     }
 
     @Override
+    default void actionJumpTo(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            List<VRange> aAdditionalPingRanges)
+        throws IOException
+    {
+        // No document switch, so no forced refresh: a non-paged editor can scroll client-side.
+        actionJump(aTarget, aBegin, aEnd, aAdditionalPingRanges, false);
+    }
+
+    @Override
     default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
+            AnnotationSet aDataOwner, Range aRange)
         throws IOException, AnnotationException
     {
-        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, null);
+        actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange, null);
     }
 
     /**
@@ -166,23 +160,9 @@ public interface DocumentEditorActionHandler
      * additional ranges during the scroll.
      */
     @Override
-    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd, List<VRange> aAdditionalPingRanges)
-        throws IOException, AnnotationException
-    {
-        // A null document means "wherever we are" - callers default to the context's own document,
-        // which is itself null until the first one has been loaded.
-        var switched = aDocument != null && !aDocument.equals(getAnnotatorState().getDocument());
-        if (switched) {
-            actionOpenDocument(aTarget, aDocument);
-        }
-
-        if (getAnnotatorState().getDocument() == null) {
-            return;
-        }
-
-        actionJump(aTarget, aBegin, aEnd, aAdditionalPingRanges, switched);
-    }
+    void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException;
 
     @Override
     default void actionClear(AjaxRequestTarget aTarget)
@@ -190,4 +170,28 @@ public interface DocumentEditorActionHandler
         getAnnotatorState().setSelection(Selection.unselected());
         actionRefreshDocument(aTarget);
     }
+
+    /**
+     * Repaint everything in <b>this</b> editor that depends on the state of the document it shows -
+     * in particular on whether the document may still be edited.
+     * <p>
+     * Call this after a document state transition instead of repainting the page. A page repaint
+     * also works, but it takes every other editor with it, remounting panes whose document did not
+     * change.
+     *
+     * @param aTarget
+     *            the AJAX target. May be {@code null} outside a partial page update.
+     */
+    default void refreshAfterDocumentStateChange(AjaxRequestTarget aTarget)
+    {
+        // Nothing to do for an editor that renders nothing state-dependent.
+    }
+
+    /**
+     * Unload the document from the editor.
+     *
+     * @param aTarget
+     *            the AJAX target. May be {@code null} outside a partial page update.
+     */
+    void actionUnloadDocument(AjaxRequestTarget aTarget);
 }

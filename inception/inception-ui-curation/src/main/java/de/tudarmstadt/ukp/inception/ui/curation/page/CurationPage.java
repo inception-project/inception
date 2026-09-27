@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.page;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase.PAGE_PARAM_DOCUMENT;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
@@ -26,24 +27,31 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAG
 import java.util.List;
 
 import org.apache.wicket.Component;
+import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.string.StringValue;
 import org.wicketstuff.annotation.mount.MountPath;
 
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenDialogBehavior;
-import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.url.SingleDocumentEditorUrlParameterStrategy;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.DocumentEditorWorkspace_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.mono.SingleDocumentEditorWorkspace;
+import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenDialogBehavior;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.inception.ui.curation.readiness.CurationReadinessBadgePanel;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarBehavior;
@@ -71,24 +79,39 @@ public class CurationPage
         add(new CurationSidebarBehavior());
 
         add(new CurationAutoOpenDialogBehavior());
-        addToFooter(new CurationOpenDocumentDialog(ApplicationPageBase.CID_FOOTER_ITEM, getModel(),
-                LoadableDetachableModel.of(this::getListOfDocs)));
+        addToFooter(new CurationOpenDocumentDialog(ApplicationPageBase.CID_FOOTER_ITEM,
+                getProjectModel(), LoadableDetachableModel.of(this::listCuratableDocuments),
+                this::actionOpenCuratedDocument));
 
-        var state = getModelObject();
-        state.enableExtension(CurationEditorExtension.EXTENSION_ID);
-
-        curationSessionService.startSession(userRepository.getCurrentUsername(),
-                state.getProject());
+        curationSessionService.startSession(userRepository.getCurrentUsername(), getProject());
     }
 
     @Override
-    protected Component createDocumentStatusBadges(String aId)
+    protected AnnotatorState createAnnotatorState()
     {
-        return new CurationReadinessBadgePanel(aId, getModel());
+        var state = super.createAnnotatorState();
+        state.enableExtension(CurationEditorExtension.EXTENSION_ID);
+        return state;
+    }
+
+    private void actionOpenCuratedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
+    {
+        try {
+            getDocumentEditorManager().actionShowDocument(aTarget, aDocument, CURATION_SET);
+        }
+        catch (Exception e) {
+            handleException(aTarget, e);
+        }
     }
 
     @Override
-    protected void ensureDocumentMayBeOpened(SourceDocument aDocument)
+    protected Component createDocumentStatusBadges(String aId, IModel<AnnotatorState> aState)
+    {
+        return new CurationReadinessBadgePanel(aId, aState);
+    }
+
+    @Override
+    protected void ensureDocumentMayBeOpened(SourceDocument aDocument, AnnotatorState aState)
     {
         // Must run before the curation CAS is created: once it exists, isDocumentCuratable treats
         // curation as started and would let the document through on any subsequent attempt.
@@ -103,33 +126,41 @@ public class CurationPage
     }
 
     @Override
-    protected void handleParameters(StringValue aDocumentParameter, StringValue aFocusParameter,
-            StringValue aUserParameter)
+    protected DocumentEditorWorkspace_ImplBase createWorkspace(String aId)
     {
-        var sessionOwner = userRepository.getCurrentUser();
-        requireProjectRole(sessionOwner, CURATOR);
-
-        // Pin data owner to the curation user
-        var curationUser = userRepository.getCurationUser();
-        getModelObject().setUser(curationUser);
-        super.handleParameters(aDocumentParameter, aFocusParameter,
-                StringValue.valueOf(curationUser.getUsername()));
+        return new SingleDocumentEditorWorkspace(aId, this::createDocumentEditorPanel,
+                new SingleDocumentEditorUrlParameterStrategy(userRepository::getCurrentUsername,
+                        getPinnedDataOwner() != null));
     }
 
     @Override
-    public List<SourceDocument> getListOfDocs()
+    protected AnnotationSet getPinnedDataOwner()
     {
-        // Since the curatable documents depend on the document state, let's make sure the document
-        // state is up-to-date
-        var project = getModelObject().getProject();
+        return CURATION_SET;
+    }
+
+    @Override
+    protected void requireAccess(User aSessionOwner)
+    {
+        requireProjectRole(aSessionOwner, CURATOR);
+    }
+
+    /**
+     * @see CuratableDocumentPage#listCuratableDocuments()
+     */
+    public List<SourceDocument> listCuratableDocuments()
+    {
+        var project = getProject();
         workloadManagementService.getWorkloadManagerExtension(project).freshenStatus(project);
         return curationDocumentService.listCuratableSourceDocuments(project);
     }
 
     @Override
-    protected void transitionDocumentStateOnLoadDocument(AnnotatorState state,
-            AnnotationDocument annotationDocument)
+    protected void transitionDocumentStateOnLoadDocument(DocumentEditorPanel aPanel,
+            AnnotationDocument aAnnotationDocument)
     {
+        var state = aPanel.getAnnotatorState();
+
         // Opening a document on the curation page typically triggers an initial merge.
         // This initial merge is a write operation, so even if the document should for
         // some reason not be editable, the transition into CURATION_IN_PROGRESS should
@@ -138,12 +169,12 @@ public class CurationPage
         curationDocumentService.markCurationInProgress(state.getDocument());
 
         // State transition may have had an impact on editability, so let's clear the cache
-        clearIsEditableCache();
+        aPanel.clearIsEditableCache();
 
-        if (isEditable()) {
+        if (aPanel.isEditable()) {
             // We maintain an AnnotationDocument for the `CURATION_USER` now
-            if (AnnotationDocumentState.NEW == annotationDocument.getState()) {
-                documentService.setAnnotationDocumentState(annotationDocument,
+            if (AnnotationDocumentState.NEW == aAnnotationDocument.getState()) {
+                documentService.setAnnotationDocumentState(aAnnotationDocument,
                         AnnotationDocumentState.IN_PROGRESS, EXPLICIT_ANNOTATOR_USER_ACTION);
             }
         }

@@ -163,7 +163,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     public DocumentMetadataAnnotationSelectionPanel(String aId, DocumentEditorManager aManager)
     {
         super(aId,
-                () -> aManager.getActiveContext().map(DiamContext::getAnnotatorState).orElse(null));
+                () -> aManager.getActiveEditor().map(DiamContext::getAnnotatorState).orElse(null));
 
         setOutputMarkupPlaceholderTag(true);
 
@@ -200,7 +200,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private boolean isEditable()
     {
-        return manager.getActiveContext() //
+        return manager.getActiveEditor() //
                 .map(context -> context.getActionHandler().isEditable()) //
                 .orElse(false);
     }
@@ -208,7 +208,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private void actionAcceptSuggestion(AjaxRequestTarget aTarget, AnnotationListItem aItem)
     {
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             context.getActionHandler().ensureIsEditable();
 
             acceptSuggestion(aTarget, aItem, context);
@@ -221,7 +221,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private void actionMergeCuration(AjaxRequestTarget aTarget, AnnotationListItem aItem)
     {
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             context.getActionHandler().ensureIsEditable();
 
             mergeCuration(aTarget, aItem, context);
@@ -287,7 +287,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private void actionRejectSuggestion(AjaxRequestTarget aTarget, AnnotationListItem aItem)
     {
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             context.getActionHandler().ensureIsEditable();
 
             var state = getModelObject();
@@ -319,7 +319,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private void actionCreate(AjaxRequestTarget aTarget) throws AnnotationException, IOException
     {
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             context.getActionHandler().ensureIsEditable();
 
             var state = getModelObject();
@@ -344,7 +344,7 @@ public class DocumentMetadataAnnotationSelectionPanel
             DocumentMetadataAnnotationDetailPanel aDetailPanel)
     {
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             context.getActionHandler().ensureIsEditable();
 
             // Load the boiler-plate
@@ -596,7 +596,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     {
         CAS cas;
         try {
-            cas = manager.getActiveContext().orElseThrow().getEditorCas();
+            cas = manager.getActiveEditor().orElseThrow().getEditorCas();
         }
         catch (IOException | NoSuchElementException e) {
             LOG.error("Unable to load CAS", e);
@@ -681,8 +681,8 @@ public class DocumentMetadataAnnotationSelectionPanel
             DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
             List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
-        var state = getModelObject();
-        var predictions = recommendationService.getPredictions(state.getUser(), state.getProject())
+        var sessionOwner = userService.getSessionOwner();
+        var predictions = recommendationService.getPredictions(sessionOwner, aLayer.getProject())
                 .values();
         for (var preds : predictions) {
             generateSuggestionItems(preds, aLayer, aLayerSupport, aSingleton, aCas, aItems,
@@ -690,7 +690,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
     }
 
-    private void generateSuggestionItems(Predictions predictions, AnnotationLayer aLayer,
+    private void generateSuggestionItems(Predictions aPredictions, AnnotationLayer aLayer,
             DocumentMetadataLayerSupport aLayerSupport, boolean aSingleton, CAS aCas,
             List<AnnotationListItem> aItems, List<AnnotationFeature> aFeatures)
     {
@@ -698,18 +698,19 @@ public class DocumentMetadataAnnotationSelectionPanel
         var featuresIndex = aFeatures.stream()
                 .collect(toMap(AnnotationFeature::getName, identity()));
 
-        if (predictions != null) {
-            var predictionsByDocument = predictions
+        if (aPredictions != null) {
+            var predictionsByDocument = aPredictions
                     .getPredictionsByDocument(state.getDocument().getId());
 
             var group = SuggestionDocumentGroup.groupsOfType(MetadataSuggestion.class,
                     predictionsByDocument);
 
-            recommendationService.calculateSuggestionVisibility(userService.getCurrentUsername(),
+            var sessionOwner = userService.getSessionOwner();
+            recommendationService.calculateSuggestionVisibility(sessionOwner.getUsername(),
                     state.getDocument(), aCas, state.getUser().getUsername(), aLayer, group, -1,
                     -1);
 
-            var pref = recommendationService.getPreferences(state.getUser(), state.getProject());
+            var pref = recommendationService.getPreferences(sessionOwner, state.getProject());
 
             for (var suggestion : predictionsByDocument) {
                 if ((!suggestion.isVisible() && !pref.isShowAllPredictions())
@@ -964,7 +965,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         aEvent.getRequestTarget().ifPresent(target -> target.add(layersContainer));
-        manager.getActiveContext().ifPresent(
+        manager.getActiveEditor().ifPresent(
                 ctx -> ctx.actionRefreshDocument(aEvent.getRequestTarget().orElse(null)));
     }
 
@@ -976,7 +977,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         aEvent.getRequestTarget().ifPresent(target -> target.add(layersContainer));
-        manager.getActiveContext().ifPresent(
+        manager.getActiveEditor().ifPresent(
                 ctx -> ctx.actionRefreshDocument(aEvent.getRequestTarget().orElse(null)));
     }
 

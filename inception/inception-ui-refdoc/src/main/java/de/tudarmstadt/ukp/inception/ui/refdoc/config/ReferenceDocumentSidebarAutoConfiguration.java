@@ -24,6 +24,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentNavigatorActionBarExtension;
 import de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarFactory;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @ConditionalOnWebApplication
 @Configuration
@@ -35,9 +36,10 @@ import de.tudarmstadt.ukp.inception.ui.refdoc.ReferenceDocumentSidebarFactory;
 public class ReferenceDocumentSidebarAutoConfiguration
 {
     @Bean
-    public ReferenceDocumentSidebarFactory referenceDocumentSidebarFactory()
+    public ReferenceDocumentSidebarFactory referenceDocumentSidebarFactory(
+            WorkloadManagementService aWorkloadManagementService)
     {
-        return new ReferenceDocumentSidebarFactory();
+        return new ReferenceDocumentSidebarFactory(aWorkloadManagementService);
     }
 
     @Bean

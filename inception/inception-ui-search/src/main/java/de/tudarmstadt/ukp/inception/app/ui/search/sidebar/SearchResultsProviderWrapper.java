@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.wicket.markup.repeater.data.IDataProvider;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.search.ResultsGroup;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
 
@@ -158,6 +159,15 @@ public class SearchResultsProviderWrapper
         var resultsList = new ArrayList<ResultsGroup>();
         resultsIterator.forEachRemaining(r -> resultsList.add(r));
         return resultsList;
+    }
+
+    /**
+     * @return the user whose annotations the current query searches, or {@code null} if there is no
+     *         current query.
+     */
+    public User getDataOwner()
+    {
+        return searchResultsProvider.getDataOwner();
     }
 
     public void emptyQuery()
