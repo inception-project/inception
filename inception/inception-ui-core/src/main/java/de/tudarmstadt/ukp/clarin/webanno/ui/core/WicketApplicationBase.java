@@ -95,6 +95,7 @@ import de.tudarmstadt.ukp.inception.support.kendo.KendoFixDisabledInputComponent
 import de.tudarmstadt.ukp.inception.support.kendo.KendoResourceBehavior;
 import de.tudarmstadt.ukp.inception.support.kendo.WicketJQueryFocusPatchBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.PatternMatchingCrossOriginEmbedderPolicyRequestCycleListener;
+import de.tudarmstadt.ukp.inception.support.wicket.WicketTagPlaceholderCheckFilter;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.resource.ContextSensitivePackageStringResourceLoader;
 import de.tudarmstadt.ukp.inception.ui.core.ErrorListener;
@@ -241,6 +242,8 @@ public abstract class WicketApplicationBase
         initServerTimeReporting();
 
         initNonCachingInDevEnvironment();
+
+        initWicketTagPlaceholderCheck();
 
         initErrorPage();
 
@@ -414,6 +417,13 @@ public abstract class WicketApplicationBase
     {
         if (DEVELOPMENT.equals(getConfigurationType())) {
             getComponentPostOnBeforeRenderListeners().add(new StatelessChecker());
+        }
+    }
+
+    private void initWicketTagPlaceholderCheck()
+    {
+        if (DEVELOPMENT.equals(getConfigurationType())) {
+            getRequestCycleSettings().addResponseFilter(WicketTagPlaceholderCheckFilter.INSTANCE);
         }
     }
 
