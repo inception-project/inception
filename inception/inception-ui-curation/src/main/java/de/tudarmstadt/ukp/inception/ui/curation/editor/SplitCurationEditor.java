@@ -97,6 +97,7 @@ public class SplitCurationEditor
 
         annotatorsPanel = new AnnotatorsPanel(MID_ANNOTATORS_PANEL, aManager,
                 new ListModel<>(segments));
+        annotatorsPanel.setSelectAnnotationOnMerge(true);
         annotatorsPanel.setOutputMarkupPlaceholderTag(true);
         annotatorsPanel.add(visibleWhen(getModel().map(AnnotatorState::getDocument).isPresent()));
         splitter.add(annotatorsPanel);
