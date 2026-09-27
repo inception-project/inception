@@ -113,6 +113,7 @@ sec-wrap {
 
 .i7n-wrapper {
     position: relative;
+    flex: 1 1 auto;
     line-height: 1.8; // default; overridden by the .iaa-line-spacing-* presets below
     overflow: auto;
     padding-left: var(--vertical-tray-width-left);
