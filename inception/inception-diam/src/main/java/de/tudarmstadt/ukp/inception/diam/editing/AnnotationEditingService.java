@@ -89,8 +89,9 @@ public interface AnnotationEditingService
      * Commits the values from the given feature states into the annotation with the given target FS
      * address in the given target CAS using the provided type adapter.
      * <p>
-     * Features are committed independently: if one feature cannot be set, the remaining ones are
-     * still attempted and the failure is reported as an ERROR message.
+     * If any of the features does not exist in the type system of the target CAS, nothing is
+     * committed. Otherwise, features are committed independently: if one feature cannot be set, the
+     * remaining ones are still attempted and the failure is reported as an ERROR message.
      *
      * @param aDocument
      *            the document the target CAS belongs to.
@@ -105,10 +106,13 @@ public interface AnnotationEditingService
      * @param aFeatureStates
      *            the values to commit.
      * @return a message per feature that could not be set; empty if all features were committed.
+     * @throws StaleTypeSystemException
+     *             if a feature does not exist in the type system of the target CAS.
      */
     List<LogMessage> commitFeatureStates(SourceDocument aDocument, String aDataOwner,
             CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
-            List<FeatureState> aFeatureStates);
+            List<FeatureState> aFeatureStates)
+        throws StaleTypeSystemException;
 
     /**
      * Reverses the relation with the given address, i.e. replaces it with a relation whose source
@@ -214,13 +218,11 @@ public interface AnnotationEditingService
      * @param aMessages
      *            collects messages about problems encountered while loading, e.g. constraints that
      *            could not be evaluated.
-     * @return the feature states to show in the feature editors.
-     * @throws StaleTypeSystemException
-     *             if a feature of the layer does not exist in the CAS type system. No feature
-     *             states are returned in this case.
+     * @return the feature states to show in the feature editors. A feature that does not exist in
+     *         the CAS type system (e.g. because the CAS was not upgraded as the document is opened
+     *         read-only) is included with its null value.
      */
     List<FeatureState> loadFeatureStates(CAS aCas, AnnotatorState aState, AnnotationLayer aLayer,
             FeatureStructure aFS, Map<AnnotationFeature, Serializable> aRemembered,
-            List<LogMessage> aMessages)
-        throws StaleTypeSystemException;
+            List<LogMessage> aMessages);
 }
