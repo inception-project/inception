@@ -56,10 +56,10 @@ export class ApacheAnnotatorEditorFactory implements AnnotationEditorFactory {
         // If the target element is the body of a HTML document and the body has only one child, then
         // we use the child as the target element. This is to support the case where the body is
         // used as a container for the additional editor functionality.
-        const body = element.ownerDocument?.body;
+        const body = documentOf(element)?.body;
         if (body) {
             // Add a (scrolling) wrapper in the body
-            const wrapper = element.ownerDocument.createElement('div');
+            const wrapper = body.ownerDocument.createElement('div');
             wrapper.classList.add('i7n-wrapper');
             wrapper.style.overflow = 'auto';
 
@@ -120,7 +120,7 @@ function resolveDocumentStructure(
 ): DocumentStructureStrategy {
     const expr = props.documentStructureFactory;
     if (!expr) return new NoopDocumentStructure();
-    const win = element.ownerDocument?.defaultView ?? window;
+    const win = documentOf(element)?.defaultView ?? window;
     try {
         const factory = (win as any).eval(expr) as DocumentStructureFactory;
         return factory.create();
@@ -131,4 +131,13 @@ function resolveDocumentStructure(
         );
         return new NoopDocumentStructure();
     }
+}
+
+/**
+ * The document a node belongs to. A Document has no owner document, so it is
+ * returned as-is. Checks nodeType rather than instanceof so that a document
+ * from another frame is recognised too.
+ */
+function documentOf(node: Node): Document | null {
+    return node.nodeType === Node.DOCUMENT_NODE ? (node as Document) : node.ownerDocument;
 }
