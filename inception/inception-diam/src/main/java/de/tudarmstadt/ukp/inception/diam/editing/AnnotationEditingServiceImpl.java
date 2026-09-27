@@ -220,7 +220,10 @@ public class AnnotationEditingServiceImpl
     public List<LogMessage> commitFeatureStates(SourceDocument aDocument, String aDataOwner,
             CAS aTargetCas, int aTargetFsAddr, TypeAdapter aAdapter,
             List<FeatureState> aFeatureStates)
+        throws StaleTypeSystemException
     {
+        assertFeaturesExist(selectFsByAddr(aTargetCas, aTargetFsAddr), aFeatureStates);
+
         var messages = new ArrayList<LogMessage>();
 
         try (var ctx = aAdapter.updateFeatureValues(aDocument, aDataOwner, aTargetCas,
@@ -241,6 +244,18 @@ public class AnnotationEditingServiceImpl
         return messages;
     }
 
+    private void assertFeaturesExist(FeatureStructure aFS, List<FeatureState> aFeatureStates)
+        throws StaleTypeSystemException
+    {
+        for (var featureState : aFeatureStates) {
+            if (FeatureUtil.getFeature(aFS, featureState.feature).isEmpty()) {
+                LOG.error("Unable to find [{}] in the current CAS typesystem",
+                        featureState.feature.getName());
+                throw new StaleTypeSystemException(featureState.feature);
+            }
+        }
+    }
+
     @Override
     public AnnotationFS reverseRelation(SourceDocument aDocument, String aDataOwner, CAS aCas,
             int aRelationAddr, TypeAdapter aAdapter, List<FeatureState> aFeatureStates,
@@ -254,6 +269,8 @@ public class AnnotationEditingServiceImpl
         }
 
         var oldRelation = selectAnnotationByAddr(aCas, aRelationAddr);
+
+        assertFeaturesExist(oldRelation, aFeatureStates);
 
         // Remove old relation
         relationAdapter.delete(aDocument, aDataOwner, aCas, VID.of(oldRelation));
@@ -323,7 +340,6 @@ public class AnnotationEditingServiceImpl
     public List<FeatureState> loadFeatureStates(CAS aCas, AnnotatorState aState,
             AnnotationLayer aLayer, FeatureStructure aFS,
             Map<AnnotationFeature, Serializable> aRemembered, List<LogMessage> aMessages)
-        throws StaleTypeSystemException
     {
         var featureStates = new ArrayList<FeatureState>();
 
@@ -332,11 +348,6 @@ public class AnnotationEditingServiceImpl
         for (var feature : annotationService.listEnabledFeatures(aLayer)) {
             if (isFeatureSuppressed(aState, feature)) {
                 continue;
-            }
-
-            if (aFS != null && FeatureUtil.getFeature(aFS, feature).isEmpty()) {
-                LOG.error("Unable to find [{}] in the current CAS typesystem", feature.getName());
-                throw new StaleTypeSystemException(feature);
             }
 
             FeatureState featureState;
