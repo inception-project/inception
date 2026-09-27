@@ -52,8 +52,7 @@ public class ShowContextMenuHandler
     public boolean accepts(DiamRequest aRequest)
     {
         var paramId = getVid(aRequest.getRequest());
-        return super.accepts(aRequest) && paramId.isSet() && !paramId.isSynthetic()
-                && !paramId.isSlotSet();
+        return super.accepts(aRequest) && paramId.isSet() && !paramId.isSlotSet();
     }
 
     @Override

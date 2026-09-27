@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.inception.editor;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
 
 public interface ContextMenuLookup
+    extends Serializable
 {
     public ContextMenu getContextMenu();
 }

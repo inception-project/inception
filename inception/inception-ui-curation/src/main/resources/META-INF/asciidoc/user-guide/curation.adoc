@@ -106,11 +106,21 @@ NOTE: The upper *Annotation* pane that the curator uses to edit annotations is n
 |===
 
 **Left-click** on an annotation in one of the lower panels to merge it. This action copies the annotation to the upper panel. The merged annotation will turn green in the lower panel from which it was selected. If other annotators had a conflicting opinion, these will turn red in the lower panels of the respective annotators. 
+The merged annotation is also selected in the upper panel, so you can review or edit it right away in the annotation detail panel on the right.
+
+Hold kbd:[Shift] and **left-click** on an annotation in one of the lower panels to look at it without merging it.
+The annotation detail panel on the right then shows the annotator's annotation read-only, headed *Annotation by ... (read-only)*.
+This way you can, for example, check all feature values of an annotation or follow the link to a knowledge base entry before deciding whether to merge it.
+Your selection in the upper panel does not change.
+To get back to it, click *Clear* in the detail panel or select an annotation in the upper panel.
+This also works when the curation of the document has already been marked as finished.
 
 **Right-click** on an annotation in the lower panels to bring up a menu with additional options.
 
+* **Show details**: show the annotation read-only in the annotation detail panel, the same as holding kbd:[Shift] while clicking it.
 * **Merge all XXX**: merge all annotations of the given type from the selected annotator.
   Note that this overrides any annotations of the type which may previously have been merged or manually created in the upper panel.
+  Because this cannot be undone, you are asked to confirm it first.
 
 == Integrated curation mode
 
@@ -121,6 +131,11 @@ In order to override an suggestion, simply create a new annotation at the same p
 Overriding or accepting suggestions will typically hide alternative suggestions unless the layer allows stacking annotations.
 It is currently not possible to reject an annotation in the integrated curation mode.
 So if you do not want to accept or override an annotation, just ignore it.
+
+To look at the annotation behind a suggestion without accepting it, **right-click** the suggestion and choose **Show details**.
+The annotation detail panel on the right then shows the annotation read-only, headed with the annotators who made it, e.g. *Annotation by anno1, anno2 (read-only)*.
+This way you can, for example, check all feature values or follow the link to a knowledge base entry before deciding whether to accept the suggestion.
+To get back to your own selection, click *Clear* in the detail panel or select an annotation in the document.
 
 In this mode, you can find a **Curation sidebar** on the left side of the page.
 In this sidebar, you can configure which annotators you want to see in the document view.

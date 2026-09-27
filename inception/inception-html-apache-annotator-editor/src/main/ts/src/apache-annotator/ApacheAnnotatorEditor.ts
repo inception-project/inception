@@ -42,6 +42,8 @@ import AnnotationDetailPopOver from '@inception-project/inception-js-api/src/wid
 import { mount, tick, unmount } from 'svelte';
 import {
     highlights,
+    distinctHighlightStack,
+    isPointOnInlineLabel,
     compileNsSelector,
     closestWithMatcher,
     type SelectionLike,
@@ -481,11 +483,23 @@ export class ApacheAnnotatorEditor implements AnnotationEditor {
         // e.g. during debugging / developing
         if (event.shiftKey) return;
 
-        if (hls.length === 1) {
-            event.preventDefault();
-            const vid = hls[0].getAttribute('data-iaa-id');
+        event.preventDefault();
+
+        // Like a left click: act directly if there is only one annotation or if the user clicked
+        // on an inline label, otherwise let the user pick which annotation the menu is for.
+        const point = { x: event.clientX, y: event.clientY };
+        const stack = distinctHighlightStack(event.target);
+        const direct =
+            stack.length === 1 ? stack[0] : stack.find((hl) => isPointOnInlineLabel(point, hl));
+        if (direct) {
+            const vid = direct.getAttribute('data-iaa-id');
             if (vid) this.ajax.openContextMenu(vid, event);
+            return;
         }
+
+        this.selector.pickContextMenuTarget(event.clientX, event.clientY, stack, (vid) =>
+            this.ajax.openContextMenu(vid, event)
+        );
     }
 
     loadAnnotations(): void {

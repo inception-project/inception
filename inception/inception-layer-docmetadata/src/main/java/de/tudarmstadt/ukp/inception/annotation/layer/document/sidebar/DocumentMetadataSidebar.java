@@ -40,8 +40,8 @@ public class DocumentMetadataSidebar
     {
         super(aId, aContext);
 
-        add(new DocumentMetadataAnnotationSelectionPanel("annotations",
-                getDocumentEditorManager()));
+        add(new DocumentMetadataAnnotationSelectionPanel("annotations", getDocumentEditorManager(),
+                aContext::getProject));
     }
 
     @Override
