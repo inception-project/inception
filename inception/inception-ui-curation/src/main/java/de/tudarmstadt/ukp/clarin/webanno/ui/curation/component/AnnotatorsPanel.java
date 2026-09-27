@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.component;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ACCEPTED_BY_CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState.ANNOTATORS_AGREE;
@@ -123,6 +124,8 @@ public class AnnotatorsPanel
     private @SpringBean AnnotationSchemaProperties annotationEditorProperties;
     private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
 
+    private boolean selectAnnotationOnMerge = false;
+
     public AnnotatorsPanel(String id, DocumentEditorManager aManager,
             IModel<List<AnnotatorSegmentState>> aModel)
     {
@@ -159,6 +162,18 @@ public class AnnotatorsPanel
         };
         annotatorSegments.setOutputMarkupId(true);
         add(annotatorSegments);
+    }
+
+    /**
+     * @param aSelectAnnotationOnMerge
+     *            whether merging an annotation selects the merged annotation in the curator's
+     *            editor and thereby shows it in the annotation detail editor panel.
+     * @return the panel itself for chaining.
+     */
+    public AnnotatorsPanel setSelectAnnotationOnMerge(boolean aSelectAnnotationOnMerge)
+    {
+        selectAnnotationOnMerge = aSelectAnnotationOnMerge;
+        return this;
     }
 
     /**
@@ -209,20 +224,21 @@ public class AnnotatorsPanel
 
             // check if clicked on a span
             var casMerge = new CasMerge(schemaService, applicationEventPublisher.get());
+            CasMergeOperationResult result = null;
             if (ACTION_SELECT_SPAN_FOR_MERGE.equals(action.toString())) {
-                mergeSpan(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
-                        sourceState.getUser().getUsername(), layer);
+                result = mergeSpan(casMerge, targetCas, sourceCas, sourceVid,
+                        sourceState.getDocument(), sourceState.getUser().getUsername(), layer);
             }
             // check if clicked on an arc (relation or slot)
             else if (ACTION_SELECT_ARC_FOR_MERGE.equals(action.toString())) {
                 // this is a slot arc
                 if (sourceVid.isSlotSet()) {
-                    mergeSlot(casMerge, targetCas, sourceCas, sourceVid, sourceState.getDocument(),
-                            sourceState.getUser().getUsername(), layer);
+                    result = mergeSlot(casMerge, targetCas, sourceCas, sourceVid,
+                            sourceState.getDocument(), sourceState.getUser().getUsername(), layer);
                 }
                 // normal relation annotation arc is clicked
                 else {
-                    mergeRelation(casMerge, targetCas, sourceCas, sourceVid,
+                    result = mergeRelation(casMerge, targetCas, sourceCas, sourceVid,
                             sourceState.getDocument(), sourceState.getUser().getUsername(), layer);
                 }
             }
@@ -236,6 +252,23 @@ public class AnnotatorsPanel
                 sourceState.getPagingStrategy().moveToOffset(sourceState, targetCas,
                         sourceAnnotation.getBegin(), CENTERED);
             }
+
+            if (selectAnnotationOnMerge && result != null) {
+                selectMergedAnnotation(aTarget, sourceState.getDocument(), result);
+            }
+        }
+    }
+
+    private void selectMergedAnnotation(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            CasMergeOperationResult aResult)
+        throws IOException, AnnotationException
+    {
+        // The merge result must already have been written to the curation CAS because the
+        // curator's editor reads the CAS again to resolve the selection. For a slot, the target
+        // is the slot host.
+        var editor = manager.findEditorFor(aDocument, CURATION_SET);
+        if (editor.isPresent()) {
+            editor.get().actionSelect(aTarget, new VID(aResult.targetAddress()));
         }
     }
 
@@ -340,8 +373,9 @@ public class AnnotatorsPanel
                 sourceAnnotation);
     }
 
-    private void mergeSlot(CasMerge aCasMerge, CAS aCas, CAS aSourceCas, VID aSourceVid,
-            SourceDocument aSourceDocument, String aTargetDataOwner, AnnotationLayer aLayer)
+    private CasMergeOperationResult mergeSlot(CasMerge aCasMerge, CAS aCas, CAS aSourceCas,
+            VID aSourceVid, SourceDocument aSourceDocument, String aTargetDataOwner,
+            AnnotationLayer aLayer)
         throws AnnotationException, IOException
     {
         var sourceAnnotation = ICasUtil.selectAnnotationByAddr(aSourceCas, aSourceVid.getId());
@@ -350,7 +384,7 @@ public class AnnotatorsPanel
         var feature = adapter.listFeatures().stream().sequential().skip(aSourceVid.getAttribute())
                 .findFirst().get();
 
-        aCasMerge.mergeSlotFeature(aSourceDocument, aTargetDataOwner, aLayer, aCas,
+        return aCasMerge.mergeSlotFeature(aSourceDocument, aTargetDataOwner, aLayer, aCas,
                 sourceAnnotation, feature.getName(), aSourceVid.getSlot());
     }
 
