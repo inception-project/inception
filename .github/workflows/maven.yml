@@ -153,7 +153,7 @@ jobs:
 
     - name: Build with Maven
       if: "!(matrix.os == 'ubuntu-24.04-arm' && github.event_name == 'push')"
-      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify -T 1C ${{ runner.os == 'Linux' && '-Pci-docker-cleanup' || '' }}
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress clean verify ${{ runner.os == 'Linux' && '-Pci-docker-cleanup' || '' }}
 
     - name: Build with Maven and publish artifacts
       if: matrix.os == 'ubuntu-24.04-arm' && github.event_name == 'push'
@@ -161,7 +161,7 @@ jobs:
         # `MAVEN_USERNAME` and `MAVEN_PASSWORD` are used in `~/.m2/settings.xml` created by `setup-java` action
         MAVEN_USERNAME: ${{ secrets.UKP_MAVEN_USER }}
         MAVEN_PASSWORD: ${{ secrets.UKP_MAVEN_TOKEN }}
-      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress -DdeployAtEnd=true clean deploy -T1C -Pci-docker-cleanup
+      run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress -DdeployAtEnd=true clean deploy -Pci-docker-cleanup
 
     - name: Report memory pressure
       # Runs even when the build is killed, so a repeat OOM leaves evidence behind
