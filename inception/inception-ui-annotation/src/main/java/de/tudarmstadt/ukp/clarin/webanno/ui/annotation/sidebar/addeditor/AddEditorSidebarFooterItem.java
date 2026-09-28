@@ -18,12 +18,14 @@
 package de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.addeditor;
 
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
+import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.util.stream.Stream;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.IEvent;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
 
@@ -33,11 +35,13 @@ import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7I
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.split.SplitEditorWorkspace;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorSetChangedEvent;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 
 /**
  * Splits the page into a second editor pane, and - at a cap of exactly two - unsplits it again.
+ * While there are two panes, also toggles scrolling them together.
  */
 public class AddEditorSidebarFooterItem
     extends Panel
@@ -48,8 +52,14 @@ public class AddEditorSidebarFooterItem
 
     private static final String MID_ICON = "icon";
 
+    private static final String MID_SCROLL_SYNC_GROUP = "scrollSyncGroup";
+    private static final String MID_TOGGLE_SCROLL_SYNC = "toggleScrollSync";
+    private static final String MID_SCROLL_SYNC_ICON = "scrollSyncIcon";
+
     private static final IconType ICON_SPLIT = FontAwesome7IconType.table_columns_s;
     private static final IconType ICON_UNSPLIT = FontAwesome7IconType.square_r;
+    private static final IconType ICON_SYNC_ON = FontAwesome7IconType.link_s;
+    private static final IconType ICON_SYNC_OFF = FontAwesome7IconType.link_slash_s;
 
     private final AnnotationPageBase2 page;
 
@@ -69,6 +79,53 @@ public class AddEditorSidebarFooterItem
         toggleEditor.add(new Icon(MID_ICON,
                 LambdaModel.of(() -> showsUnsplit() ? ICON_UNSPLIT : ICON_SPLIT)));
         add(toggleEditor);
+
+        var scrollSyncGroup = new WebMarkupContainer(MID_SCROLL_SYNC_GROUP);
+        scrollSyncGroup.setOutputMarkupPlaceholderTag(true);
+        scrollSyncGroup.add(visibleWhen(this::isScrollSyncAvailable));
+        scrollSyncGroup.add(new AttributeModifier("title", this::getScrollSyncTooltip));
+        add(scrollSyncGroup);
+
+        var toggleScrollSync = new LambdaAjaxLink(MID_TOGGLE_SCROLL_SYNC,
+                this::actionToggleScrollSync);
+        toggleScrollSync.add(enabledWhen(this::isScrollSyncPossible));
+        toggleScrollSync.add(new Icon(MID_SCROLL_SYNC_ICON,
+                LambdaModel.of(() -> workspace() != null && workspace().isScrollSyncEnabled()
+                        ? ICON_SYNC_ON
+                        : ICON_SYNC_OFF)));
+        scrollSyncGroup.add(toggleScrollSync);
+    }
+
+    private boolean isScrollSyncAvailable()
+    {
+        return workspace() != null && workspace().isScrollSyncAvailable();
+    }
+
+    private boolean isScrollSyncPossible()
+    {
+        return workspace() != null && workspace().getScrollSyncObstacle().isEmpty();
+    }
+
+    private String getScrollSyncTooltip()
+    {
+        if (workspace() == null) {
+            return null;
+        }
+
+        return workspace().getScrollSyncObstacle() //
+                .map(obstacle -> getString("scrollSync." + obstacle.name())) //
+                .orElseGet(() -> getString("scrollSync"));
+    }
+
+    private void actionToggleScrollSync(AjaxRequestTarget aTarget)
+    {
+        var workspace = workspace();
+        if (workspace == null) {
+            return;
+        }
+
+        workspace.actionToggleScrollSync(aTarget);
+        aTarget.add(this);
     }
 
     private boolean canAddEditor()
@@ -147,6 +204,11 @@ public class AddEditorSidebarFooterItem
         super.onEvent(aEvent);
 
         if (aEvent.getPayload() instanceof EditorSetChangedEvent event
+                && event.getRequestHandler() != null) {
+            event.getRequestHandler().add(this);
+        }
+
+        if (aEvent.getPayload() instanceof EditorContentReplacedEvent event
                 && event.getRequestHandler() != null) {
             event.getRequestHandler().add(this);
         }

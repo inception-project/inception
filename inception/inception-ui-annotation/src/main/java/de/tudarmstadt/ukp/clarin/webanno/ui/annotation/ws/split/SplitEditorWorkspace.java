@@ -32,6 +32,8 @@ import org.apache.commons.lang3.Validate;
 import org.apache.wicket.Component;
 import org.apache.wicket.Page;
 import org.apache.wicket.ajax.AjaxRequestTarget;
+import org.apache.wicket.markup.head.IHeaderResponse;
+import org.apache.wicket.markup.head.OnDomReadyHeaderItem;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.model.LoadableDetachableModel;
@@ -39,12 +41,15 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.danekja.java.util.function.serializable.SerializableFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.ViewportSyncLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.ViewportSyncLink.Obstacle;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.url.EditorUrlParameterStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.DocumentEditorWorkspace_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.EditorRequest;
@@ -52,6 +57,8 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.selection.ActiveEditorChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.AnnotatorViewportChangedEvent;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.selection.EditorSetChangedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VRange;
 import de.tudarmstadt.ukp.inception.support.uima.Range;
@@ -84,6 +91,16 @@ public class SplitEditorWorkspace
     private final RepeatingView editorPanels;
 
     private DocumentEditor activeEditor;
+
+    private final ViewportSyncLink scrollSyncLink = new ViewportSyncLink(() -> getScrollSyncPane(0),
+            () -> getScrollSyncPane(1));
+
+    /**
+     * Whether the user wants the two panes to scroll together. Starts off and is not saved: whether
+     * it makes sense depends on what the two panes happen to show. Kept when a pane changes
+     * document - sync then only pauses while the new pair cannot be synchronized.
+     */
+    private boolean scrollSyncEnabled = false;
 
     /**
      * @param aUrlParameterStrategy
@@ -170,6 +187,12 @@ public class SplitEditorWorkspace
         editorPanels.visitChildren(DocumentEditorPanel.class,
                 (aChild, aVisit) -> panels.add((DocumentEditorPanel) aChild));
         return unmodifiableList(panels);
+    }
+
+    @Override
+    public List<DocumentEditor> getEditors()
+    {
+        return unmodifiableList(getEditorPanels());
     }
 
     @Override
@@ -280,6 +303,8 @@ public class SplitEditorWorkspace
 
     private void fireEditorSetChanged(AjaxRequestTarget aTarget)
     {
+        refreshScrollSync(aTarget);
+
         var page = findPage();
         if (page != null) {
             page.send(page, BREADTH, new EditorSetChangedEvent(aTarget));
@@ -562,6 +587,82 @@ public class SplitEditorWorkspace
 
             closeEditor(aTarget, panel);
         }
+    }
+
+    /**
+     * @return whether the two panes can be offered scroll sync at all, i.e. whether there are
+     *         exactly two panes.
+     */
+    public boolean isScrollSyncAvailable()
+    {
+        return getEditorPanels().size() == 2;
+    }
+
+    public boolean isScrollSyncEnabled()
+    {
+        return scrollSyncEnabled;
+    }
+
+    /**
+     * @return why the two panes cannot be synchronized right now, or {@link Optional#empty()} if
+     *         they can.
+     */
+    public Optional<Obstacle> getScrollSyncObstacle()
+    {
+        return scrollSyncLink.getObstacle();
+    }
+
+    public void actionToggleScrollSync(AjaxRequestTarget aTarget)
+    {
+        scrollSyncEnabled = !scrollSyncEnabled;
+
+        refreshScrollSync(aTarget);
+    }
+
+    /**
+     * @return the pane at the given index, but only while there are exactly two. With any other
+     *         number of panes the link has no sides and emits nothing, which leaves the client-side
+     *         hub to the reference document sidebar - it syncs with the pane while there is only
+     *         one.
+     */
+    private DocumentEditorPanel getScrollSyncPane(int aIndex)
+    {
+        var panels = getEditorPanels();
+        return panels.size() == 2 ? panels.get(aIndex) : null;
+    }
+
+    private void refreshScrollSync(AjaxRequestTarget aTarget)
+    {
+        if (aTarget == null) {
+            return;
+        }
+
+        scrollSyncLink.linkScript(scrollSyncEnabled).ifPresent(aTarget::appendJavaScript);
+    }
+
+    @Override
+    public void renderHead(IHeaderResponse aResponse)
+    {
+        super.renderHead(aResponse);
+
+        scrollSyncLink.linkScript(scrollSyncEnabled)
+                .ifPresent(script -> aResponse.render(OnDomReadyHeaderItem.forScript(script)));
+    }
+
+    @OnEvent
+    public void onAnnotatorViewportChanged(AnnotatorViewportChangedEvent aEvent)
+    {
+        if (!scrollSyncEnabled) {
+            return;
+        }
+
+        scrollSyncLink.follow(aEvent);
+    }
+
+    @OnEvent
+    public void onEditorContentReplaced(EditorContentReplacedEvent aEvent)
+    {
+        refreshScrollSync(aEvent.getRequestHandler());
     }
 
     @Override

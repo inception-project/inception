@@ -46,6 +46,13 @@ public interface DocumentEditorManager
     Optional<DocumentEditor> getActiveEditor();
 
     /**
+     * @return all editors hosted by this manager in display order, whether or not they hold a
+     *         document. Never {@code null}, possibly empty before the first editor has been
+     *         created.
+     */
+    List<DocumentEditor> getEditors();
+
+    /**
      * @return whether there is any editor with a document in it.
      */
     boolean hasOpenDocument();

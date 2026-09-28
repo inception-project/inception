@@ -108,6 +108,12 @@ public class SingleDocumentEditorWorkspace
     }
 
     @Override
+    public List<DocumentEditor> getEditors()
+    {
+        return documentEditorPanel != null ? List.of(documentEditorPanel) : List.of();
+    }
+
+    @Override
     public void setActiveEditor(AjaxRequestTarget aTarget, DocumentEditor aEditor)
     {
         if (aEditor == activeEditor) {

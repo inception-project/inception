@@ -555,6 +555,12 @@ public class LegacyCurationPage
     }
 
     @Override
+    public List<DocumentEditor> getEditors()
+    {
+        return List.of(this);
+    }
+
+    @Override
     public boolean hasOpenDocument()
     {
         return getModelObject().getDocument() != null;

@@ -35,6 +35,7 @@ import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationSentenceLayer
 import de.tudarmstadt.ukp.inception.testscenarios.editorplacement.EditorPlacementScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.recommender.RecommenderScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.searchbulk.SearchBulkScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.scrollsync.ScrollSyncScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.splitview.SplitViewScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.urlfragment.UrlFragmentScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.workload.DynamicWorkloadScenarioInitializer;
@@ -156,5 +157,14 @@ public class InceptionTestScenariosAutoConfiguration
     {
         return new MatrixWorkloadScenarioInitializer(aDocumentService, aProjectService,
                 aUserService, aScenarioAccountService, aWorkloadManagementService);
+    }
+
+    @Bean
+    public ScrollSyncScenarioInitializer scrollSyncScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new ScrollSyncScenarioInitializer(aDocumentService, aProjectService, aUserService,
+                aScenarioAccountService);
     }
 }

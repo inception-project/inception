@@ -17,8 +17,15 @@
 -->
 <html xmlns:wicket="http://wicket.apache.org">
 <wicket:panel>
-  <a wicket:id="toggleEditor" class="flex-content pe-1 m-1 icon" style="width: unset;" href="#">
-    <i wicket:id="icon" aria-hidden="true"></i>
-  </a>
+  <span class="d-flex flex-column">
+    <span wicket:id="scrollSyncGroup" class="d-flex">
+      <a wicket:id="toggleScrollSync" class="flex-content pe-1 m-1 icon" style="width: unset;" href="#">
+        <i wicket:id="scrollSyncIcon" aria-hidden="true"></i>
+      </a>
+    </span>
+    <a wicket:id="toggleEditor" class="flex-content pe-1 m-1 icon" style="width: unset;" href="#">
+      <i wicket:id="icon" aria-hidden="true"></i>
+    </a>
+  </span>
 </wicket:panel>
 </html>
