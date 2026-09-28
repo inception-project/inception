@@ -58,7 +58,7 @@ public class AnnotationTextPanel
                 .add(visibleWhen(() -> !isRelationSelected())));
         add(new LambdaAjaxLink("jumpToAnnotation", this::actionJumpToAnnotation) //
                 .setAlwaysEnabled(true) // avoid disabling in read-only mode
-                .add(visibleWhen(() -> !isRelationSelected())));
+                .add(visibleWhen(() -> !isRelationSelected() && !owner.isFloating())));
 
         add(new Label("originName", LoadableDetachableModel.of(this::getOriginName))
                 .add(visibleWhen(() -> isRelationSelected())));
@@ -68,12 +68,13 @@ public class AnnotationTextPanel
                 .add(visibleWhen(() -> isRelationSelected())));
         add(new Label("targetText", PropertyModel.of(aModel, "selection.targetText"))
                 .add(visibleWhen(() -> isRelationSelected())));
+        // There is no editor to jump in while the owner shows an annotation read-only
         add(new LambdaAjaxLink("jumpToOrigin", this::actionJumpToOrigin) //
                 .setAlwaysEnabled(true) // avoid disabling in read-only mode
-                .add(visibleWhen(() -> isRelationSelected())));
+                .add(visibleWhen(() -> isRelationSelected() && !owner.isFloating())));
         add(new LambdaAjaxLink("jumpToTarget", this::actionJumpToTarget) //
                 .setAlwaysEnabled(true) // avoid disabling in read-only mode
-                .add(visibleWhen(() -> isRelationSelected())));
+                .add(visibleWhen(() -> isRelationSelected() && !owner.isFloating())));
     }
 
     private String getOriginName()
@@ -113,21 +114,21 @@ public class AnnotationTextPanel
     private void actionJumpToAnnotation(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        owner.activeActionHandler().actionSelectAndJump(aTarget,
+        owner.detailActionHandler().actionSelectAndJump(aTarget,
                 getModelObject().getSelection().getAnnotation());
     }
 
     private void actionJumpToOrigin(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        owner.activeActionHandler().actionSelectAndJump(aTarget,
+        owner.detailActionHandler().actionSelectAndJump(aTarget,
                 new VID(getModelObject().getSelection().getOrigin()));
     }
 
     private void actionJumpToTarget(AjaxRequestTarget aTarget)
         throws IOException, AnnotationException
     {
-        owner.activeActionHandler().actionSelectAndJump(aTarget,
+        owner.detailActionHandler().actionSelectAndJump(aTarget,
                 new VID(getModelObject().getSelection().getTarget()));
     }
 }

@@ -17,15 +17,12 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
-<body>
-  <wicket:panel>
-    <div wicket:id="contextMenu" style="width: 250px;"></div>
-    <div wicket:id="mergeAllDialog"></div>
-    <div class="flex-v-container flex-gutter flex-only-internal-gutter">
-      <div wicket:id="annotatorSegments">
-        <div wicket:id="annotationViewer"></div>
-      </div>
-    </div>
-  </wicket:panel>
-</body>
+<wicket:extend>
+  <p>
+    <wicket:container wicket:id="message" />
+  </p>
+  <p class="text-muted vw-50">
+    <wicket:message key="explanation" />
+  </p>
+</wicket:extend>
 </html>

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.inception.annotation.menu;
 
+import java.io.Serializable;
+
 import de.tudarmstadt.ukp.inception.editor.ContextMenuLookup;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -31,6 +33,7 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
  */
 public record ContextMenuItemContext(VID vid, DiamContext context,
         ContextMenuLookup contextMenuLookup)
+    implements Serializable
 {
 
 }

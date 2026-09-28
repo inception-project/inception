@@ -33,7 +33,7 @@ import { createPopper, type Instance } from '@popperjs/core';
  *   pending pick callback with the chosen vid instead of selecting/deleting; dismissing
  *   the popup cancels the relation. No ❌ buttons.
  */
-type PopupMode = 'mouse' | 'keyboard-select' | 'keyboard-delete' | 'relation-target';
+type PopupMode = 'mouse' | 'keyboard-select' | 'keyboard-delete' | 'relation-target' | 'context-menu';
 
 export class ApacheAnnotatorSelector {
     private ajax: DiamAjax;
@@ -134,6 +134,18 @@ export class ApacheAnnotatorSelector {
         if (hls.length === 0) return;
         this.pendingTargetPick = onPick;
         this.createPopup(clientX, clientY, hls, true, 'relation-target');
+    }
+
+    public pickContextMenuTarget(
+        clientX: number,
+        clientY: number,
+        hls: HTMLElement[],
+        onPick: (vid: VID) => void
+    ): void {
+        this.destroyPopup();
+        if (hls.length === 0) return;
+        this.pendingTargetPick = onPick;
+        this.createPopup(clientX, clientY, hls, false, 'context-menu');
     }
 
     private onMouseDown(event: Event): void {
@@ -238,7 +250,9 @@ export class ApacheAnnotatorSelector {
                     ? 'Delete…'
                     : mode === 'relation-target'
                       ? 'Relation target…'
-                      : 'Select…';
+                      : mode === 'context-menu'
+                        ? 'Menu for…'
+                        : 'Select…';
             this.popupContent.appendChild(header);
         }
 
@@ -336,17 +350,17 @@ export class ApacheAnnotatorSelector {
     private activateItem(event: Event, id: VID) {
         if (this.popupMode === 'keyboard-delete') {
             this.onDeleteAnnotation(event, id);
-        } else if (this.popupMode === 'relation-target') {
-            this.onPickRelationTarget(event, id);
+        } else if (this.popupMode === 'relation-target' || this.popupMode === 'context-menu') {
+            this.onPickTarget(event, id);
         } else {
             this.onSelectAnnotation(event, id);
         }
     }
 
-    private onPickRelationTarget(event: Event, id: VID) {
+    private onPickTarget(event: Event, id: VID) {
         event.stopPropagation();
-        // Capture before destroyPopup() clears it: destroy first so the controller's
-        // createRelationAnnotation runs against a torn-down popup, then resolve.
+        // Capture before destroyPopup() clears it: destroy first so the caller (e.g. the relation
+        // controller's createRelationAnnotation) runs against a torn-down popup, then resolve.
         const pick = this.pendingTargetPick;
         this.destroyPopup();
         pick?.(id);

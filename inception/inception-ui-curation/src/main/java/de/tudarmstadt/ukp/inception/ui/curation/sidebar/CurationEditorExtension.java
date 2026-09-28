@@ -33,6 +33,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 
 import org.apache.uima.cas.CAS;
@@ -45,6 +46,7 @@ import org.springframework.context.ApplicationEventPublisher;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff;
+import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.Configuration;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
@@ -367,24 +369,10 @@ public class CurationEditorExtension
             User aDataOwner, CAS aCas, AnnotationLayer aLayer, VID vid, String aSrcUser,
             CAS aSrcCas, List<AnnotationFeature> aNonCuratableFeatures)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
-        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
-                aDocument.getProject(), aDocument);
-
-        if (selectedDataOwners.isEmpty()) {
-            return emptyList();
-        }
-
-        // The editable target CAS goes first, then the read-only CASes of the other data owners.
         var casses = new LinkedHashMap<String, CAS>();
-        casses.put(aDataOwner.getUsername(), aCas);
-        documentService.readAllAnnotationCases(aDocument, selectedDataOwners)
-                .forEach(casses::putIfAbsent);
-
         var srcFs = selectFsByAddr(aSrcCas, vid.getId());
-        var casDiff = createDiff(casses, aLayer, srcFs);
-
-        var maybeConfiguration = casDiff.toResult().findConfiguration(aSrcUser, srcFs);
+        var maybeConfiguration = findConfiguration(aDocument, aDataOwner, aCas, aLayer, aSrcUser,
+                srcFs, casses);
         if (maybeConfiguration.isEmpty()) {
             return emptyList();
         }
@@ -414,6 +402,74 @@ public class CurationEditorExtension
         }
 
         return detailGroups;
+    }
+
+    /**
+     * Lists the annotators who made the annotation a curation suggestion stands for - the
+     * suggestion shows the annotation of one of them (the representative), but all of them agree on
+     * it at that position.
+     *
+     * @param aDocument
+     *            the document being curated
+     * @param aDataOwner
+     *            the curator (the data owner of the curation editor)
+     * @param aCas
+     *            the curation CAS
+     * @param aSuggestionVid
+     *            the VID of the curation suggestion as rendered in the curation editor
+     * @return the usernames of the annotators, the representative first. The curator is not
+     *         included. Just the representative if the group cannot be determined.
+     * @throws IOException
+     *             if a CAS cannot be read
+     */
+    public List<String> listSuggestionAnnotators(SourceDocument aDocument, User aDataOwner,
+            CAS aCas, VID aSuggestionVid)
+        throws IOException
+    {
+        var curationVid = CurationVID.parse(aSuggestionVid.getExtensionPayload());
+        var vid = VID.parse(curationVid.getExtensionPayload());
+        var srcUser = curationVid.getUsername();
+        var srcCas = documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(srcUser));
+        var srcFs = selectFsByAddr(srcCas, vid.getId());
+        var layer = annotationService.findLayer(aDocument.getProject(), srcFs);
+
+        var annotators = new ArrayList<String>();
+        annotators.add(srcUser);
+        findConfiguration(aDocument, aDataOwner, aCas, layer, srcUser, srcFs, new LinkedHashMap<>()) //
+                .ifPresent(cfg -> cfg.getCasGroupIds().stream() //
+                        .filter(user -> !user.equals(srcUser)) //
+                        .filter(user -> !user.equals(aDataOwner.getUsername())) //
+                        .sorted() //
+                        .forEach(annotators::add));
+        return annotators;
+    }
+
+    /**
+     * Finds the diff configuration the given annotation of the source user belongs to, considering
+     * the curator and all data owners ready for curation.
+     *
+     * @param aCasses
+     *            receives the CASes the diff was computed over
+     */
+    private Optional<Configuration> findConfiguration(SourceDocument aDocument, User aDataOwner,
+            CAS aCas, AnnotationLayer aLayer, String aSrcUser, FeatureStructure aSrcFs,
+            Map<String, CAS> aCasses)
+    {
+        var sessionOwner = userRepository.getCurrentUsername();
+        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
+                aDocument.getProject(), aDocument);
+
+        if (selectedDataOwners.isEmpty()) {
+            return Optional.empty();
+        }
+
+        // The editable target CAS goes first, then the read-only CASes of the other data owners.
+        aCasses.put(aDataOwner.getUsername(), aCas);
+        documentService.readAllAnnotationCases(aDocument, selectedDataOwners)
+                .forEach(aCasses::putIfAbsent);
+
+        var casDiff = createDiff(aCasses, aLayer, aSrcFs);
+        return casDiff.toResult().findConfiguration(aSrcUser, aSrcFs);
     }
 
     private CasDiff createDiff(Map<String, CAS> aCasses, AnnotationLayer aLayer,

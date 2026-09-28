@@ -82,6 +82,7 @@ import de.tudarmstadt.ukp.clarin.webanno.constraints.evaluator.ConstraintsEvalua
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
@@ -152,6 +153,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private @SpringBean UserDao userService;
 
     private final DocumentEditorManager manager;
+    private final IModel<Project> project;
     private final WebMarkupContainer layersContainer;
 
     private final IModel<AnnotationLayer> selectedLayer;
@@ -160,7 +162,8 @@ public class DocumentMetadataAnnotationSelectionPanel
     private VID selectedAnnotationVid;
     private int createdAnnotationAddress;
 
-    public DocumentMetadataAnnotationSelectionPanel(String aId, DocumentEditorManager aManager)
+    public DocumentMetadataAnnotationSelectionPanel(String aId, DocumentEditorManager aManager,
+            IModel<Project> aProject)
     {
         super(aId,
                 () -> aManager.getActiveEditor().map(DiamContext::getAnnotatorState).orElse(null));
@@ -168,6 +171,7 @@ public class DocumentMetadataAnnotationSelectionPanel
         setOutputMarkupPlaceholderTag(true);
 
         manager = aManager;
+        project = aProject;
 
         selectedLayer = Model.of(listCreatableMetadataLayers().stream().findFirst().orElse(null));
         layers = LoadableDetachableModel.of(this::listLayers);
@@ -573,7 +577,7 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private List<AnnotationLayer> listMetadataLayers()
     {
-        return annotationService.listAnnotationLayer(getModelObject().getProject()).stream()
+        return annotationService.listAnnotationLayer(project.getObject()).stream()
                 .filter(layer -> DocumentMetadataLayerSupport.TYPE.equals(layer.getType())
                         && layer.isEnabled()) //
                 .toList();
@@ -990,6 +994,10 @@ public class DocumentMetadataAnnotationSelectionPanel
     private boolean appliesToThisEditor(AnnotationEvent aEvent)
     {
         var state = getModelObject();
+        if (state == null) {
+            return false;
+        }
+
         return Objects.equals(state.getProject(), aEvent.getProject())
                 && Objects.equals(state.getDocument(), aEvent.getDocument())
                 && Objects.equals(state.getUser().getUsername(), aEvent.getDocumentOwner());
