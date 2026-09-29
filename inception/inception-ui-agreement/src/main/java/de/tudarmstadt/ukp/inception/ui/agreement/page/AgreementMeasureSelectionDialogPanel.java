@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.extensions.ajax.markup.html.modal.ModalDialog;
 import org.apache.wicket.markup.html.basic.Label;
@@ -34,7 +35,6 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
 
-import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureSupportRegistry;
@@ -112,12 +112,26 @@ public class AgreementMeasureSelectionDialogPanel
                 card.setEnabled(item.applicable);
                 aItem.queue(card);
 
-                aItem.queue(new Label("name", item.name));
-                aItem.queue(new Label("description", item.description));
+                var name = new Label("name", item.name);
+                name.setOutputMarkupId(true);
+                aItem.queue(name);
+
+                var description = new Label("description", item.description);
+                description.setOutputMarkupId(true);
+                aItem.queue(description);
 
                 var reason = new Label("reason", item.inapplicabilityReason);
+                reason.setOutputMarkupId(true);
                 reason.add(visibleWhen(() -> !item.applicable));
                 aItem.queue(reason);
+
+                // The card is a button with block content, so without these a screen reader would
+                // read the entire card as the name of the button.
+                card.add(AttributeModifier.replace("aria-labelledby",
+                        LambdaModel.of(name::getMarkupId)));
+                card.add(AttributeModifier.replace("aria-describedby",
+                        LambdaModel.of(() -> item.applicable ? description.getMarkupId()
+                                : description.getMarkupId() + " " + reason.getMarkupId())));
 
                 aItem.queue(new ListView<String>("capabilities", item.capabilities)
                 {
@@ -165,17 +179,13 @@ public class AgreementMeasureSelectionDialogPanel
         item.description = aSupport.getDescription().orElse("");
         item.paradigm = aSupport.getParadigm();
         item.capabilities = aSupport.getCapabilities().stream() //
-                // WEIGHTED is hidden for now: INCEpTION always uses a nominal distance function,
-                // so weighting has no effect yet. Re-add this badge when weighted distance
-                // functions become configurable - see PLAN_weighted_measures.md.
-                .filter(c -> c != AgreementMeasureCapability.WEIGHTED) //
                 .map(c -> c.getUiName()) //
                 .sorted() //
                 .toList();
         item.applicable = aApplicable;
         item.inapplicabilityReason = aApplicable ? ""
                 : aSupport.getInapplicabilityReason(layer, feature)
-                        .orElse("Not applicable to the selected layer / feature.");
+                        .orElseGet(() -> getString("notApplicable"));
         return item;
     }
 

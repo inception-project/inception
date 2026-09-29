@@ -17,6 +17,9 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +36,28 @@ public interface AgreementService
 {
     Map<SourceDocument, List<AnnotationDocument>> getDocumentsToEvaluate(Project aProject,
             List<SourceDocument> aDocuments, DefaultAgreementTraits aTraits);
+
+    /**
+     * The curation counterpart of {@link #getDocumentsToEvaluate}: the curator's data of a document
+     * is only evaluated once curation has started - or, if the calculation is limited to finished
+     * documents, once it has finished. Before that, the curation data is not a rater's work that
+     * could be compared.
+     *
+     * @param aDocument
+     *            the document.
+     * @param aTraits
+     *            the agreement settings.
+     * @return whether the curator's data of the document is to be evaluated.
+     */
+    static boolean isCurationToEvaluate(SourceDocument aDocument, DefaultAgreementTraits aTraits)
+    {
+        if (aTraits != null && aTraits.isLimitToFinishedDocuments()) {
+            return aDocument.getState() == CURATION_FINISHED;
+        }
+
+        return aDocument.getState() == CURATION_IN_PROGRESS
+                || aDocument.getState() == CURATION_FINISHED;
+    }
 
     /**
      * 

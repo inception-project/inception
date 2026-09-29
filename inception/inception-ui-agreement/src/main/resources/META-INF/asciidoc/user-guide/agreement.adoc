@@ -47,6 +47,8 @@ If you select annotators, at least two annotators must be selected.
 To select multiple annotators or documents, hold, for example, the kbd:[Shift] or kbd:[CTRL]/kbd:[CMD] keys while clicking, depending on your browser and operating system. 
 The option *include original* is useful if you have imported pre-annotated documents as it can be used to compare annotators against the original pre-annotated.
 The option *include curator* is useful if you want to compare the annotator's performance (or even the original) to the final curated version.
+The curator is only compared on documents whose curation is in progress or finished - or, if the calculation is limited to finished documents, only on documents whose curation is finished. 
+Likewise, annotators are only compared on documents they are working on or have finished. 
 
 The *Pairwise...* button can be used to start the agreement calculation, and the results will be shown in a <<sect_agreement_matrix,Pairwise agreement matrix>>. 
 
@@ -248,3 +250,48 @@ The upper part of the agreement matrix displays the pairwise agreement scores.
 Annotations for a given position are considered complete when both annotators have made an annotation. 
 Unless the agreement measure supports `null` values (i.e. missing annotations), incomplete annotations are implicitly excluded from the agreement calculation.
 If the agreement measure does support incomplete annotations, then excluding them or not is the users' choice.
+
+[[sect_agreement_notes]]
+== Notes on the result
+
+After an agreement calculation has finished, {product-name} inspects the annotated data and reports characteristics that affect how the resulting score should be read - for example a label distribution so skewed that a chance-corrected measure reports a low score despite the annotators agreeing on almost every item. 
+These notes are shown in a collapsible panel above the agreement results. 
+A note does not mean that the score is wrong, but that it should not be taken at face value.
+
+The following notes may be shown:
+
+* *Single label*: only one label was observed at all. 
+  Chance-corrected measures are undefined or degenerate in this situation because there is no variation to correct for.
+* *Skewed label distribution*: a single label accounts for most of the assigned labels. 
+  In this situation, chance-corrected measures of the kappa family become unstable: the agreement expected by chance approaches the agreement actually observed, so the score can collapse towards zero even though the annotators agree on nearly every item. 
+  Only a *single* dominant label produces this effect - mass spread across several labels does not.
+* *Asymmetric marginals*: two annotators use the labels at noticeably different rates. 
+  Measures that pool the marginals (Fleiss' kappa, Krippendorff's alpha) count such differences as disagreement, while Cohen's kappa does not and can therefore report a higher score. 
+  With two labels, both are always named, as one annotator's surplus on one label is their deficit on the other.
+* *Sparse labels*: a label occurs on too few items for the agreement on it to be interpretable. 
+  Items rather than individual labels are counted: a label that five annotators put on the same item is still evidence from a single item.
+* *Few items*: the score is based on so few items that it is statistically fragile, regardless of which measure was used. 
+  Only items that count towards the score are considered: measures such as Krippendorff's alpha or Gwet's AC2 ignore items to which only one annotator assigned a value.
+* *Boundary disagreement*: many of the relevant positions are missing from at least one annotator, i.e. the disagreement is predominantly about *where* to annotate rather than about *which label* to use. 
+  A coding measure only compares labels at matching positions and therefore does not capture this kind of disagreement (see <<sect_agreement_measures>> and the section on incomplete annotations). 
+  This note is not shown when an annotator has no annotations in some of the documents, since that case is reported separately (see below).
+* *Annotator without annotations*: an annotator has nothing the comparison looks at in a document included in the calculation. 
+  The data cannot tell why - they may not have started yet, or there may have been nothing to annotate. 
+  Either way, every position the other annotators annotated in that document counts as one this annotator left out.
+* *Documents without a score*: a notable share of the documents that both annotators of a pair worked on did not produce a score - for example because neither left anything the measure can compare, or because the data could not be processed. 
+  Documents that only one of them worked on are not counted, since in projects where each document goes to only some annotators, that is simply how the work was distributed.
+* *Affected documents*: individual documents show one of the label distribution patterns above (a single label, a dominant label, or annotators using labels at different rates) even though the data taken together does not. 
+  See below.
+
+When the agreement between two annotators is calculated over several documents, the score is the average of the per-document scores (see <<sect_agreement_matrix>>). 
+The notes judge the data of all these documents together, but a document can distort its own score in a way that cancels out across documents - two documents that each use only one label, but a different one, together look perfectly balanced. 
+So the shape of the label distribution is also checked on every scored document on its own. 
+If enough of the scored documents show such a pattern while the data taken together does not, a note names those documents.
+
+Notes about *how much evidence* there is (sparse labels, few items) are based on absolute counts, because reliability does not scale with study size: four observations of a label are too few to interpret whether the study has 50 items or 50,000. 
+Notes about *the shape* of the data (skew, asymmetric marginals, boundary disagreement) are based on shares, because "one label dominates" has no absolute reading. 
+Share-based notes are only shown once the share is computed over a sufficient number of observations - "2 of 3 positions" is a true but useless 67%. 
+The share of documents without a score is the exception: it states exactly how much of the selection went into the score, so it is reported as soon as at least two documents produced no score.
+
+The thresholds at which each note appears can be configured by the administrator (see the <<admin-guide.adoc#sect_settings_agreement, Admin Guide>>). 
+The defaults are chosen to stay quiet on well-behaved data.

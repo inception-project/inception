@@ -18,7 +18,6 @@
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gwetac2;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.WEIGHTED;
 import static java.util.EnumSet.of;
 
 import java.util.Optional;
@@ -27,6 +26,9 @@ import java.util.Set;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcern;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcerns;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDiagnostic;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
@@ -67,16 +69,14 @@ public class GwetAC2AgreementMeasureSupport
     @Override
     public Optional<String> getDescription()
     {
-        return Optional
-                .of("The weighted extension of Gwet's AC1: chance-corrected agreement that is "
-                        + "robust to imbalanced labels and additionally credits near-misses as partial "
-                        + "agreement via a distance function.");
+        return Optional.of("The generalisation of Gwet's AC1 to more than two annotators: "
+                + "chance-corrected agreement that is robust to imbalanced labels.");
     }
 
     @Override
     public Set<AgreementMeasureCapability> getDeclaredCapabilities()
     {
-        return of(CHANCE_CORRECTED, WEIGHTED);
+        return of(CHANCE_CORRECTED);
     }
 
     @Override
@@ -98,6 +98,23 @@ public class GwetAC2AgreementMeasureSupport
     public DefaultAgreementTraits createTraits()
     {
         return new DefaultAgreementTraits();
+    }
+
+    @Override
+    public Optional<AgreementConcern> getConcern(AgreementDiagnostic aDiagnostic)
+    {
+        switch (aDiagnostic.getType()) {
+        case SKEWED_PREVALENCE:
+            // This is precisely the situation AC1/AC2 were designed for, so there is nothing to
+            // warn about - but saying so explicitly is more reassuring than silence.
+            return Optional.of(new AgreementConcern(aDiagnostic,
+                    "This measure estimates chance agreement in a way that stays stable under "
+                            + "skewed label distributions, so the score is not distorted the way a "
+                            + "Kappa-family score would be here."));
+
+        default:
+            return AgreementConcerns.generic(aDiagnostic);
+        }
     }
 
     @Override

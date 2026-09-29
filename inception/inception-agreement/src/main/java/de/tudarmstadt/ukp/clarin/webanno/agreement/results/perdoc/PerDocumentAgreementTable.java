@@ -28,8 +28,11 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.wicket.AttributeModifier;
+import org.apache.wicket.Component;
 import org.apache.wicket.behavior.AttributeAppender;
+import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.panel.Fragment;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.markup.repeater.Item;
 import org.apache.wicket.markup.repeater.RefreshingView;
@@ -39,6 +42,7 @@ import org.apache.wicket.spring.injection.annot.SpringBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -48,6 +52,7 @@ import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.support.wicket.DefaultRefreshingView;
+import de.tudarmstadt.ukp.inception.support.wicket.DescriptionTooltipBehavior;
 
 public class PerDocumentAgreementTable
     extends GenericPanel<PerDocumentAgreementResult>
@@ -98,6 +103,7 @@ public class PerDocumentAgreementTable
 
                 var agreementSummary = aModel.getObject().getResult(doc);
                 aRowItem.add(new Label("score", format("%.2f", agreementSummary.getAgreement())));
+                aRowItem.add(makeNotesBadge(doc, agreementSummary));
 
                 var casGroupIds = agreementSummary.getCasGroupIds();
                 var annotators = new Label("annotators", renderAnnotators(casGroupIds));
@@ -116,6 +122,34 @@ public class PerDocumentAgreementTable
         };
 
         add(rows);
+    }
+
+    private Component makeNotesBadge(SourceDocument aDocument, AgreementSummary aSummary)
+    {
+        // As in the pairwise table, notes that apply to every document are left to the notes above
+        // the table - marking every row for them would drown out those that single out documents.
+        var notes = aSummary.getDiagnostics().stream() //
+                .filter(d -> !getModelObject().isCommonToAllComparisons(d)) //
+                .toList();
+
+        if (notes.isEmpty()) {
+            return new WebMarkupContainer("notes").setVisible(false);
+        }
+
+        // The score cell has no popover of its own, so the notes go on the badge.
+        var tooltip = new DescriptionTooltipBehavior(aDocument.getName(), notes.stream() //
+                .map(d -> "- " + d.getObservation()) //
+                .collect(joining("\n")));
+        tooltip.withTitleIcon("fa-circle-info", "text-body-secondary");
+        tooltip.setOption("position", (Object) null);
+
+        var badge = new WebMarkupContainer("badge");
+        badge.add(new Label("count", notes.size()));
+        badge.add(tooltip);
+
+        var fragment = new Fragment("notes", "notes-badge", this);
+        fragment.add(badge);
+        return fragment;
     }
 
     private String renderAnnotators(List<String> aCasGroupIds)

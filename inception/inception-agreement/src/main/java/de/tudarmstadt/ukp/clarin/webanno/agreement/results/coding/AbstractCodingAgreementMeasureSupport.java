@@ -80,8 +80,7 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
             DefaultAgreementTraits aDefaultAgreementTraits)
     {
         if (aResults.getObject() instanceof PairwiseAgreementResult) {
-            return new PairwiseCodingAgreementTable(aId, (IModel) aResults,
-                    aDefaultAgreementTraits);
+            return new PairwiseCodingAgreementTable(aId, (IModel) aResults);
         }
 
         if (aResults.getObject() instanceof PerDocumentAgreementResult) {

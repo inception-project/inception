@@ -116,6 +116,7 @@ public class AgreementPage
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
     private static final String MID_RESULTS = "results";
+    private static final String MID_CONCERNS = "concerns";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService schemaService;
@@ -162,6 +163,7 @@ public class AgreementPage
         queue(resultsContainer = new WebMarkupContainer("resultsContainer"));
         resultsContainer.setOutputMarkupPlaceholderTag(true);
         resultsContainer.add(new EmptyPanel(MID_RESULTS));
+        resultsContainer.add(new EmptyPanel(MID_CONCERNS));
 
         downloadBehavior = new AjaxDownloadBehavior();
         add(downloadBehavior);
@@ -188,6 +190,8 @@ public class AgreementPage
 
         measureDialog = new BootstrapModalDialog("measureDialog");
         measureDialog.trapFocus();
+        measureDialog.closeOnEscape();
+        measureDialog.closeOnClick();
         queue(measureDialog);
 
         selectedMeasureLabel = new Label("selectedMeasure", form.getModel().map(m -> m.measure)
@@ -204,14 +208,18 @@ public class AgreementPage
 
         queue(new CheckBox("compareWithInitialCas").setOutputMarkupId(true));
 
+        // Both lists are the target of a wicket:for label, which needs a stable markup id to
+        // point at - without it, Wicket cannot render the label's for attribute and warns.
         var annotatorList = new ListMultipleChoice<AnnotationSet>("annotators");
         annotatorList.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationSet::displayName));
         annotatorList.setChoices(listAnnotators());
+        annotatorList.setOutputMarkupId(true);
         queue(annotatorList);
 
         var documentList = new ListMultipleChoice<SourceDocument>("documents");
         documentList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         documentList.setChoices(listDocuments());
+        documentList.setOutputMarkupId(true);
         queue(documentList);
 
         calculatePairwiseAgreementButton = new LambdaAjaxButton<>("calculatePairwiseAgreement",
@@ -267,6 +275,15 @@ public class AgreementPage
                 .filter(p -> p.getKey()
                         .equals(KrippendorffAlphaUnitizingAgreementMeasureSupport.ID))
                 .findFirst().ifPresent(this::setSelectedMeasure);
+
+        // Neither of the preferred measures may apply - e.g. to a feature only a measure from a
+        // plugin supports. The previous selection must then not survive if it does not apply to
+        // the new feature either, as nothing else would replace it before it is used.
+        var selected = form.getModelObject().measure;
+        if (selected == null
+                || applicable.stream().noneMatch(p -> p.getKey().equals(selected.getKey()))) {
+            setSelectedMeasure(applicable.get(0));
+        }
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -310,11 +327,22 @@ public class AgreementPage
     private void actionSelectMeasure(AjaxRequestTarget aTarget, String aMeasureId)
     {
         var ams = agreementRegistry.getAgreementMeasureSupport(aMeasureId);
+        var previousMeasure = form.getModelObject().measure;
         setSelectedMeasure(Pair.of(ams.getId(), ams.getName()));
 
-        aTarget.add(selectedMeasureLabel, chooseMeasureButton, traitsContainer,
-                calculatePairwiseAgreementButton, calculatePerDocumentAgreement,
-                exportCsvDiffButton, exportJsonButton, exportCsvButton);
+        // Results and notes shown so far were computed with the previous measure - keeping them
+        // under the name of the new one would misattribute them.
+        if (previousMeasure == null || !previousMeasure.getKey().equals(ams.getId())) {
+            clearResults(aTarget);
+        }
+
+        // Only the label inside the button is re-rendered, not the button itself: the dialog
+        // returns the focus to the element it was opened from when it closes, which it can only do
+        // if that element was not replaced in the same response. Whether the button is enabled
+        // depends on the feature only, which picking a measure does not change.
+        aTarget.add(selectedMeasureLabel, traitsContainer, calculatePairwiseAgreementButton,
+                calculatePerDocumentAgreement, exportCsvDiffButton, exportJsonButton,
+                exportCsvButton);
     }
 
     private boolean isMeasureSupportingMoreThanTwoRaters()
@@ -386,12 +414,28 @@ public class AgreementPage
                 .getAgreementMeasureSupport(form.getModelObject().measure.getKey());
         var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(aResult), getTraits());
         resultsContainer.addOrReplace(resultsPanel);
+
+        // Report what the data looks like and what that means for the measure that was just used.
+        // This can only be done now - before the computation there is no study to inspect.
+        resultsContainer.addOrReplace(
+                new AgreementConcernsPanel(MID_CONCERNS, Model.of(aResult), ams.getId()));
+
+        aTarget.add(resultsContainer);
+    }
+
+    private void clearResults(AjaxRequestTarget aTarget)
+    {
+        resultsContainer.addOrReplace(new EmptyPanel(MID_RESULTS));
+        resultsContainer.addOrReplace(new EmptyPanel(MID_CONCERNS));
         aTarget.add(resultsContainer);
     }
 
     private void actionSelectFeature(AjaxRequestTarget aTarget)
     {
         preselectBestAgreementMeasures();
+
+        // Results shown so far were computed on a different layer / feature.
+        clearResults(aTarget);
 
         aTarget.add(selectedMeasureLabel, chooseMeasureButton, calculatePerDocumentAgreement,
                 calculatePairwiseAgreementButton, traitsContainer, exportCsvDiffButton,

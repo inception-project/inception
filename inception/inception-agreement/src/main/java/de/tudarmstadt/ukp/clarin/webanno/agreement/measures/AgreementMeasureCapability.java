@@ -43,7 +43,8 @@ public enum AgreementMeasureCapability
 
     /**
      * Uses a distance/weighting function so that near-misses count as partial agreement
-     * ({@code IWeightedAgreement}).
+     * ({@code IWeightedAgreement}). Only declare this if the measure is actually run with a
+     * non-nominal distance function - with a nominal distance, weighting has no effect.
      */
     WEIGHTED("Weighted", //
             "Uses a distance function so that near-misses count as partial rather than total "
@@ -51,6 +52,8 @@ public enum AgreementMeasureCapability
 
     /**
      * Can report agreement broken down per category/label ({@code ICategorySpecificAgreement}).
+     * Only declare this once INCEpTION actually shows such a breakdown - the DKPro marker alone
+     * does not make the per-label scores visible to the user.
      */
     CATEGORY_SPECIFIC("Per-category", //
             "Can report agreement broken down per label, not just an overall score.");

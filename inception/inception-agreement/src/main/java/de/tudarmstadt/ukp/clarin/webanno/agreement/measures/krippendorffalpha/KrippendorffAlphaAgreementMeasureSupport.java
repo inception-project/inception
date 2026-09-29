@@ -17,9 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha;
 
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CATEGORY_SPECIFIC;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.WEIGHTED;
 import static java.util.EnumSet.of;
 
 import java.util.Optional;
@@ -28,6 +26,9 @@ import java.util.Set;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcern;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcerns;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDiagnostic;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
@@ -76,7 +77,7 @@ public class KrippendorffAlphaAgreementMeasureSupport
     @Override
     public Set<AgreementMeasureCapability> getDeclaredCapabilities()
     {
-        return of(CHANCE_CORRECTED, WEIGHTED, CATEGORY_SPECIFIC);
+        return of(CHANCE_CORRECTED);
     }
 
     @Override
@@ -98,6 +99,35 @@ public class KrippendorffAlphaAgreementMeasureSupport
     public DefaultAgreementTraits createTraits()
     {
         return new DefaultAgreementTraits();
+    }
+
+    @Override
+    public Optional<AgreementConcern> getConcern(AgreementDiagnostic aDiagnostic)
+    {
+        switch (aDiagnostic.getType()) {
+        case SKEWED_PREVALENCE:
+            return Optional.of(new AgreementConcern(aDiagnostic,
+                    "When one label dominates, the disagreement expected by chance becomes "
+                            + "very small. Alpha divides the observed disagreement by the expected "
+                            + "disagreement, so it can report a low score even though the raters "
+                            + "agree on almost every item - the same effect known from Kappa as the "
+                            + "Kappa paradox.",
+                    "Compare against the raw observed agreement, and consider Gwet's AC2, which "
+                            + "supports more than two raters and estimates chance agreement in a "
+                            + "way that is robust to this kind of skew."));
+
+        case MARGINAL_ASYMMETRY:
+            return Optional.of(new AgreementConcern(aDiagnostic,
+                    "The raters applied the labelling scheme at noticeably different rates. This "
+                            + "measure pools the marginals across raters, so the difference in "
+                            + "label usage counts as disagreement and lowers the score. Cohen's "
+                            + "Kappa would report a higher score on the same data because it does "
+                            + "not count this rater bias against the raters.",
+                    "Check whether the annotation guidelines leave this label ambiguous."));
+
+        default:
+            return AgreementConcerns.generic(aDiagnostic);
+        }
     }
 
     @Override

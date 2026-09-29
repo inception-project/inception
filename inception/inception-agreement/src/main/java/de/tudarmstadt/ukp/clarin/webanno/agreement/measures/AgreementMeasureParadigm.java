@@ -36,13 +36,14 @@ public enum AgreementMeasureParadigm
                     + "same category."),
 
     /**
-     * Scores agreement on how annotators segment the text into units, based on character offsets.
-     * Operates on positions rather than categories, so it does not require a feature.
+     * Scores agreement on how annotators segment the text into units, based on character offsets. A
+     * feature is optional: without one only the segmentation is compared, with one the labels of
+     * the units count as well.
      */
     UNITIZING("Unitizing", //
             "Compares how annotators segment the text into units based on character offsets. "
-                    + "Suitable when the disagreement of interest is about boundaries rather than "
-                    + "labels."),
+                    + "Suitable when the disagreement of interest is about boundaries - the "
+                    + "labels of the units are taken into account only if a feature is selected."),
 
     /**
      * Aligns annotations across raters as part of computing agreement, tolerating differences in

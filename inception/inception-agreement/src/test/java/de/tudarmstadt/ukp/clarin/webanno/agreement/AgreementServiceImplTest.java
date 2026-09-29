@@ -65,6 +65,34 @@ class AgreementServiceImplTest
 
     @SuppressWarnings("unchecked")
     @Test
+    void thatRaterNotTakingPartInDocumentIsMarkedAsNotEvaluated() throws Exception
+    {
+        var type = NamedEntity._TypeName;
+        var feature = NamedEntity._FeatName_value;
+        Row[] data = { //
+                new Row("John", asList("PER"), asList("PER")), //
+                new Row("Bob", asList("PER", "LOC"), asList("ORG")) //
+        };
+        var userCases = convert(2, data, type, feature);
+        var diff = doDiff(asList(NER_DIFF_ADAPTER), userCases);
+        var agreementResult = makeCodingStudy(diff, type, feature, null, false, userCases);
+
+        var buffer = new StringBuilder();
+        try (var printer = new CSVPrinter(buffer, RFC4180)) {
+            AgreementServiceImpl.configurationSetsWithItemsToCsv(printer, agreementResult,
+                    List.of("user1", "user2", "user3"), true, null);
+        }
+
+        assertThat(buffer.toString().lines()).containsExactly( //
+                "Type,Collection,Document,Layer,Feature,Position,Flags,user1,user2,user3",
+                "SpanPosition,,,de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity,"
+                        + "value,0-4 [John],\"COMPLETE, USED\",PER,PER,<not evaluated>",
+                "SpanPosition,,,de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity,"
+                        + "value,5-8 [Bob],STACKED,\"LOC, PER\",ORG,<not evaluated>");
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
     void testStackedPosition() throws Exception
     {
         var userCount = 2;

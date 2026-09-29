@@ -28,6 +28,10 @@ import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.IAnnotationStudy;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcern;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcerns;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDiagnostic;
+
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.FullAgreementResult_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
@@ -124,6 +128,25 @@ public interface AgreementMeasureSupport<//
             AnnotationFeature aFeature)
     {
         return Optional.empty();
+    }
+
+    /**
+     * Interprets a characteristic observed in the annotated data for this particular measure,
+     * explaining what it means for the score this measure produced and - where applicable - what
+     * could be done about it.
+     * <p>
+     * The default delegates to {@link AgreementConcerns#generic}, which covers the interpretations
+     * that hold for any measure. Measures override this to add readings that depend on how they
+     * model chance agreement.
+     *
+     * @param aDiagnostic
+     *            a data characteristic reported by {@code AgreementDiagnostics}.
+     * @return the concern to show the user, or empty if this characteristic does not affect the
+     *         interpretation of this measure's score.
+     */
+    default Optional<AgreementConcern> getConcern(AgreementDiagnostic aDiagnostic)
+    {
+        return AgreementConcerns.generic(aDiagnostic);
     }
 
     /**

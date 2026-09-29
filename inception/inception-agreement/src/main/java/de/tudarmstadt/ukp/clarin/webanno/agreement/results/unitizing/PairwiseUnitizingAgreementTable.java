@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.results.unitizing;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.results.SkipDescriptions.describeSkips;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
@@ -195,7 +196,19 @@ public class PairwiseUnitizingAgreementTable
         var result = getModelObject().getResult(aRater1.getUsername(), aRater2.getUsername());
 
         if (result == null || result.getCasGroupIds().isEmpty()) {
-            return new Label("label", "no data");
+            var noData = new Label("label", "no data");
+            // Say why no document produced a score rather than leave the user to guess.
+            var skips = result != null
+                    ? describeSkips(result, getModelObject().getTraits(), aRater1, aRater2)
+                    : "";
+            if (!skips.isEmpty()) {
+                var tooltip = new DescriptionTooltipBehavior(
+                        aRater1.getUiName() + " ↔ " + aRater2.getUiName(),
+                        "No document produced a score.\n" + skips);
+                tooltip.setOption("position", (Object) null);
+                noData.add(tooltip);
+            }
+            return noData;
         }
 
         if (result.getCasGroupIds().size() != 2) {
@@ -230,6 +243,7 @@ public class PairwiseUnitizingAgreementTable
 
         var tooltipContent = format("Documents counted: %d/%d%n", result.getUsableAgreementsCount(),
                 result.getTotalAgreementsCount())
+                + describeSkips(result, getModelObject().getTraits(), aRater1, aRater2)
                 + "Positions annotated:\n"
                 + format("- %s: %d/%d%n", aRater1.getUiName(), result.getNonNullCount(casGroupId1),
                         result.getItemCount(casGroupId1))

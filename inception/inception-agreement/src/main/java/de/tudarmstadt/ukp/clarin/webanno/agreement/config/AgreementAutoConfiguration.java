@@ -17,10 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.config;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementService;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementServiceImpl;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDiagnostics;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.cohenkappa.CohenKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa.FleissKappaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gamma.GammaAgreementMeasureSupport;
@@ -33,8 +35,15 @@ import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 
+@EnableConfigurationProperties({ AgreementDiagnosticsPropertiesImpl.class })
 public class AgreementAutoConfiguration
 {
+    @Bean
+    public AgreementDiagnostics agreementDiagnostics(AgreementDiagnosticsProperties aProperties)
+    {
+        return new AgreementDiagnostics(aProperties);
+    }
+
     @Bean
     public AgreementService agreementService(DocumentService aDocumentService,
             AnnotationSchemaService aSchemaService, UserDao aUserService,

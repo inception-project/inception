@@ -17,9 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gamma;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm.ALIGNING;
+import static java.util.EnumSet.of;
 
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
@@ -27,6 +30,7 @@ import org.apache.wicket.model.IModel;
 import org.dkpro.statistics.agreement.aligning.AligningAnnotationStudy;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementResult_ImplBase;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PairwiseAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
@@ -72,6 +76,12 @@ public class GammaAgreementMeasureSupport
     public AgreementMeasureParadigm getParadigm()
     {
         return ALIGNING;
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED);
     }
 
     @Override

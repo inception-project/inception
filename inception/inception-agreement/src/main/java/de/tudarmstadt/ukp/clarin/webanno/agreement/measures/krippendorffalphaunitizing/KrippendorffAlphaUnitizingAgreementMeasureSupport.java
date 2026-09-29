@@ -17,7 +17,7 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalphaunitizing;
 
-import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CATEGORY_SPECIFIC;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm.UNITIZING;
 import static java.util.EnumSet.of;
 
@@ -69,8 +69,8 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     {
         return Optional.of("Measures how consistently raters segment the text into units, based on "
                 + "character offsets. Use this when the disagreement of interest is about "
-                + "boundaries rather than labels. Operates on span positions, so it does not "
-                + "require a feature.");
+                + "boundaries. A feature is optional: without one, only the segmentation is "
+                + "compared; with one, units must also carry the same label to agree.");
     }
 
     @Override
@@ -82,7 +82,7 @@ public class KrippendorffAlphaUnitizingAgreementMeasureSupport
     @Override
     public Set<AgreementMeasureCapability> getDeclaredCapabilities()
     {
-        return of(CATEGORY_SPECIFIC);
+        return of(CHANCE_CORRECTED);
     }
 
     @Override

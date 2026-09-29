@@ -17,10 +17,15 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
-import java.util.HashMap;
+import static java.lang.Double.isNaN;
+
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
@@ -34,7 +39,7 @@ public class PerDocumentAgreementResult
     private static final long serialVersionUID = -5103322733512045313L;
 
     private final Set<SourceDocument> documents = new HashSet<>();
-    private final Map<SourceDocument, AgreementSummary> results = new HashMap<>();
+    private final Map<SourceDocument, AgreementSummary> results = new LinkedHashMap<>();
 
     private SummaryStatistics agreementScoreStats = new SummaryStatistics();
 
@@ -58,9 +63,31 @@ public class PerDocumentAgreementResult
         return results.get(aDocument);
     }
 
+    @Override
+    protected Collection<AgreementSummary> getComparisonResults()
+    {
+        // The unit of comparison here is the document - each document is its own complete study,
+        // so a characteristic is counted once per document that exhibits it.
+        return results.values();
+    }
+
+    @Override
+    protected Optional<String> describeComparison(AgreementSummary aComparison,
+            Function<String, String> aRaterNames)
+    {
+        return results.entrySet().stream() //
+                .filter(e -> e.getValue() == aComparison) //
+                .map(e -> e.getKey().getName()) //
+                .findFirst();
+    }
+
     public void mergeResult(SourceDocument aDocument, AgreementSummary aRes)
     {
-        agreementScoreStats.addValue(aRes.getAgreement());
+        invalidateDiagnostics();
+
+        if (!isNaN(aRes.getAgreement())) {
+            agreementScoreStats.addValue(aRes.getAgreement());
+        }
         documents.add(aDocument);
 
         var existingRes = getResult(aDocument);

@@ -1,0 +1,97 @@
+// Licensed to the Technische Universität Darmstadt under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The Technische Universität Darmstadt
+// licenses this file to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+[[sect_settings_agreement]]
+= Agreement Settings
+
+After an agreement calculation, {product-name} shows notes on characteristics of the data that
+affect how the score should be read. What these notes mean and how they are determined is described
+in the <<user-guide.adoc#sect_agreement_notes, User Guide>>. The settings below control when such a
+note is considered worth showing.
+
+The defaults are chosen to stay quiet on well-behaved data, on the grounds that a note appearing on
+every result is quickly ignored. Projects that want to be told earlier - or later - can move the
+thresholds.
+
+NOTE: These thresholds are conventions, not derived constants. Where the line falls between "worth
+      mentioning" and "noise" depends on the annotation project, so treat the defaults as a starting
+      point rather than as recommended values.
+
+Thresholds expressed as shares must lie between `0` and `1`, limits must not be negative, and
+`minimum-basis-for-share` must be at least `1`. An out-of-range value prevents {product-name} from
+starting and names the offending setting.
+
+.Agreement diagnostics settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `agreement.diagnostics.skew-threshold`
+| Share of the assigned labels that the most frequent label must reach (or exceed) for the
+  distribution to be reported as skewed. If several labels are equally frequent at the top - which
+  can only reach the threshold if it is set to `0.5` or lower - all of them are named.
+| `0.85`
+| `0.9`
+
+| `agreement.diagnostics.marginal-asymmetry-threshold`
+| Difference in label usage between two annotators, as a share of their annotations, at or above
+  which their marginals are reported as asymmetric.
+| `0.2`
+| `0.3`
+
+| `agreement.diagnostics.sparse-category-limit`
+| Number of items below which a label is reported as too sparse.
+| `5`
+| `10`
+
+| `agreement.diagnostics.few-items-limit`
+| Number of items that count towards the score below which the score is reported as statistically
+  fragile.
+| `30`
+| `50`
+
+| `agreement.diagnostics.boundary-disagreement-threshold`
+| Share of the relevant positions missing from at least one annotator at or above which a
+  substantial part of the disagreement is reported as being about boundaries.
+| `0.2`
+| `0.5`
+
+| `agreement.diagnostics.unusable-document-threshold`
+| Share of the documents both annotators of a pair worked on that must fail to produce a score for
+  that to be reported (reached or exceeded). At least two documents must be affected;
+  `minimum-basis-for-share` does not apply.
+| `0.3`
+| `0.5`
+
+| `agreement.diagnostics.affected-document-threshold`
+| Share of the scored documents that must show a single label, a dominant label (see
+  `skew-threshold`) or annotators using labels at different rates (see
+  `marginal-asymmetry-threshold`) on their own for these documents to be reported (reached or
+  exceeded). Only applies if at least two documents produced a score. `minimum-basis-for-share`
+  does not apply to the share of documents, but it does apply within each document.
+| `0.25`
+| `0.5`
+
+| `agreement.diagnostics.minimum-basis-for-share`
+| Smallest number of observations that a share may be computed over before a share-based note is
+  reported. It never appears in the text shown to the user. Raising this suppresses notes on small
+  studies; lowering it makes them appear sooner.
+| `20`
+| `50`
+|===
