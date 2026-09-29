@@ -87,9 +87,10 @@ public interface DocumentEditor
      *
      * @param aTarget
      *            the AJAX target
-     * @param aRange
-     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
-     *            opening the document placed it.
+     * @param aBegin
+     *            the offset to scroll to
+     * @param aEnd
+     *            the corresponding end offset
      * @param aAdditionalPingRanges
      *            additional ranges that should ideally be visible. May be {@code null} or empty.
      * @throws IOException
