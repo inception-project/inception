@@ -26,7 +26,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.EditorBoundEvent;
  * Indicates when the content of an editor changes (i.e. a document is opened or the current
  * document is unloaded leaving it empty.
  * <p>
- * Note that related events like {@link DocumentOpenedEvent} do not indicate when a document is
+ * Note that related events like {@code DocumentOpenedEvent} do not indicate when a document is
  * unloaded, only when a document is opened.
  */
 public class EditorContentReplacedEvent

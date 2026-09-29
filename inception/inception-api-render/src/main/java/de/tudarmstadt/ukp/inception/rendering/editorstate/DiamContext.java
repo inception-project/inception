@@ -221,10 +221,8 @@ public interface DiamContext
      * @param aDataOwner
      *            whose annotations to show. A caller that only wants to move within what the editor
      *            already shows should use {@link #actionJumpTo} instead of naming these.
-     * @param aBegin
-     *            the offset to scroll to
-     * @param aEnd
-     *            the corresponding end offset
+     * @param aRange
+     *            the range to scroll to
      * @throws IOException
      *             if there was an I/O-level problem
      * @throws AnnotationException
