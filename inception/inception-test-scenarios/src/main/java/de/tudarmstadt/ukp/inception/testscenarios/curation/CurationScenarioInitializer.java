@@ -29,6 +29,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
 import de.tudarmstadt.ukp.inception.testscenarios.config.InceptionTestScenariosAutoConfiguration;
 
 /**
@@ -45,9 +46,10 @@ public class CurationScenarioInitializer
     extends CurationScenarioInitializer_ImplBase
 {
     public CurationScenarioInitializer(DocumentService aDocumentService,
-            ProjectService aProjectService, UserDao aUserService)
+            ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
     {
-        super(aDocumentService, aProjectService, aUserService);
+        super(aDocumentService, aProjectService, aUserService, aScenarioAccountService);
     }
 
     @Override

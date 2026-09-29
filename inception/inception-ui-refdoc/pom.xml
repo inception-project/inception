@@ -34,12 +34,12 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-annotation</artifactId>
+      <artifactId>inception-workload</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
-      <artifactId>inception-api-editor</artifactId>
+      <artifactId>inception-api-annotation</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -73,10 +73,6 @@
       <version>${project.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.apache.uima</groupId>
-      <artifactId>uimaj-core</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.fasterxml.jackson.core</groupId>
@@ -90,6 +86,10 @@
     <dependency>
       <groupId>org.springframework</groupId>
       <artifactId>spring-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-beans</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework</groupId>
@@ -125,10 +125,6 @@
       <artifactId>jdk-serializable-functional</artifactId>
     </dependency>
     <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-    </dependency>
-    <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot</artifactId>
     </dependency>
@@ -148,6 +144,11 @@
       <artifactId>spring-boot-test</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -160,6 +161,7 @@
             <!-- Used only for the @ConditionalOnProperty annotation on the auto-configuration,
                  which is not retained in the bytecode the analyzer inspects. -->
             <ignoredNonTestScopedDependencies>
+              <dependency>org.springframework:spring-beans</dependency>
               <dependency>org.springframework.boot:spring-boot</dependency>
             </ignoredNonTestScopedDependencies>
           </configuration>

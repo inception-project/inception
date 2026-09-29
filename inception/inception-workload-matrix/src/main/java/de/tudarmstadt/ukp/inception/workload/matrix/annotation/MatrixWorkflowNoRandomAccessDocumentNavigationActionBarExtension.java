@@ -83,7 +83,7 @@ public class MatrixWorkflowNoRandomAccessDocumentNavigationActionBarExtension
     @Override
     public boolean accepts(ActionBarContext aContext)
     {
-        var project = aContext.page().getModelObject().getProject();
+        var project = aContext.editor().getProject();
         if (project == null) {
             return false;
         }

@@ -245,7 +245,7 @@ public class FeatureEditorListPanel
                     .orElseThrow();
             var editorPanel = findParent(AnnotationDetailEditorPanel.class);
             final var editor = featureSupport.createEditor("editor", featureEditorContainer,
-                    editorPanel.activeActionHandler(), getModel(), aItem.getModel());
+                    editorPanel.detailActionHandler(), getModel(), aItem.getModel());
 
             // We need to enable the markup ID here because we use it during the AJAX behavior
             // that automatically saves feature editors on change/blur.
@@ -338,7 +338,7 @@ public class FeatureEditorListPanel
     {
         var editorPanel = findParent(AnnotationDetailEditorPanel.class);
 
-        editorPanel.ensureActiveEditorIsEditable();
+        editorPanel.ensureDetailIsEditable();
 
         var state = getModelObject();
 
@@ -352,7 +352,7 @@ public class FeatureEditorListPanel
         // re-focus after rendering
         getRequestCycle().setMetaData(IsSidebarAction.INSTANCE, true);
 
-        var cas = editorPanel.activeEditorCas();
+        var cas = editorPanel.detailCas();
 
         var adapter = annotationService.getAdapter(state.getSelectedAnnotationLayer());
         editorPanel.reportMessages(aTarget, annotationEditingService.commitFeatureStates(

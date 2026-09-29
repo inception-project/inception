@@ -37,11 +37,11 @@ public class AnnotationDocumentTableFilterState
         return states;
     }
 
-    public void setState(List<AnnotationDocumentState> states)
+    public void setState(List<AnnotationDocumentState> aStates)
     {
         states.clear();
-        if (states != null) {
-            states.addAll(states);
+        if (aStates != null) {
+            states.addAll(aStates);
         }
     }
 

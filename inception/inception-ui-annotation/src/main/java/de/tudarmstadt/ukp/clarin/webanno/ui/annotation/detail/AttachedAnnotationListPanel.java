@@ -53,7 +53,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanLayerSupport;
 import de.tudarmstadt.ukp.inception.rendering.Renderer;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationActionHandler;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.selection.Selection;
@@ -78,17 +77,14 @@ public class AttachedAnnotationListPanel
     private @SpringBean AnnotationSchemaService schemaService;
     private @SpringBean LayerSupportRegistry layerRegistry;
 
-    private final DocumentEditorManager manager;
     private final WebMarkupContainer noAttachedAnnotationsInfo;
     private final WebMarkupContainer attachedAnnotationsContainer;
     private final IModel<List<AttachedAnnotationInfo>> annotations;
 
-    public AttachedAnnotationListPanel(String aId, DocumentEditorManager aManager,
-            IModel<AnnotatorState> aModel)
+    public AttachedAnnotationListPanel(String aId, IModel<AnnotatorState> aModel)
     {
         super(aId, aModel);
 
-        manager = aManager;
         annotations = LoadableDetachableModel.of(this::getRelationInfo);
 
         noAttachedAnnotationsInfo = new WebMarkupContainer("noAttachedAnnotationsInfo");
@@ -121,7 +117,7 @@ public class AttachedAnnotationListPanel
 
     private AnnotationActionHandler actionHandler()
     {
-        return manager.getActiveContext().orElseThrow().getActionHandler();
+        return findParent(AnnotationDetailEditorPanel.class).detailActionHandler();
     }
 
     private List<AttachedAnnotationInfo> getRelationInfo()
@@ -134,7 +130,7 @@ public class AttachedAnnotationListPanel
 
         CAS cas;
         try {
-            cas = manager.getActiveContext().orElseThrow().getEditorCas();
+            cas = findParent(AnnotationDetailEditorPanel.class).detailCas();
         }
         catch (IOException e) {
             // If we have trouble accessing the CAS, we probably never get here anyway...
@@ -277,15 +273,20 @@ public class AttachedAnnotationListPanel
 
             aItem.add(new Label("endpoint", info.endpointText));
 
+            // Selecting and jumping act on the active editor, so they are not offered while the
+            // detail panel shows an annotation read-only
+            var floating = findParent(AnnotationDetailEditorPanel.class).isFloating();
+
             aItem.add(new LambdaAjaxLink("jumpToEndpoint",
                     _target -> actionHandler().actionSelectAndJump(_target, info.endPointVid))
                             .setAlwaysEnabled(true) // avoid disabling in read-only mode
-            );
+                            .setVisible(!floating));
 
             LambdaAjaxLink selectRelation = new LambdaAjaxLink("selectRelation",
                     _target -> actionHandler().actionSelect(_target, info.relationVid));
             // avoid disabling in read-only mode
-            selectRelation.setAlwaysEnabled(info.relationVid != null);
+            selectRelation.setAlwaysEnabled(info.relationVid != null && !floating);
+            selectRelation.setEnabled(!floating);
             selectRelation
                     .add(visibleWhen(() -> info.relationVid != null && info.relationVid.isSet()));
             aItem.add(selectRelation);

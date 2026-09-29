@@ -21,6 +21,7 @@ import static org.apache.commons.lang3.StringUtils.abbreviateMiddle;
 import static org.apache.commons.text.StringEscapeUtils.escapeJava;
 import static org.apache.uima.fit.util.CasUtil.getType;
 import static org.apache.uima.fit.util.CasUtil.select;
+import static de.tudarmstadt.ukp.clarin.webanno.diag.CasDoctorUtils.safeCoveredText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,7 +76,21 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
                 continue;
             }
 
+            var docText = aCas.getDocumentText();
+            if (docText == null) {
+                continue;
+            }
+
             for (var ann : select(aCas, type)) {
+                if (ann.getBegin() < 0 || ann.getEnd() < 0 || ann.getBegin() > docText.length()
+                        || ann.getEnd() > docText.length()) {
+                    // Annotations lying outside the document text are reported by
+                    // AllAnnotationsWithinDocumentTextCheck. Their offsets cannot meaningfully be
+                    // compared against sentence boundaries, so reporting them here as well would
+                    // only add a second, misleading message for the same defect.
+                    continue;
+                }
+
                 var startsOutside = aCas.select(Sentence._TypeName)
                         .covering(ann.getBegin(), ann.getBegin()).isEmpty();
                 var endsOutside = aCas.select(Sentence._TypeName)
@@ -95,7 +110,7 @@ public class AllAnnotationsStartAndEndWithinSentencesCheck
 
                 aMessages.add(LogMessage.error(this, "[%s] [%s]@[%d-%d] %s outside any sentence",
                         ann.getType().getName(),
-                        escapeJava(abbreviateMiddle(ann.getCoveredText(), "…", 20)), ann.getBegin(),
+                        escapeJava(abbreviateMiddle(safeCoveredText(ann), "…", 20)), ann.getBegin(),
                         ann.getEnd(), String.join(" and ", outsides.toArray(String[]::new))));
 
                 ok = false;

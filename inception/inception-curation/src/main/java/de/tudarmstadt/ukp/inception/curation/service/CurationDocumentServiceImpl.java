@@ -39,6 +39,7 @@ import org.apache.uima.cas.CAS;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
@@ -54,6 +55,7 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.NoResultException;
@@ -74,22 +76,39 @@ public class CurationDocumentServiceImpl
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
     private final DocumentService documentService;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
             AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
-            EntityManager aEntityManager, DocumentService aDocumentService)
+            EntityManager aEntityManager, DocumentService aDocumentService,
+            ApplicationEventPublisher aApplicationEventPublisher)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
         curationProperties = aCurationProperties;
         documentService = aDocumentService;
+        applicationEventPublisher = aApplicationEventPublisher;
     }
 
     @Override
     @Transactional
     public void writeCurationCas(CAS aCas, SourceDocument aDocument, boolean aUpdateTimestamp)
+        throws IOException
+    {
+        writeCurationCasSilently(aCas, aDocument, aUpdateTimestamp);
+
+        if (documentService.existsAnnotationDocument(aDocument, CURATION_SET)) {
+            applicationEventPublisher.publishEvent(new AfterCasWrittenEvent(this,
+                    documentService.getAnnotationDocument(aDocument, CURATION_SET), aCas));
+        }
+    }
+
+    @Override
+    @Transactional
+    public void writeCurationCasSilently(CAS aCas, SourceDocument aDocument,
+            boolean aUpdateTimestamp)
         throws IOException
     {
         casStorageService.writeCas(aDocument, aCas, CURATION_SET);
@@ -295,6 +314,39 @@ public class CurationDocumentServiceImpl
 
         // We require at least one curatable user from whom we can obtain the curation CAS template
         return !listCuratableUsers(aDocument).isEmpty();
+    }
+
+    @Override
+    @Transactional(noRollbackFor = NoResultException.class)
+    public boolean isInitialMergeRequired(SourceDocument aDocument)
+    {
+        Validate.notNull(aDocument, "Document must be specified");
+
+        // Make sure we know the latest state from the DB - just in case the given document is stale
+        var state = getCurrentState(aDocument);
+
+        if (!CURATION_IN_PROGRESS.equals(state) && !CURATION_FINISHED.equals(state)) {
+            return true;
+        }
+
+        // CURATION_FINISHED is only ever reached through an explicit curator action, so a missing
+        // curation CAS there is somebody having reset the curation on purpose - not a failed merge.
+        if (CURATION_FINISHED.equals(state)) {
+            return false;
+        }
+
+        try {
+            // A document claiming to be in curation but without a curation CAS to back that claim
+            // is the result of a failed initial merge - retry it instead of locking the document
+            // up.
+            return !existsCurationCas(aDocument);
+        }
+        catch (IOException e) {
+            // If we cannot tell, assume it is there - that avoids re-merging over curation work
+            LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
+                    aDocument, e);
+            return false;
+        }
     }
 
     /**

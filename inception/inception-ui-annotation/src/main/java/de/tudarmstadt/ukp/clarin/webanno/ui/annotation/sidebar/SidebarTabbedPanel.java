@@ -185,14 +185,14 @@ public class SidebarTabbedPanel<T extends SidebarTab>
         sidebarState.setExpanded(expanded);
         var user = userService.getCurrentUser();
         prefService.saveTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
-                state.getObject().getProject(), sidebarState);
+                annotationPage.getProject(), sidebarState);
     }
 
     private void loadSidebarState()
     {
         var user = userService.getCurrentUser();
         var sidebarState = prefService.loadTraitsForUserAndProject(KEY_SIDEBAR_STATE, user,
-                state.getObject().getProject());
+                annotationPage.getProject());
         expanded = sidebarState.isExpanded();
         if (isNotBlank(sidebarState.getSelectedTab())) {
             var tabFactories = getTabs().stream().map(SidebarTab::getFactoryId).toList();

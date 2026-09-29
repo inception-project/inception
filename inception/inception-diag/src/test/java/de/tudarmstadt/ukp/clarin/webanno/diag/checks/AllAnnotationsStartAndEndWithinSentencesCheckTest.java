@@ -102,4 +102,29 @@ class AllAnnotationsStartAndEndWithinSentencesCheckTest
                 "[de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity] [Blong]@[10-15] ends outside any sentence");
 
     }
+
+    @Test
+    void thatAnnotationsOutsideTheDocumentTextAreNotReportedHere()
+    {
+        // Annotations reaching outside the document text are
+        // AllAnnotationsWithinDocumentTextCheck's
+        // business. Reporting them here as well would add a second, misleading message ("ends
+        // outside any sentence") for what is really an out-of-bounds defect. See #6246.
+        when(annotationService.listAnnotationLayer(project)).thenReturn(layers);
+
+        jCas.setDocumentText("BlingBlangBlong");
+
+        var annotations = asList( //
+                new Sentence(jCas, 0, 15), //
+                new NamedEntity(jCas, 10, 16), // reaches beyond the end of the text
+                new NamedEntity(jCas, -1, 5)); // starts before the beginning of the text
+        annotations.forEach(Annotation::addToIndexes);
+
+        var messages = new ArrayList<LogMessage>();
+
+        var result = sut.check(document, dataOwner, jCas.getCas(), messages);
+
+        assertThat(result).isTrue();
+        assertThat(messages).isEmpty();
+    }
 }

@@ -45,10 +45,14 @@
             </div>
           </form>
         </div>
-        <div wicket:id="dataTableContainer" class="scrolling flex-content fit-child-snug">
-          <table wicket:id="resultsTable" class="table table-sm" cellspacing="0" >
-            [Results table]
-          </table>
+        <div class="flex-content fit-child-snug">
+          <div wicket:id="resultsScroller" class="scrolling">
+            <div wicket:id="dataTableContainer">
+              <table wicket:id="resultsTable" class="table table-sm" cellspacing="0" >
+                [Results table]
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

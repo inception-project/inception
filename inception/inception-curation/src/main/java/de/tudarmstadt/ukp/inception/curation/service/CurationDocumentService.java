@@ -53,6 +53,22 @@ public interface CurationDocumentService
     void writeCurationCas(CAS aCas, SourceDocument document, boolean aUpdateTimestamp)
         throws IOException;
 
+    /**
+     * Like {@link #writeCurationCas}, but does not publish an {@code AfterCasWrittenEvent}. Use
+     * this when the write does not change the annotations, e.g. when only persisting a CAS upgrade.
+     *
+     * @param aCas
+     *            the CAS.
+     * @param document
+     *            the source document.
+     * @param aUpdateTimestamp
+     *            whether to update the timestamp on the source document
+     * @throws IOException
+     *             if an I/O error occurs.
+     */
+    void writeCurationCasSilently(CAS aCas, SourceDocument document, boolean aUpdateTimestamp)
+        throws IOException;
+
     void upgradeCurationCas(CAS aCurCas, SourceDocument document) throws UIMAException, IOException;
 
     /**
@@ -76,6 +92,13 @@ public interface CurationDocumentService
      * @return whether the document may be opened for curation.
      */
     boolean isDocumentCuratable(SourceDocument aDocument);
+
+    /**
+     * @param aDocument
+     *            the source document.
+     * @return whether an initial merge has to be performed.
+     */
+    boolean isInitialMergeRequired(SourceDocument aDocument);
 
     /**
      * @param aSourceDocument

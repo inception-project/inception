@@ -130,6 +130,13 @@ public class ExportServiceControllerImpl
             return new ResponseEntity<>(NOT_FOUND);
         }
 
+        // Get project (this also ensures that it exists). Then check user permissions.
+        var project = projectService.getProject(monitor.getProjectId());
+        var user = userService.getCurrentUser();
+        if (!projectService.hasRole(user, project, MANAGER) && !userService.isAdministrator(user)) {
+            return new ResponseEntity<>(NOT_FOUND);
+        }
+
         List<RExportLogMessage> result = monitor.getMessages().stream()
                 .map(msg -> new RExportLogMessage(msg)).collect(Collectors.toList());
 

@@ -73,6 +73,11 @@
       <artifactId>inception-io-text</artifactId>
       <version>${project.version}</version>
     </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-workload</artifactId>
+      <version>${project.version}</version>
+    </dependency>
 
 
     <!-- Spring dependencies -->
@@ -89,10 +94,20 @@
       <artifactId>spring-boot-autoconfigure</artifactId>
     </dependency>
 
+    <!-- Logging dependencies -->
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+
     <!-- UIMA dependencies -->
     <dependency>
       <groupId>org.apache.uima</groupId>
       <artifactId>uimaj-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.uima</groupId>
+      <artifactId>uimafit-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.dkpro.core</groupId>

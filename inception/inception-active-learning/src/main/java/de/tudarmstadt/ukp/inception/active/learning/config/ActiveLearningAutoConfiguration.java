@@ -37,6 +37,7 @@ import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @Configuration
 @AutoConfigureAfter(RecommenderServiceAutoConfiguration.class)
@@ -75,8 +76,8 @@ public class ActiveLearningAutoConfiguration
     @Bean
     public ActiveLearningSidebarFactory activeLearningSidebarFactory(
             RecommendationService aRecommendationService, PreferencesService aPreferencesService,
-            UserDao aUserService)
+            UserDao aUserService, WorkloadManagementService aWorkloadManagementService)
     {
-        return new ActiveLearningSidebarFactory(aRecommendationService);
+        return new ActiveLearningSidebarFactory(aRecommendationService, aWorkloadManagementService);
     }
 }

@@ -17,6 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
+
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.markup.html.panel.Panel;
 
@@ -36,24 +38,15 @@ public class PreferencesActionBarItem
     private static final long serialVersionUID = 4139817495914347777L;
 
     private final AnnotationPreferencesDialog preferencesModal;
-    private final AnnotationPageBase page;
 
     public PreferencesActionBarItem(String aId, AnnotationPageBase aPage)
     {
         super(aId);
 
-        page = aPage;
-
         add(preferencesModal = new AnnotationPreferencesDialog("preferencesDialog",
-                page.getModel()));
-        preferencesModal.setOnChangeAction(this::actionCompletePreferencesChange);
+                aPage.getProjectModel(), CURATION));
 
         add(new LambdaAjaxLink("showPreferencesDialog", this::actionShowPreferencesDialog));
-    }
-
-    private void actionCompletePreferencesChange(AjaxRequestTarget aTarget)
-    {
-        page.actionLoadDocument(aTarget);
     }
 
     private void actionShowPreferencesDialog(AjaxRequestTarget aTarget)

@@ -52,9 +52,8 @@ import org.apache.wicket.ajax.form.OnChangeAjaxBehavior;
 import org.apache.wicket.extensions.markup.html.form.select.Select;
 import org.apache.wicket.extensions.markup.html.form.select.SelectOption;
 import org.apache.wicket.feedback.IFeedback;
-import org.apache.wicket.markup.ComponentTag;
-import org.apache.wicket.markup.MarkupStream;
 import org.apache.wicket.markup.html.WebMarkupContainer;
+import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.ChoiceRenderer;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.ListChoice;
@@ -207,20 +206,12 @@ public class ProjectLayersPanel
                 @Override
                 protected void populateItem(final ListItem<AnnotationLayer> item)
                 {
-                    item.add(new SelectOption<AnnotationLayer>("layer",
-                            new Model<>(item.getModelObject()))
-                    {
-                        private static final long serialVersionUID = 3095089418860168215L;
-
-                        @Override
-                        public void onComponentTagBody(MarkupStream markupStream,
-                                ComponentTag openTag)
-                        {
-                            replaceComponentTagBody(markupStream, openTag,
-                                    item.getModelObject().getUiName());
-                        }
-                    }.add(new AttributeModifier("style",
-                            "color:" + colors.get(item.getModelObject()) + ";")));
+                    var option = new SelectOption<AnnotationLayer>("layer",
+                            new Model<>(item.getModelObject()));
+                    option.add(new Label("layerName", item.getModelObject().getUiName()));
+                    option.add(new AttributeModifier("style",
+                            "color:" + colors.get(item.getModelObject()) + ";"));
+                    item.add(option);
                 }
             };
 

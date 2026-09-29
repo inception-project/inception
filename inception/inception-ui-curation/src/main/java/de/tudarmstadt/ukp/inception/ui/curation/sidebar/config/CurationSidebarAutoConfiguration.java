@@ -40,6 +40,7 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarServiceImpl;
+import de.tudarmstadt.ukp.inception.ui.curation.sidebar.ShowSuggestionDetailsContextMenuItem;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.render.CurationSidebarRenderer;
 
 @ConditionalOnWebApplication
@@ -72,6 +73,13 @@ public class CurationSidebarAutoConfiguration
                 aApplicationEventPublisher, aUserRepository, aCurationSessionService,
                 aCurationSidebarService, aFeatureSupportRegistry, aDetailsLookupService,
                 aDiffAdapterRegistry);
+    }
+
+    @Bean
+    public ShowSuggestionDetailsContextMenuItem showSuggestionDetailsContextMenuItem(
+            CurationEditorExtension aCurationEditorExtension, UserDao aUserService)
+    {
+        return new ShowSuggestionDetailsContextMenuItem(aCurationEditorExtension, aUserService);
     }
 
     @Bean("curationSidebar")

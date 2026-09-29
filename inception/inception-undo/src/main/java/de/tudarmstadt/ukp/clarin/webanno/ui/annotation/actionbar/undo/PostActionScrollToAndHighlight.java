@@ -27,6 +27,7 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
@@ -40,11 +41,14 @@ public class PostActionScrollToAndHighlight
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final SourceDocument document;
+    private final AnnotationSet dataOwner;
     private final Range range;
 
-    public PostActionScrollToAndHighlight(SourceDocument aDocument, Range aRange)
+    public PostActionScrollToAndHighlight(SourceDocument aDocument, AnnotationSet aDataOwner,
+            Range aRange)
     {
         document = aDocument;
+        dataOwner = aDataOwner;
         range = aRange;
     }
 
@@ -53,8 +57,7 @@ public class PostActionScrollToAndHighlight
     {
         try {
             aContext.getActionHandler().actionClear(aTarget);
-            aContext.actionShowSelectedDocument(aTarget, document, range.getBegin(),
-                    range.getEnd());
+            aContext.actionShowSelectedDocument(aTarget, document, dataOwner, range);
         }
         catch (IOException | AnnotationException e) {
             handleException(LOG, aHost, aTarget, e);

@@ -17,6 +17,10 @@
  */
 package de.tudarmstadt.ukp.inception.testscenarios.config;
 
+import java.lang.invoke.MethodHandles;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,11 +28,19 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationMixedEditabilityScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationSentenceLayerScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.editorplacement.EditorPlacementScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.recommender.RecommenderScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.searchbulk.SearchBulkScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.scrollsync.ScrollSyncScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.splitview.SplitViewScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.urlfragment.UrlFragmentScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.workload.DynamicWorkloadScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.workload.MatrixWorkloadScenarioInitializer;
+import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 /**
  * Project initializers that exist purely to set up reproducible test scenarios.
@@ -41,28 +53,48 @@ import de.tudarmstadt.ukp.inception.testscenarios.recommender.RecommenderScenari
 @Configuration
 public class InceptionTestScenariosAutoConfiguration
 {
+    private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
+    public InceptionTestScenariosAutoConfiguration()
+    {
+        // Logged as a warning so it is not filtered out: a build that carries these initializers
+        // lets any project creator create accounts with a well-known password.
+        LOG.warn("Test scenarios are enabled. This build must not be used in production.");
+    }
+
+    @Bean
+    public ScenarioAccountService scenarioAccountService(UserDao aUserService,
+            ProjectService aProjectService)
+    {
+        return new ScenarioAccountService(aUserService, aProjectService);
+    }
+
     @Bean
     public CurationScenarioInitializer curationScenarioInitializer(DocumentService aDocumentService,
-            ProjectService aProjectService, UserDao aUserService)
+            ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
     {
-        return new CurationScenarioInitializer(aDocumentService, aProjectService, aUserService);
+        return new CurationScenarioInitializer(aDocumentService, aProjectService, aUserService,
+                aScenarioAccountService);
     }
 
     @Bean
     public CurationMixedEditabilityScenarioInitializer curationMixedEditabilityScenarioInitializer(
-            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService)
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
     {
         return new CurationMixedEditabilityScenarioInitializer(aDocumentService, aProjectService,
-                aUserService);
+                aUserService, aScenarioAccountService);
     }
 
     @Bean
     public CurationSentenceLayerScenarioInitializer curationSentenceLayerScenarioInitializer(
             DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService,
             AnnotationSchemaService aAnnotationSchemaService)
     {
         return new CurationSentenceLayerScenarioInitializer(aDocumentService, aProjectService,
-                aUserService, aAnnotationSchemaService);
+                aUserService, aScenarioAccountService, aAnnotationSchemaService);
     }
 
     @Bean
@@ -78,5 +110,61 @@ public class InceptionTestScenariosAutoConfiguration
     {
         return new EditorPlacementScenarioInitializer(aDocumentService, aProjectService,
                 aUserService);
+    }
+
+    @Bean
+    public SplitViewScenarioInitializer splitViewScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new SplitViewScenarioInitializer(aDocumentService, aProjectService, aUserService,
+                aScenarioAccountService);
+    }
+
+    @Bean
+    public SearchBulkScenarioInitializer searchBulkScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new SearchBulkScenarioInitializer(aDocumentService, aProjectService, aUserService,
+                aScenarioAccountService);
+    }
+
+    @Bean
+    public UrlFragmentScenarioInitializer urlFragmentScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new UrlFragmentScenarioInitializer(aDocumentService, aProjectService, aUserService,
+                aScenarioAccountService);
+    }
+
+    @Bean
+    public DynamicWorkloadScenarioInitializer dynamicWorkloadScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService,
+            WorkloadManagementService aWorkloadManagementService)
+    {
+        return new DynamicWorkloadScenarioInitializer(aDocumentService, aProjectService,
+                aUserService, aScenarioAccountService, aWorkloadManagementService);
+    }
+
+    @Bean
+    public MatrixWorkloadScenarioInitializer matrixWorkloadScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService,
+            WorkloadManagementService aWorkloadManagementService)
+    {
+        return new MatrixWorkloadScenarioInitializer(aDocumentService, aProjectService,
+                aUserService, aScenarioAccountService, aWorkloadManagementService);
+    }
+
+    @Bean
+    public ScrollSyncScenarioInitializer scrollSyncScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new ScrollSyncScenarioInitializer(aDocumentService, aProjectService, aUserService,
+                aScenarioAccountService);
     }
 }

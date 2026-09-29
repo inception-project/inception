@@ -63,10 +63,8 @@ public class SvelteBehavior
         host = aHost;
         host.setOutputMarkupId(true);
         var componentClass = host.getClass();
-        jsRef = new PackageResourceReference(componentClass,
-                componentClass.getSimpleName() + ".min.js");
-        cssRef = new PackageResourceReference(componentClass,
-                componentClass.getSimpleName() + ".min.css");
+        jsRef = jsRefFor(componentClass);
+        cssRef = cssRefFor(componentClass);
     }
 
     public SvelteBehavior(ResourceReference aJsRef, ResourceReference aCssRef)
@@ -94,15 +92,34 @@ public class SvelteBehavior
         var componentClass = host.getClass();
 
         if (jsRef == null) {
-            jsRef = new PackageResourceReference(componentClass,
-                    componentClass.getSimpleName() + ".min.js");
+            jsRef = jsRefFor(componentClass);
         }
 
-        if (cssRef == null
-                & componentClass.getResource(componentClass.getSimpleName() + ".min.css") != null) {
-            cssRef = new PackageResourceReference(componentClass,
-                    componentClass.getSimpleName() + ".min.css");
+        if (cssRef == null) {
+            cssRef = cssRefFor(componentClass);
         }
+    }
+
+    private static ResourceReference jsRefFor(Class<?> aComponentClass)
+    {
+        return new PackageResourceReference(aComponentClass,
+                aComponentClass.getSimpleName() + ".min.js");
+    }
+
+    /**
+     * The Svelte build only emits a stylesheet for components that actually declare styles. Return
+     * a reference only if the stylesheet exists, otherwise we would render a link to a non-existing
+     * resource which the resource loader then reports as a 404.
+     */
+    private static ResourceReference cssRefFor(Class<?> aComponentClass)
+    {
+        var cssName = aComponentClass.getSimpleName() + ".min.css";
+
+        if (aComponentClass.getResource(cssName) == null) {
+            return null;
+        }
+
+        return new PackageResourceReference(aComponentClass, cssName);
     }
 
     @Override

@@ -23,7 +23,7 @@ package de.tudarmstadt.ukp.inception.pdfeditor2;
 
 import org.apache.wicket.model.IModel;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;

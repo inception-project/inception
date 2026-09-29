@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistry;
 import de.tudarmstadt.ukp.clarin.webanno.diag.RepairsRegistryImpl;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithCharactersCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsStartAndEndWithinSentencesCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllAnnotationsWithinDocumentTextCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.AllFeatureStructuresIndexedCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.CASMetadataTypeIsPresentCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.Check;
@@ -49,6 +50,7 @@ import de.tudarmstadt.ukp.clarin.webanno.diag.checks.TokensAndSententencedDoNotO
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UniqueDocumentAnnotationCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.UnreachableAnnotationsCheck;
 import de.tudarmstadt.ukp.clarin.webanno.diag.checks.XmlStructurePresentInNonInitialCasCheck;
+import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ClampAnnotationsToDocumentTextRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.CoverAllTextInSentencesRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsAndDeleteExtrasRepair;
 import de.tudarmstadt.ukp.clarin.webanno.diag.repairs.ReattachFeatureAttachedSpanAnnotationsRepair;
@@ -219,6 +221,18 @@ public class CasDoctorAutoConfiguration
     public NegativeSizeAnnotationsCheck noNegativeSizeAnnotationsCheck()
     {
         return new NegativeSizeAnnotationsCheck();
+    }
+
+    @Bean
+    public AllAnnotationsWithinDocumentTextCheck allAnnotationsWithinDocumentTextCheck()
+    {
+        return new AllAnnotationsWithinDocumentTextCheck();
+    }
+
+    @Bean
+    public ClampAnnotationsToDocumentTextRepair clampAnnotationsToDocumentTextRepair()
+    {
+        return new ClampAnnotationsToDocumentTextRepair();
     }
 
     @Bean

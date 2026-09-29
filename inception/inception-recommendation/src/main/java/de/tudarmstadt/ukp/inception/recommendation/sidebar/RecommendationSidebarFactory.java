@@ -23,13 +23,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
 import de.tudarmstadt.ukp.inception.recommendation.config.RecommenderServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 /**
  * <p>
@@ -75,14 +75,16 @@ public class RecommendationSidebarFactory
     }
 
     @Override
-    public boolean applies(AnnotatorState aState)
+    public boolean accepts(SidebarContext aContext)
     {
-        return available(aState.getProject());
+        // Predictions are currently only rendered for the session owner, so on the curation pages
+        // the sidebar would offer actions on suggestions that are not shown.
+        return super.accepts(aContext) && aContext.page() instanceof AnnotationPage;
     }
 
     @Override
-    public AnnotationSidebar_ImplBase create(String aId, AnnotationPageBase2 aAnnotationPage)
+    public AnnotationSidebar_ImplBase create(String aId, SidebarContext aContext)
     {
-        return new RecommendationSidebar(aId, aAnnotationPage);
+        return new RecommendationSidebar(aId, aContext);
     }
 }

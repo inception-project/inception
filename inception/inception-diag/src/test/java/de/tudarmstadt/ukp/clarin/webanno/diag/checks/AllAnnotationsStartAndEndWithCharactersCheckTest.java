@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.diag.checks;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
@@ -101,5 +102,23 @@ class AllAnnotationsStartAndEndWithCharactersCheckTest
         assertThat(messages.get(0).getMessage()).contains(
                 "[de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity] [\\u00A0a]@[0-2] starts with whitespace");
 
+    }
+
+    @Test
+    void thatAnnotationsBeyondTheDocumentTextDoNotBreakTheCheck()
+    {
+        when(annotationService.listAnnotationLayer(project)).thenReturn(layers);
+
+        jCas.setDocumentText("abc");
+
+        // The annotation reaches beyond the end of the document text (#6246). Reporting on it is
+        // the job of AllAnnotationsWithinDocumentTextCheck - this check must simply not blow up.
+        var annotations = asList(new NamedEntity(jCas, 0, 4));
+        annotations.forEach(Annotation::addToIndexes);
+
+        var messages = new ArrayList<LogMessage>();
+
+        assertThatNoException()
+                .isThrownBy(() -> sut.check(document, dataOwner, jCas.getCas(), messages));
     }
 }

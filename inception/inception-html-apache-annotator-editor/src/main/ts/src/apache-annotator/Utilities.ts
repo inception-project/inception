@@ -399,6 +399,24 @@ export function rangeClientRect(range: Range, preferBounding = false): DOMRect |
  * @param {DOMRect} rect - Rectangle to test against.
  * @returns {boolean} `true` when the point is within or on the boundary of `rect`, otherwise `false`.
  */
+/**
+ * Whether the given point is on the inline label of the given highlight. Only highlights showing
+ * an inline label (class `iaa-inline-label`) have one; getInlineLabelClientRect throws on a
+ * highlight with no leading text node, which counts as not on the label.
+ *
+ * @param point a point in client coordinates.
+ * @param highlight a highlight element.
+ * @returns whether the point is on the highlight's inline label.
+ */
+export function isPointOnInlineLabel(point: { x: number; y: number }, highlight: Element): boolean {
+    if (!highlight.classList.contains('iaa-inline-label')) return false;
+    try {
+        return isPointInRect(point, getInlineLabelClientRect(highlight));
+    } catch {
+        return false;
+    }
+}
+
 export function isPointInRect(point: { x: number; y: number }, rect: DOMRect): boolean {
     return (
         point.x >= rect.left &&

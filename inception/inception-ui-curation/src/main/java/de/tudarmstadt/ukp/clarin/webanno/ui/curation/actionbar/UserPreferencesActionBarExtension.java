@@ -17,16 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationEditorManagerPrefs.KEY_ANNOTATION_EDITOR_MANAGER_PREFS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.CURATION;
-
 import org.apache.wicket.markup.html.panel.Panel;
 import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 /**
  * Provides access to the annotation preferences from the action bar of the
@@ -37,25 +33,10 @@ import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 public class UserPreferencesActionBarExtension
     implements ActionBarExtension
 {
-    private final PreferencesService preferencesService;
-
-    public UserPreferencesActionBarExtension(PreferencesService aPreferencesService)
-    {
-        preferencesService = aPreferencesService;
-    }
-
     @Override
     public boolean accepts(ActionBarContext aContext)
     {
-        if (!(aContext.page() instanceof LegacyCurationPage)) {
-            return false;
-        }
-
-        var editorState = preferencesService.loadDefaultTraitsForProject(
-                KEY_ANNOTATION_EDITOR_MANAGER_PREFS, aContext.page().getProject());
-
-        return editorState.isPreferencesAccessAllowed()
-                || aContext.page().getModelObject().getMode() == CURATION;
+        return aContext.page() instanceof LegacyCurationPage;
     }
 
     @Override

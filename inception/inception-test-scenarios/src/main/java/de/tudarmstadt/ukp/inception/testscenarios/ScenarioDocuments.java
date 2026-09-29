@@ -59,10 +59,36 @@ public class ScenarioDocuments
             Class<?> aOwner, String aDocumentName)
         throws IOException
     {
+        return importDocument(aDocumentService, aProject, aOwner, aDocumentName,
+                TextFormatSupport.ID);
+    }
+
+    /**
+     * Imports a sample document in the given format that lives in the same package as
+     * {@code aOwner}.
+     *
+     * @param aDocumentService
+     *            used to store the document.
+     * @param aProject
+     *            the project to import into.
+     * @param aOwner
+     *            the class whose package holds the document.
+     * @param aDocumentName
+     *            the file name of the document, e.g. {@code curation-sample.txt}.
+     * @param aFormat
+     *            the ID of the format support to import the document with.
+     * @return the imported document.
+     * @throws IOException
+     *             if the document cannot be found or read.
+     */
+    public static SourceDocument importDocument(DocumentService aDocumentService, Project aProject,
+            Class<?> aOwner, String aDocumentName, String aFormat)
+        throws IOException
+    {
         var doc = SourceDocument.builder() //
                 .withProject(aProject) //
                 .withName(aDocumentName) //
-                .withFormat(TextFormatSupport.ID) //
+                .withFormat(aFormat) //
                 .build();
 
         try (var is = aOwner.getResourceAsStream(aDocumentName)) {

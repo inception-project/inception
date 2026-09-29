@@ -57,6 +57,10 @@ public class CheckAnnotationContextMenuItem
     @Override
     public boolean accepts(ContextMenuItemContext aCtx)
     {
+        if (aCtx.vid().isSynthetic()) {
+            return false;
+        }
+
         var ctx = aCtx.context();
 
         try {

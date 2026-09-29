@@ -22,7 +22,7 @@ import org.springframework.core.annotation.Order;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.multiedit.DocumentEditorPanel;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.editor.DocumentEditorPanel;
 
 /**
  * Previous/next document buttons for the reference document sidebar.
@@ -47,12 +47,12 @@ public class ReferenceDocumentNavigatorActionBarExtension
     @Override
     public boolean accepts(ActionBarContext aContext)
     {
-        return aContext.editorContext() instanceof ReferenceDocumentEditor;
+        return aContext.editor() instanceof ReferenceDocumentEditor;
     }
 
     @Override
     public Component createActionBarItem(String aId, ActionBarContext aContext)
     {
-        return new ReferenceDocumentNavigator(aId, (DocumentEditorPanel) aContext.editorContext());
+        return new ReferenceDocumentNavigator(aId, (DocumentEditorPanel) aContext.editor());
     }
 }

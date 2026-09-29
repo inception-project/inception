@@ -24,7 +24,7 @@ import org.apache.wicket.model.IModel;
 
 import com.networknt.schema.Schema;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.paging.NoPagingStrategy;
+import de.tudarmstadt.ukp.inception.rendering.paging.NoPagingStrategy;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasProvider;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorBase;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorFactoryImplBase;

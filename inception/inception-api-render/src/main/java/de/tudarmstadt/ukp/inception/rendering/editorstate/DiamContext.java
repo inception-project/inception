@@ -25,6 +25,8 @@ import org.apache.uima.cas.CAS;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 
+import de.tudarmstadt.ukp.inception.support.uima.Range;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
@@ -76,7 +78,29 @@ public interface DiamContext
     DocumentEditorManager getDocumentEditorManager();
 
     /**
-     * Make the editor served by this context the active one.
+     * Reload the document currently set on this context's annotator state into <b>this</b> editor,
+     * resetting the state and upgrading the CAS.
+     *
+     * @param aTarget
+     *            the AJAX request target
+     */
+    default void actionLoadDocument(AjaxRequestTarget aTarget)
+    {
+        actionLoadDocument(aTarget, 0);
+    }
+
+    void actionLoadDocument(AjaxRequestTarget aTarget, int aFocus);
+
+    /**
+     * @return the editor this context belongs to - the one identity its manager tracks as active.
+     */
+    default Optional<DocumentEditor> getHostingEditor()
+    {
+        return this instanceof DocumentEditor editor ? Optional.of(editor) : Optional.empty();
+    }
+
+    /**
+     * Make the editor this context belongs to the active one.
      *
      * @param aTarget
      *            the AJAX target, so consumers can be refreshed. May be {@code null} outside a
@@ -84,7 +108,8 @@ public interface DiamContext
      */
     default void activate(AjaxRequestTarget aTarget)
     {
-        getDocumentEditorManager().setActiveContext(aTarget, this);
+        getHostingEditor()
+                .ifPresent(editor -> getDocumentEditorManager().setActiveEditor(aTarget, editor));
     }
 
     /**
@@ -141,12 +166,14 @@ public interface DiamContext
     }
 
     /**
-     * Open the given document in the editor, scroll to the given location.
+     * Scroll to the given location <b>within the document this editor already shows</b>.
+     * <p>
+     * Prefer this over {@link #actionShowSelectedDocument} whenever the caller is not switching
+     * documents: passing a document that happens to be the current one works, but it hides whether
+     * a switch was intended, and only a switch may change which data owner the editor shows.
      *
      * @param aTarget
      *            the AJAX target
-     * @param aDocument
-     *            the document to show
      * @param aBegin
      *            the offset to scroll to
      * @param aEnd
@@ -156,21 +183,18 @@ public interface DiamContext
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
-            int aBegin, int aEnd)
+    default void actionJumpTo(AjaxRequestTarget aTarget, int aBegin, int aEnd)
         throws IOException, AnnotationException
     {
-        actionShowSelectedDocument(aTarget, aDocument, aBegin, aEnd, null);
+        actionJumpTo(aTarget, aBegin, aEnd, null);
     }
 
     /**
-     * Open the given document in the editor, scroll to the given location. Optionally highlight
-     * additional ranges during the scroll.
+     * Scroll to the given location within the document this editor already shows, optionally
+     * highlighting additional ranges.
      *
      * @param aTarget
      *            the AJAX target
-     * @param aDocument
-     *            the document to show
      * @param aBegin
      *            the offset to scroll to
      * @param aEnd
@@ -183,8 +207,57 @@ public interface DiamContext
      * @throws AnnotationException
      *             if there was an annotation-level problem
      */
-    void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument, int aBegin,
-            int aEnd, List<VRange> aAdditionalPingRanges)
+    void actionJumpTo(AjaxRequestTarget aTarget, int aBegin, int aEnd,
+            List<VRange> aAdditionalPingRanges)
+        throws IOException, AnnotationException;
+
+    /**
+     * Open the given document in the editor, scroll to the given location.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aDocument
+     *            the document to show
+     * @param aDataOwner
+     *            whose annotations to show. A caller that only wants to move within what the editor
+     *            already shows should use {@link #actionJumpTo} instead of naming these.
+     * @param aBegin
+     *            the offset to scroll to
+     * @param aEnd
+     *            the corresponding end offset
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    default void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange)
+        throws IOException, AnnotationException
+    {
+        actionShowSelectedDocument(aTarget, aDocument, aDataOwner, aRange, null);
+    }
+
+    /**
+     * Open the given document in the editor, scroll to the given location. Optionally highlight
+     * additional ranges during the scroll.
+     *
+     * @param aTarget
+     *            the AJAX target
+     * @param aDocument
+     *            the document to show
+     * @param aRange
+     *            where to scroll to, or {@link Range#UNDEFINED} to leave the editor wherever
+     *            opening the document placed it.
+     * @param aAdditionalPingRanges
+     *            additional ranges that should ideally be visible, resolved in this context's
+     *            editor CAS. May be {@code null} or empty.
+     * @throws IOException
+     *             if there was an I/O-level problem
+     * @throws AnnotationException
+     *             if there was an annotation-level problem
+     */
+    void actionShowSelectedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument,
+            AnnotationSet aDataOwner, Range aRange, List<VRange> aAdditionalPingRanges)
         throws IOException, AnnotationException;
 
     /**

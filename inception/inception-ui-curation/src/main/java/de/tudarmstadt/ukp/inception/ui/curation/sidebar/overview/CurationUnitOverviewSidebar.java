@@ -44,7 +44,6 @@ import org.slf4j.Logger;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
@@ -59,6 +58,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class CurationUnitOverviewSidebar
     extends AnnotationSidebar_ImplBase
@@ -75,9 +75,9 @@ public class CurationUnitOverviewSidebar
 
     private WebMarkupContainer mainContainer;
 
-    public CurationUnitOverviewSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public CurationUnitOverviewSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
     }
 
     @Override
@@ -120,7 +120,7 @@ public class CurationUnitOverviewSidebar
     public void onUnitClickedEvent(CurationUnitClickedEvent aEvent)
     {
         try {
-            var context = getActiveContext().orElse(null);
+            var context = getActiveEditor().orElse(null);
             if (context == null) {
                 return;
             }
@@ -192,7 +192,7 @@ public class CurationUnitOverviewSidebar
 
     private Optional<AnnotatorState> getActiveEditorState()
     {
-        return getActiveContext().map(DiamContext::getAnnotatorState);
+        return getActiveEditor().map(DiamContext::getAnnotatorState);
     }
 
     private boolean isNotComputable()

@@ -50,6 +50,10 @@ public class LinkToContextMenuItem
     @Override
     public boolean accepts(ContextMenuItemContext aCtx)
     {
+        if (aCtx.vid().isSynthetic()) {
+            return false;
+        }
+
         var state = aCtx.context().getAnnotatorState();
 
         // Origin of the relation needs to be a span

@@ -33,7 +33,7 @@ import static java.lang.String.join;
 import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import static org.apache.commons.lang3.StringUtils.startsWith;
+import static org.apache.commons.lang3.Strings.CS;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -473,15 +473,22 @@ public class UserDaoImpl
 
     @Override
     @Transactional
+    @Deprecated
     public User getCurrentUser()
     {
-        var username = getCurrentUsername();
+        return getSessionOwner();
+    }
 
-        if (username == null) {
+    @Override
+    public User getSessionOwner()
+    {
+        var sessionOwner = getSessionOwnerName();
+
+        if (sessionOwner == null) {
             return null;
         }
 
-        return get(username);
+        return get(sessionOwner);
     }
 
     @Override
@@ -780,7 +787,14 @@ public class UserDaoImpl
     }
 
     @Override
+    @Deprecated
     public String getCurrentUsername()
+    {
+        return getSessionOwnerName();
+    }
+
+    @Override
+    public String getSessionOwnerName()
     {
         var authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -816,7 +830,7 @@ public class UserDaoImpl
             return false;
         }
 
-        if (startsWith(aUser.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
+        if (CS.startsWith(aUser.getRealm(), Realm.REALM_PROJECT_PREFIX)) {
             // Project-bound users get no access to their profile. They could at most change their
             // display name and email, but since those are basically their logins, we don't want
             // them to be able to do that.

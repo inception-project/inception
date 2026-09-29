@@ -107,7 +107,7 @@ public class WatchedResourceFile<T>
                             resourceLocation, resourceMTime, mtime);
                 }
 
-                return Optional.of(resource);
+                return Optional.ofNullable(resource);
             }
 
             if (resourceMTime != null) {

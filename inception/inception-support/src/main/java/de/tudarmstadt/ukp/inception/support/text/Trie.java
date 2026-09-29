@@ -154,17 +154,29 @@ public class Trie<V>
      *            the key.
      * @param offset
      *            the offset.
-     * @return the node.
+     * @return the node of the longest matching key.
      */
     public MatchedNode getNode(final CharSequence key, final int offset)
     {
+        var matches = getNodes(key, offset);
+        return matches.isEmpty() ? null : matches.get(matches.size() - 1);
+    }
+
+    /**
+     * Try to match the character sequence given in key against the trie starting at the given
+     * offset in the key string.
+     *
+     * @param key
+     *            the key.
+     * @param offset
+     *            the offset.
+     * @return the nodes of all matching keys, ordered from the shortest to the longest match.
+     */
+    public List<MatchedNode> getNodes(final CharSequence key, final int offset)
+    {
         // offset outside range
         if (offset > key.length() - 1) {
-            return null;
-        }
-
-        if (key.length() == 0) {
-            return new MatchedNode(root, 0);
+            return List.of();
         }
 
         KeySanitizer sanitizer = null;
@@ -172,10 +184,9 @@ public class Trie<V>
             sanitizer = sanitizerFactory.create();
         }
 
+        var matches = new ArrayList<MatchedNode>();
         var last = root;
-        Node match = null;
-        int i = offset;
-        for (; i < key.length(); i++) {
+        for (int i = offset; i < key.length(); i++) {
             char k = key.charAt(i);
 
             if (sanitizer != null) {
@@ -183,7 +194,7 @@ public class Trie<V>
                 if (k == KeySanitizer.SKIP_CHAR) {
                     if (i == offset) {
                         // The first character must not be a skipped character
-                        return null;
+                        return List.of();
                     }
                     continue;
                 }
@@ -193,15 +204,14 @@ public class Trie<V>
             if (cur == null) {
                 break;
             }
-            else {
-                if (cur.set) {
-                    match = cur;
-                }
+
+            if (cur.set) {
+                matches.add(new MatchedNode(cur, i + 1 - offset));
             }
             last = cur;
         }
 
-        return match != null ? new MatchedNode(match, i - offset) : null;
+        return matches;
     }
 
     /**

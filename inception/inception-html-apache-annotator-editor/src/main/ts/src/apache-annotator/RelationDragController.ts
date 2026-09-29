@@ -18,7 +18,7 @@
 import { type DiamAjax, type VID } from '@inception-project/inception-js-api';
 import { type RelationVisualizer } from './RelationVisualizer';
 import { GRIP_CLASS } from './RelationGripLayer';
-import { distinctHighlightStack, getInlineLabelClientRect, isPointInRect } from './Utilities';
+import { distinctHighlightStack, isPointOnInlineLabel } from './Utilities';
 
 /**
  * The relation-creation drag state machine.
@@ -189,17 +189,10 @@ export class RelationDragController {
     }
 
     /**
-     * Whether the drop point is on `hl`'s inline label. The class guard scopes this to label mode
-     * (the class is only set when labels are shown); getInlineLabelClientRect throws on a highlight
-     * with no leading text node, hence the try/catch.
+     * Whether the drop point is on `hl`'s inline label.
      */
     private droppedOnInlineLabel(e: MouseEvent, hl: HTMLElement): boolean {
-        if (!hl.classList.contains('iaa-inline-label')) return false;
-        try {
-            return isPointInRect({ x: e.clientX, y: e.clientY }, getInlineLabelClientRect(hl));
-        } catch {
-            return false;
-        }
+        return isPointOnInlineLabel({ x: e.clientX, y: e.clientY }, hl);
     }
 
     private teardown(): void {

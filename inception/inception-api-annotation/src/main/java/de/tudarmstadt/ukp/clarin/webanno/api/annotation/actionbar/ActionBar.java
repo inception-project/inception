@@ -20,18 +20,21 @@ package de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar;
 import java.lang.invoke.MethodHandles;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
+import org.apache.wicket.Component;
 import org.apache.wicket.markup.html.list.ListItem;
 import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.apache.wicket.util.visit.IVisit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditor;
 
 public class ActionBar
     extends Panel
@@ -44,19 +47,19 @@ public class ActionBar
 
     private final Set<String> activeExtensions = new HashSet<>();
 
-    private final DiamContext editorContext;
+    private final DocumentEditor editor;
 
     /**
      * @param aId
      *            the component id.
-     * @param aEditorContext
+     * @param aEditor
      *            the editor this action bar belongs to.
      */
-    public ActionBar(String aId, DiamContext aEditorContext)
+    public ActionBar(String aId, DocumentEditor aEditor)
     {
         super(aId);
 
-        editorContext = aEditorContext;
+        editor = aEditor;
 
         add(new ListView<ActionBarExtension>("items",
                 LoadableDetachableModel.of(this::getExtensions))
@@ -74,7 +77,7 @@ public class ActionBar
 
     private ActionBarContext newActionBarContext()
     {
-        return new ActionBarContext((AnnotationPageBase) getPage(), editorContext);
+        return new ActionBarContext((AnnotationPageBase) getPage(), editor);
     }
 
     @Override
@@ -111,6 +114,18 @@ public class ActionBar
                 LOG.debug("Added footer extension: {}", ext.getId());
             }
         }
+    }
+
+    /**
+     * @param aType
+     *            the type to look for - typically a handler interface such as
+     *            {@link DocumentNavigationHandler}.
+     * @return the first item contributed to this action bar that is of the given type.
+     */
+    public <T> Optional<T> findItem(Class<T> aType)
+    {
+        return Optional.ofNullable(visitChildren(aType,
+                (Component component, IVisit<T> visit) -> visit.stop(aType.cast(component))));
     }
 
     private List<ActionBarExtension> getExtensions()

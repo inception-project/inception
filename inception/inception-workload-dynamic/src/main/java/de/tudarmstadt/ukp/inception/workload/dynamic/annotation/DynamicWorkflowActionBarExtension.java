@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.dynamic.annotation;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.workload.dynamic.DynamicWorkloadExtension.DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID;
 
 import org.apache.wicket.markup.html.panel.Panel;
@@ -74,21 +75,22 @@ public class DynamicWorkflowActionBarExtension
             return false;
         }
 
-        if (!aContext.editorContext().isEditor()) {
+        if (!aContext.editor().isEditor()) {
             return false;
         }
 
-        var project = aContext.page().getModelObject().getProject();
+        var project = aContext.editor().getProject();
         if (project == null) {
             return false;
         }
 
-        // Curator are excluded from the feature
+        // Curators and managers are excluded from the workflow - they may open any document (see
+        // DynamicWorkloadExtension.isDocumentRandomAccessAllowed)
         var sessionOwner = userService.getCurrentUser();
         var workloadConfig = workloadManagementService
                 .loadOrCreateWorkloadManagerConfiguration(project);
         return DYNAMIC_WORKLOAD_MANAGER_EXTENSION_ID.equals(workloadConfig.getType())
-                && !projectService.hasRole(sessionOwner, project, CURATOR);
+                && !projectService.hasRole(sessionOwner, project, CURATOR, MANAGER);
     }
 
     @Override

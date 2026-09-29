@@ -186,8 +186,8 @@ public class PredictionTask
         var docs = documentService.listSourceDocuments(project);
 
         // Do we need to predict ALL documents (e.g. in active learning mode)
-        if (!isolated && recommendationService
-                .isPredictForAllDocuments(getMandatorySessionOwner().getUsername(), project)) {
+        if (currentDocument == null || (!isolated && recommendationService
+                .isPredictForAllDocuments(getMandatorySessionOwner().getUsername(), project))) {
             try {
                 return generatePredictionsOnAllDocuments(docs);
             }
@@ -200,7 +200,7 @@ public class PredictionTask
             }
         }
 
-        return generatePredictionsOnSingleDocument(currentDocument, docs);
+        return generatePredictionsOnCurrentDocument(docs);
     }
 
     /**
@@ -254,14 +254,11 @@ public class PredictionTask
      * Generate predictions for a single document. Any predictions available for other documents are
      * inherited.
      *
-     * @param aCurrentDocument
-     *            the document to compute the predictions for.
      * @param aDocuments
      *            all documents from the current project.
      * @return the new predictions.
      */
-    private Predictions generatePredictionsOnSingleDocument(SourceDocument aCurrentDocument,
-            List<SourceDocument> aDocuments)
+    private Predictions generatePredictionsOnCurrentDocument(List<SourceDocument> aDocuments)
     {
         var sessionOwner = getMandatorySessionOwner();
         var project = getProject();
@@ -294,21 +291,21 @@ public class PredictionTask
                 var predictionCas = casHolder.cas;
 
                 if (isolated) {
-                    var originalCas = new LazyCas(aCurrentDocument);
+                    var originalCas = new LazyCas(currentDocument);
                     for (var recommender : recommenders) {
                         try {
                             applySingleRecomenderToDocument(originalCas, recommender,
                                     predecessorPredictions, incomingPredictions, predictionCas,
-                                    aCurrentDocument, predictionBegin, predictionEnd);
+                                    currentDocument, predictionBegin, predictionEnd);
                         }
                         catch (IOException e) {
-                            logUnableToReadAnnotations(incomingPredictions, aCurrentDocument, e);
+                            logUnableToReadAnnotations(incomingPredictions, currentDocument, e);
                         }
                     }
                 }
                 else {
                     applyActiveRecommendersToDocument(predecessorPredictions, incomingPredictions,
-                            predictionCas, aCurrentDocument, predictionBegin, predictionEnd);
+                            predictionCas, currentDocument, predictionBegin, predictionEnd);
                 }
             }
             catch (ResourceInitializationException e) {
@@ -1251,8 +1248,14 @@ public class PredictionTask
         public PredictionTask build()
         {
             Validate.notNull(sessionOwner, "SelectionTask requires a user");
+            Validate.isTrue(currentDocument != null || !isolated,
+                    "Isolated prediction requires a document");
 
-            withProject(currentDocument.getProject());
+            if (currentDocument != null) {
+                withProject(currentDocument.getProject());
+            }
+
+            Validate.notNull(project, "PredictionTask requires a project or a document");
 
             return new PredictionTask(this);
         }

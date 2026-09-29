@@ -30,7 +30,6 @@ import org.wicketstuff.event.annotation.OnEvent;
 
 import de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPageBase2;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
 import de.tudarmstadt.ukp.inception.assistant.AssistantService;
@@ -43,6 +42,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdati
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormSubmittingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaModelAdapter;
+import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class AssistantSidebar
     extends AnnotationSidebar_ImplBase
@@ -60,19 +60,19 @@ public class AssistantSidebar
     private CompoundPropertyModel<AssistantSidebarPrefs> sidebarPrefs;
     private IModel<Boolean> debugMode;
 
-    public AssistantSidebar(String aId, AnnotationPageBase2 aAnnotationPage)
+    public AssistantSidebar(String aId, SidebarContext aContext)
     {
-        super(aId, aAnnotationPage);
+        super(aId, aContext);
 
         sidebarPrefs = new CompoundPropertyModel<>(Model.of(loadSidebarPrefs()));
 
         debugMode = new LambdaModelAdapter<>( //
                 () -> assistantService.isDebugMode(userService.getCurrentUsername(),
-                        getModelObject().getProject()), //
+                        getContext().getProject()), //
                 onOff -> assistantService.setDebugMode(userService.getCurrentUsername(),
-                        getModelObject().getProject(), onOff));
+                        getContext().getProject(), onOff));
 
-        chat = new AssistantPanel("chat");
+        chat = new AssistantPanel("chat", getDocumentEditorManager());
         queue(chat);
 
         var form = new Form<>("form", sidebarPrefs);
@@ -104,25 +104,25 @@ public class AssistantSidebar
     {
         var sessionOwner = userService.getCurrentUser();
         return preferencesService.loadTraitsForUserAndProject(KEY_ASSISTANT_SIDEBAR_PREFS,
-                sessionOwner, getModelObject().getProject());
+                sessionOwner, getContext().getProject());
     }
 
     private void saveSidebarPrefs()
     {
         var sessionOwner = userService.getCurrentUser();
         preferencesService.saveTraitsForUserAndProject(KEY_ASSISTANT_SIDEBAR_PREFS, sessionOwner,
-                getModelObject().getProject(), sidebarPrefs.getObject());
+                getContext().getProject(), sidebarPrefs.getObject());
     }
 
     private void actionReindex(AjaxRequestTarget aTarget)
     {
-        documentQueryService.rebuildIndexAsync(getModelObject().getProject());
+        documentQueryService.rebuildIndexAsync(getContext().getProject());
     }
 
     private void actionClear(AjaxRequestTarget aTarget)
     {
         var sessionOwner = userService.getCurrentUsername();
-        var project = getModelObject().getProject();
+        var project = getContext().getProject();
         assistantService.clearConversation(sessionOwner, project);
     }
 

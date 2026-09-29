@@ -35,8 +35,8 @@ import java.io.OutputStreamWriter;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -108,7 +108,8 @@ public class StringMatchingRecommender
 
         traits = aTraits;
         gazetteerService = aGazetteerService;
-        keySanitizerFactory = WhitespaceNormalizingSanitizer.factory();
+        keySanitizerFactory = WhitespaceNormalizingSanitizer
+                .factory(traits != null && traits.isIgnoreCase());
 
         if (traits != null && traits.getExcludePattern() != null) {
             try {
@@ -262,26 +263,34 @@ public class StringMatchingRecommender
 
     private List<Sample> predict(CAS aCas, List<AnnotationFS> units, Trie<DictEntry> aDict)
     {
+        var anchoringMode = getRecommender().getLayer().getAnchoringMode();
         var requireEndAtTokenBoundary = Set.of(SINGLE_TOKEN, TOKENS, SENTENCES)
-                .contains(getRecommender().getLayer().getAnchoringMode());
+                .contains(anchoringMode);
+        var requireSingleToken = anchoringMode == SINGLE_TOKEN;
 
         var requireSingleSentence = !getRecommender().getLayer().isCrossSentence();
 
         var tokenType = getType(aCas, Token.class);
 
+        // If matches may cross sentence boundaries, they may also end at tokens outside the
+        // current sample unit
+        Set<Integer> documentTokenEnds = null;
+        if (requireEndAtTokenBoundary && !requireSingleSentence) {
+            documentTokenEnds = tokenEnds(aCas.<Annotation> select(tokenType).asList());
+        }
+
         var data = new ArrayList<Sample>();
         var text = aCas.getDocumentText();
-        if (traits != null && traits.isIgnoreCase()) {
-            text = text.toLowerCase(Locale.ROOT);
-        }
 
         for (var sampleUnit : units) {
             var spans = new ArrayList<Span>();
 
             var tokens = aCas.<Annotation> select(tokenType).coveredBy(sampleUnit).asList();
+            var tokenEnds = documentTokenEnds != null ? documentTokenEnds : tokenEnds(tokens);
             for (var token : tokens) {
-                var match = aDict.getNode(text, token.getBegin());
-                if (match != null) {
+                // Use the longest match that satisfies the constraints - if a longer match ends
+                // e.g. in the middle of a token, a shorter one may still be valid
+                for (var match : aDict.getNodes(text, token.getBegin()).reversed()) {
                     var begin = token.getBegin();
                     var end = begin + match.matchLength;
 
@@ -291,8 +300,12 @@ public class StringMatchingRecommender
                     }
 
                     // Need to check that the match actually ends at a token boundary!
-                    if (requireEndAtTokenBoundary && !aCas.<Annotation> select(tokenType)
-                            .startAt(token).filter(t -> t.getEnd() == end).findAny().isPresent()) {
+                    if (requireEndAtTokenBoundary && !tokenEnds.contains(end)) {
+                        continue;
+                    }
+
+                    // Multi-token matches would be discarded later on single-token layers
+                    if (requireSingleToken && end != token.getEnd()) {
                         continue;
                     }
 
@@ -300,6 +313,8 @@ public class StringMatchingRecommender
                         spans.add(new Span(begin, end, aCas.getDocumentText().substring(begin, end),
                                 lc.label(), lc.relFreq()));
                     }
+
+                    break;
                 }
             }
 
@@ -307,6 +322,15 @@ public class StringMatchingRecommender
         }
 
         return data;
+    }
+
+    private static Set<Integer> tokenEnds(List<? extends AnnotationFS> aTokens)
+    {
+        var ends = new HashSet<Integer>();
+        for (var token : aTokens) {
+            ends.add(token.getEnd());
+        }
+        return ends;
     }
 
     @Override
@@ -384,16 +408,21 @@ public class StringMatchingRecommender
         }
 
         // Predict
+        var requireSingleToken = getRecommender().getLayer().getAnchoringMode() == SINGLE_TOKEN;
         var labelPairs = new ArrayList<LabelPair>();
         for (var sample : testSet) {
             for (var token : sample.getTokens()) {
-                var match = dict.getNode(sample.getText(), token.begin());
+                var match = dict.getNodes(sample.getText(), token.begin()).reversed().stream()
+                        .filter(m -> sample.hasTokenEndingAt(token.begin() + m.matchLength))
+                        .filter(m -> !requireSingleToken
+                                || token.begin() + m.matchLength == token.end())
+                        .findFirst();
                 var begin = token.begin();
                 var end = token.end();
 
                 var predictedLabel = NO_LABEL;
-                if (match != null && sample.hasTokenEndingAt(token.begin() + match.matchLength)) {
-                    var labelStats = match.node.value.getBest(1);
+                if (match.isPresent()) {
+                    var labelStats = match.get().node.value.getBest(1);
                     if (!labelStats.isEmpty()) {
                         predictedLabel = labelStats.get(0).label();
                     }
@@ -432,16 +461,11 @@ public class StringMatchingRecommender
 
         var label = isBlank(aLabel) ? BLANK_LABEL : aLabel;
 
-        var text = aText;
-        if (traits != null && traits.isIgnoreCase()) {
-            text = text.toLowerCase(Locale.ROOT);
-        }
-
-        var entry = aDict.get(text);
+        var entry = aDict.get(aText);
         if (entry == null) {
-            entry = new DictEntry(text);
+            entry = new DictEntry(aText);
             try {
-                aDict.put(text, entry);
+                aDict.put(aText, entry);
             }
             catch (IllegalArgumentException e) {
                 // This can happen if the text is empty after sanitization

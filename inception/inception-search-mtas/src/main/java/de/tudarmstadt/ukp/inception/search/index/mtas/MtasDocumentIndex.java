@@ -1310,12 +1310,12 @@ public class MtasDocumentIndex
                         var sourceDocumentId = Long.valueOf(rawSourceDocumentId);
                         var annotationDocumentId = Long.valueOf(rawAnnotationDocumentId);
                         var sourceDocument = sourceDocumentIndex.get(sourceDocumentId);
-                        var annotationDocument = annotatableDocuments.get(sourceDocument);
-
                         if (sourceDocument == null) {
                             // Document is not annotatable by this user, so we skip this result
                             continue;
                         }
+
+                        var annotationDocument = annotatableDocuments.get(sourceDocument);
 
                         if (annotationDocument != null && IGNORE == annotationDocument.getState()) {
                             LOG.trace("Skipping results from ignored document {}", sourceDocument);

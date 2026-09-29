@@ -31,7 +31,7 @@ public abstract class AnnotationAction_ImplBase
 
     private final long requestId;
     private final SourceDocument document;
-    private final String user;
+    private final String dataOwner;
     private final VID vid;
     private final AnnotationLayer layer;
 
@@ -40,7 +40,7 @@ public abstract class AnnotationAction_ImplBase
         requestId = aRequestId;
         vid = aVid;
         document = aEvent.getDocument();
-        user = aEvent.getDocumentOwner();
+        dataOwner = aEvent.getDocumentOwner();
         layer = aEvent.getLayer();
     }
 
@@ -59,9 +59,9 @@ public abstract class AnnotationAction_ImplBase
         return document;
     }
 
-    public String getUser()
+    public String getDataOwner()
     {
-        return user;
+        return dataOwner;
     }
 
     public long getRequestId()

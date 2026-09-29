@@ -116,7 +116,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
     private boolean isEditable()
     {
-        return manager.getActiveContext() //
+        return manager.getActiveEditor() //
                 .map(context -> context.getActionHandler().isEditable()) //
                 .orElse(false);
     }
@@ -142,7 +142,7 @@ public class DocumentMetadataAnnotationDetailPanel
                 // Look up a suitable editor and instantiate it
                 var featureSupport = featureSupportRegistry.findExtension(featureState.feature)
                         .orElseThrow();
-                var context = manager.getActiveContext().orElseThrow();
+                var context = manager.getActiveEditor().orElseThrow();
                 editor = featureSupport.createEditor(CID_EDITOR,
                         DocumentMetadataAnnotationDetailPanel.this, context.getActionHandler(),
                         context.getStateModel(), item.getModel());
@@ -201,7 +201,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
         CAS cas;
         try {
-            cas = manager.getActiveContext().orElseThrow().getEditorCas();
+            cas = manager.getActiveEditor().orElseThrow().getEditorCas();
         }
         catch (IOException | NoSuchElementException e) {
             LOG.error("Unable to load CAS", e);
@@ -231,7 +231,7 @@ public class DocumentMetadataAnnotationDetailPanel
 
         CAS cas;
         try {
-            cas = manager.getActiveContext().orElseThrow().getEditorCas();
+            cas = manager.getActiveEditor().orElseThrow().getEditorCas();
         }
         catch (IOException | NoSuchElementException e) {
             LOG.error("Unable to load CAS", e);
@@ -270,7 +270,7 @@ public class DocumentMetadataAnnotationDetailPanel
     private void actionAnnotate(AjaxRequestTarget aTarget)
     {
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             context.getActionHandler().ensureIsEditable();
 
             // When updating an annotation in the sidebar, we must not force a
@@ -351,7 +351,7 @@ public class DocumentMetadataAnnotationDetailPanel
     {
         var target = aEvent.getTarget();
         try {
-            var context = manager.getActiveContext().orElseThrow();
+            var context = manager.getActiveEditor().orElseThrow();
             var cas = context.getEditorCas();
             var fs = selectAnnotationByAddr(cas, aEvent.getLinkWithRoleModel().targetAddr);
             state.getObject().setSelection(Selection.span(fs));
@@ -371,6 +371,6 @@ public class DocumentMetadataAnnotationDetailPanel
     {
         actionAnnotate(aEvent.getTarget());
 
-        manager.getActiveContext().ifPresent(ctx -> ctx.actionRefreshDocument(aEvent.getTarget()));
+        manager.getActiveEditor().ifPresent(ctx -> ctx.actionRefreshDocument(aEvent.getTarget()));
     }
 }

@@ -100,7 +100,7 @@ public class AnnotationInfoPanel
         var label = new Label("selectedAnnotationType", LoadableDetachableModel.of(() -> {
             try {
                 var editorPanel = findParent(AnnotationDetailEditorPanel.class);
-                return String.valueOf(selectFsByAddr(editorPanel.activeEditorCas(),
+                return String.valueOf(selectFsByAddr(editorPanel.detailCas(),
                         getModelObject().getSelection().getAnnotation().getId())).trim();
             }
             catch (Exception e) {

@@ -79,7 +79,7 @@ public class SpanSuggestionRenderer
                 aRequest.getAnnotationUser().getUsername(), aLayer, groups,
                 aRequest.getWindowBeginOffset(), aRequest.getWindowEndOffset());
 
-        var pref = recommendationService.getPreferences(aRequest.getAnnotationUser(),
+        var pref = recommendationService.getPreferences(aRequest.getSessionOwner(),
                 aLayer.getProject());
 
         // Bulk-load all the features of this layer to avoid having to do repeated DB accesses later

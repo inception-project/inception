@@ -21,7 +21,8 @@ import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
 
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
-import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
+import de.tudarmstadt.ukp.clarin.webanno.model.Mode;
+import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.lambda.AjaxCallback;
 
 /**
@@ -32,22 +33,26 @@ public class AnnotationPreferencesDialog
 {
     private static final long serialVersionUID = -6911254813496835955L;
 
-    private IModel<AnnotatorState> state;
+    private IModel<Project> project;
+
+    private Mode mode;
 
     private AjaxCallback onChangeAction;
 
-    public AnnotationPreferencesDialog(String id, final IModel<AnnotatorState> aModel)
+    public AnnotationPreferencesDialog(String id, final IModel<Project> aProject, Mode aMode)
     {
         super(id);
 
-        state = aModel;
+        project = aProject;
+        mode = aMode;
 
         trapFocus();
     }
 
     public void show(AjaxRequestTarget aTarget)
     {
-        var content = new AnnotationPreferencesDialogContent(CONTENT_ID, state, onChangeAction);
+        var content = new AnnotationPreferencesDialogContent(CONTENT_ID, project, mode,
+                onChangeAction);
 
         open(content, aTarget);
     }
