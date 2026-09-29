@@ -153,9 +153,9 @@ is_beta_version() { [ "$(base_version_for "$1")" != "$1" ]; }
 # against ghcr.io -- 41.0-beta-1 and 41.0-beta-2 exist under
 # inception-snapshots and are absent from inception.
 #
-# This is the third consequence of the beta distinction, after the installer
-# naming above and the image repository in kubernetes.yml, which is why it gets
-# a named function rather than an inline test at the point of use.
+# It decides where the image is pushed, where `status` looks for it, and which
+# example scripts can be attached to the release, which is why it gets a named
+# function rather than an inline test at each point of use.
 image_repo_for() {
   if is_beta_version "$1"; then
     printf 'ghcr.io/inception-project/inception-snapshots\n'
@@ -195,8 +195,14 @@ expected_artifacts() {
   # The generated example scripts, so users can grab a compose file pinned to
   # this release instead of copying one out of the documentation. Note releases
   # up to 41.2 did not carry these - they are an addition, not a restoration.
-  local script_name image_repo
+  #
+  # Only the scripts that pull from the repository this version's image is
+  # pushed to. All of them name inception, where betas never land, so a beta
+  # attaches none: each would hand users an image that does not exist.
+  local script_name image_repo release_repo
+  release_repo="$(image_repo_for "$version")"
   while IFS='|' read -r script_name image_repo; do
+    [ "$image_repo" = "$release_repo" ] || continue
     printf 'Example script (%s)|%s|%s\n' \
       "$script_name" "$GENERATED_SCRIPTS_DIR/$script_name" "$script_name"
   done < <(generated_scripts)
@@ -208,8 +214,7 @@ expected_artifacts() {
 
 # The admin guide ships downloadable example scripts that must name the version
 # being released. Emits "<file>|<image-repo>" for each: the image repository is
-# the string the version has to be pinned to, and it is *not* the same for all
-# of them -- kubernetes.yml pulls from inception-snapshots.
+# the string the version has to be pinned to.
 #
 # Deliberately no placeholder spelling here. Asserting that the file names the
 # requested version catches an unsubstituted placeholder of any spelling as
@@ -219,7 +224,7 @@ expected_artifacts() {
 generated_scripts() {
   printf 'docker-compose.yml|ghcr.io/inception-project/inception\n'
   printf 'docker-compose-mysql8.yml|ghcr.io/inception-project/inception\n'
-  printf 'kubernetes.yml|ghcr.io/inception-project/inception-snapshots\n'
+  printf 'kubernetes.yml|ghcr.io/inception-project/inception\n'
 }
 
 GENERATED_SCRIPTS_DIR="$WEBAPP_TARGET/generated-docs/admin-guide/scripts"

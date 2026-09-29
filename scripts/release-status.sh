@@ -152,8 +152,7 @@ report_artifacts() {
 # --- Generated example scripts ---------------------------------------------
 
 # Done when every generated example script pins the requested version. See
-# generated_scripts() for why the image repository is per-file and why the
-# check is placeholder-agnostic.
+# generated_scripts() for why the check is placeholder-agnostic.
 #
 # Emits nothing; report_scripts repeats the matching so it can show detail.
 report_scripts() {

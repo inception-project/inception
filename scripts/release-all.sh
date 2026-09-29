@@ -101,7 +101,7 @@ for step in $STEPS; do
   # Not exec'd and not backgrounded: each step's output goes straight to the
   # terminal, and a failure stops the sequence here so the log ends at the
   # problem rather than scrolling past it.
-  if ! "$SCRIPT_DIR/release-$step.sh" "${dry_args[@]}"; then
+  if ! "$SCRIPT_DIR/release-$step.sh" ${dry_args[@]+"${dry_args[@]}"}; then
     info ""
     die "Step '$step' failed. Fix it, then resume with:
   release.sh all --from $step"

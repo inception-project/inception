@@ -171,7 +171,8 @@ prerelease=()
 is_beta_version "$version" && prerelease=(--prerelease)
 
 gh release create "$tag" --repo "$REPO" --draft --verify-tag \
-  --title "INCEpTION $version" --notes-file - "${prerelease[@]}" < <(body)
+  --title "INCEpTION $version" --notes-file - \
+  ${prerelease[@]+"${prerelease[@]}"} < <(body)
 
 info ""
 info "Draft created. Attach the artifacts with: release.sh upload $version"
