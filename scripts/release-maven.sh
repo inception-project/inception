@@ -26,14 +26,13 @@ set -euo pipefail
 source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/release-functions.shlib"
 
 MVN_ARGS=(release:prepare release:perform
-  -DpreparationGoals=clean
   -Darguments=-DskipTests\ -DretryFailedDeploymentCount=3)
 
 case "${1:-}" in
   -h|--help|help) info "Usage: release-maven.sh [--dry-run]"; exit 0 ;;
 esac
 
-info '  mvn release:prepare release:perform -DpreparationGoals=clean \'
+info '  mvn release:prepare release:perform \'
 info '    -Darguments="-DskipTests -DretryFailedDeploymentCount=3"'
 info ""
 # When Maven asks for the next development version after a beta, its suggestion
