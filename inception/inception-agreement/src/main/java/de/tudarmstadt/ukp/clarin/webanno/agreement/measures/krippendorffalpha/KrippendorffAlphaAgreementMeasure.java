@@ -71,6 +71,9 @@ public class KrippendorffAlphaAgreementMeasure
         var agreementResult = makeCodingStudy(diff, feature.getLayer().getName(), feature.getName(),
                 tagset, traits.isExcludeIncomplete(), aCasMap);
 
+        // Alpha only uses values that can be paired within an item
+        agreementResult.setScoringSingleValueItems(false);
+
         var measure = createMeasure(agreementResult);
 
         if (agreementResult.isEmpty()) {

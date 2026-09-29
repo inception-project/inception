@@ -23,6 +23,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.TOKENS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.Arrays.asList;
 
+import java.util.Optional;
+
 import org.apache.wicket.markup.html.panel.EmptyPanel;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
@@ -45,31 +47,32 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
     extends AgreementMeasureSupport_ImplBase<T, FullCodingAgreementResult, ICodingAnnotationStudy>
 {
     @Override
-    public boolean accepts(AnnotationLayer aLayer, AnnotationFeature aFeature)
+    public Optional<String> getInapplicabilityReason(AnnotationLayer aLayer,
+            AnnotationFeature aFeature)
     {
         if (aFeature == null) {
-            return false;
+            return Optional.of("Coding measures compare the labels of matching annotations, so a "
+                    + "feature must be selected - a layer alone is not enough.");
         }
 
         if (!asList(SpanLayerSupport.TYPE, RelationLayerSupport.TYPE,
                 DocumentMetadataLayerSupport.TYPE).contains(aLayer.getType())) {
-            return false;
+            return Optional.of("Coding measures only support span, relation and document-metadata "
+                    + "layers.");
         }
 
         if (!asList(SINGLE_TOKEN, TOKENS, SENTENCES).contains(aLayer.getAnchoringMode())) {
-            return false;
+            return Optional.of("Coding measures require the layer to be anchored to single tokens, "
+                    + "token spans or sentences.");
         }
 
-        if (aFeature != null) {
-            // Link features are supported (because the links generate sub-positions in the diff
-            // but multi-value primitives (e.g. multi-value strings) are not supported
-            if (aFeature.getMultiValueMode() != MultiValueMode.NONE
-                    && aFeature.getLinkMode() == NONE) {
-                return false;
-            }
+        // Link features are supported (because the links generate sub-positions in the diff) but
+        // multi-value primitives (e.g. multi-value strings) are not supported.
+        if (aFeature.getMultiValueMode() != MultiValueMode.NONE && aFeature.getLinkMode() == NONE) {
+            return Optional.of("Coding measures do not support multi-value primitive features.");
         }
 
-        return true;
+        return Optional.empty();
     }
 
     @Override
@@ -77,8 +80,7 @@ public abstract class AbstractCodingAgreementMeasureSupport<T extends DefaultAgr
             DefaultAgreementTraits aDefaultAgreementTraits)
     {
         if (aResults.getObject() instanceof PairwiseAgreementResult) {
-            return new PairwiseCodingAgreementTable(aId, (IModel) aResults,
-                    aDefaultAgreementTraits);
+            return new PairwiseCodingAgreementTable(aId, (IModel) aResults);
         }
 
         if (aResults.getObject() instanceof PerDocumentAgreementResult) {

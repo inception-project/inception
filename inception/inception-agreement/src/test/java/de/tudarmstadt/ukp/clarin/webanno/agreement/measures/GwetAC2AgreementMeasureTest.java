@@ -36,6 +36,7 @@ import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gwetac2.GwetAC2AgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
@@ -132,6 +133,25 @@ public class GwetAC2AgreementMeasureTest
 
         // AC2 with nominal distance == AC1 == (0.5 - 0.3125) / (1 - 0.3125) = 0.2727...
         assertThat(result.getAgreement()).isCloseTo(0.273, within(0.01));
+        assertThat(result.isScoringSingleValueItems()).isFalse();
+    }
+
+    /**
+     * AC2 does not score items with a value from only one rater. When incomplete positions are not
+     * excluded, those items are still part of the study, but the pairwise table must not count them
+     * as used - otherwise it claims nothing was excluded while the score ignores them.
+     */
+    @Test
+    public void twoWithoutLabel_includeIncomplete_singleValueItemsAreNotUsed() throws Exception
+    {
+        traits.setExcludeIncomplete(false);
+
+        var result = twoWithoutLabelTest(sut, traits);
+        var summary = AgreementSummary.of(result);
+
+        assertThat(summary.getRelevantSetCount()).isEqualTo(4);
+        assertThat(summary.getUnscoredSetCount()).isEqualTo(2);
+        assertThat(summary.getUsedSetCount()).isEqualTo(2);
     }
 
     @Test

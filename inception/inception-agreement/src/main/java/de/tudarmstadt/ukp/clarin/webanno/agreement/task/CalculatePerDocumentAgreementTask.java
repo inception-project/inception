@@ -17,13 +17,12 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.task;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementService.isCurationToEvaluate;
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.SkipReason.FAILED;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static java.util.Arrays.asList;
 import static java.util.Comparator.comparing;
 
 import java.io.IOException;
@@ -41,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDiagnostics;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.PerDocumentAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
@@ -61,6 +61,7 @@ public class CalculatePerDocumentAgreementTask
     private static final Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private @Autowired DocumentService documentService;
+    private @Autowired AgreementDiagnostics agreementDiagnostics;
 
     private final Set<AnnotationSet> annotators;
     private final DefaultAgreementTraits traits;
@@ -86,6 +87,8 @@ public class CalculatePerDocumentAgreementTask
     {
         summary = new PerDocumentAgreementResult(feature, traits);
 
+        var raterNames = CalculatePairwiseAgreementTask.raterNames(annotators);
+
         var docs = allAnnDocs.keySet().stream() //
                 .sorted(comparing(SourceDocument::getName)) //
                 .toList();
@@ -97,7 +100,7 @@ public class CalculatePerDocumentAgreementTask
                 }
 
                 progress.update(up -> up.increment() //
-                        .status("%", doc.getName()).statusToLog());
+                        .status("%s", doc.getName()).statusToLog());
 
                 try (var session = CasStorageSession.openNested()) {
                     var casMap = new LinkedHashMap<String, CAS>();
@@ -110,17 +113,27 @@ public class CalculatePerDocumentAgreementTask
                         casMap.put(dataOwner.id(), loadCas(annDoc.getDocument(), dataOwner));
                     }
 
-                    if (annotators.contains(CURATION_SET)) {
+                    // As in the pairwise calculation, the curator only takes part once curation
+                    // has progressed far enough. Before that, the curation data is not work that
+                    // could be compared - an empty CAS would only make it look as if the curator
+                    // disagreed with everybody.
+                    if (annotators.contains(CURATION_SET) && isCurationToEvaluate(doc, traits)) {
                         casMap.put(CURATION_USER, loadCas(doc, CURATION_SET));
                     }
 
                     LOG.trace("Calculating agreement on {} for [{}] annotators", doc,
                             casMap.size());
-                    var agreementResult = AgreementSummary.of(measure.getAgreement(casMap));
+                    var agreementResult = AgreementSummary.of(measure.getAgreement(casMap),
+                            agreementDiagnostics, doc.getName());
+                    // Here a single document is the whole study, so its counts are complete as
+                    // soon as it has been computed and the thresholds can be applied right away.
+                    agreementResult.analyzeMerged(agreementDiagnostics, raterNames);
                     summary.mergeResult(doc, agreementResult);
                 }
                 catch (Exception e) {
-                    LOG.error("Unable to load data", e);
+                    LOG.error("Unable to calculate agreement for {}", doc, e);
+                    summary.mergeResult(doc,
+                            AgreementSummary.skipped(feature.getLayer(), feature, FAILED, null));
                 }
             }
         }
@@ -136,12 +149,6 @@ public class CalculatePerDocumentAgreementTask
 
     private CAS loadCas(SourceDocument aDocument, AnnotationSet aDataOwner) throws IOException
     {
-        if (CURATION_SET.equals(aDataOwner)) {
-            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
-                return loadInitialCas(aDocument);
-            }
-        }
-
         if (!documentService.existsCas(aDocument, aDataOwner)) {
             return loadInitialCas(aDocument);
         }

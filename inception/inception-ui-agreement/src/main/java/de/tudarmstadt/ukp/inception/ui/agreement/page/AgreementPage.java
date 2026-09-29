@@ -44,6 +44,7 @@ import java.io.Serializable;
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -95,8 +96,10 @@ import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporter;
 import de.tudarmstadt.ukp.inception.documents.api.export.CrossDocumentExporterRegistry;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.support.help.DocLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
+import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxDownloadBehavior;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
@@ -113,6 +116,7 @@ public class AgreementPage
     private static final String MID_TRAITS_CONTAINER = "traitsContainer";
     private static final String MID_TRAITS = "traits";
     private static final String MID_RESULTS = "results";
+    private static final String MID_CONCERNS = "concerns";
 
     private @SpringBean DocumentService documentService;
     private @SpringBean AnnotationSchemaService schemaService;
@@ -128,7 +132,9 @@ public class AgreementPage
     // private LambdaAjaxBehavior refreshResultsBehavior;
     private AjaxDownloadBehavior downloadBehavior;
     private DropDownChoice<Pair<AnnotationLayer, AnnotationFeature>> featureList;
-    private DropDownChoice<Pair<String, String>> measureDropDown;
+    private BootstrapModalDialog measureDialog;
+    private LambdaAjaxLink chooseMeasureButton;
+    private Label selectedMeasureLabel;
     private LambdaAjaxButton<AgreementFormModel> calculatePairwiseAgreementButton;
     private LambdaAjaxButton<AgreementFormModel> calculatePerDocumentAgreement;
     private LambdaAjaxButton<AgreementFormModel> exportCsvDiffButton;
@@ -157,6 +163,7 @@ public class AgreementPage
         queue(resultsContainer = new WebMarkupContainer("resultsContainer"));
         resultsContainer.setOutputMarkupPlaceholderTag(true);
         resultsContainer.add(new EmptyPanel(MID_RESULTS));
+        resultsContainer.add(new EmptyPanel(MID_CONCERNS));
 
         downloadBehavior = new AjaxDownloadBehavior();
         add(downloadBehavior);
@@ -180,27 +187,46 @@ public class AgreementPage
         queue(new EmptyPanel(MID_TRAITS));
 
         queue(featureList = makeFeatureChoice("layerAndFeature"));
-        queue(measureDropDown = makeMeasuresDropdown("measure"));
+
+        measureDialog = new BootstrapModalDialog("measureDialog");
+        measureDialog.trapFocus();
+        measureDialog.closeOnEscape();
+        measureDialog.closeOnClick();
+        queue(measureDialog);
+
+        selectedMeasureLabel = new Label("selectedMeasure", form.getModel().map(m -> m.measure)
+                .map(Pair::getValue).orElse(getString("noMeasureSelected")));
+        selectedMeasureLabel.setOutputMarkupId(true);
+        queue(selectedMeasureLabel);
+
+        chooseMeasureButton = new LambdaAjaxLink("chooseMeasure", this::actionOpenMeasureDialog);
+        chooseMeasureButton.setOutputMarkupId(true);
+        chooseMeasureButton.add(enabledWhen(() -> featureList.getModelObject() != null));
+        queue(chooseMeasureButton);
 
         queue(new CheckBox("compareWithCurator").setOutputMarkupId(true));
 
         queue(new CheckBox("compareWithInitialCas").setOutputMarkupId(true));
 
+        // Both lists are the target of a wicket:for label, which needs a stable markup id to
+        // point at - without it, Wicket cannot render the label's for attribute and warns.
         var annotatorList = new ListMultipleChoice<AnnotationSet>("annotators");
         annotatorList.setChoiceRenderer(new LambdaChoiceRenderer<>(AnnotationSet::displayName));
         annotatorList.setChoices(listAnnotators());
+        annotatorList.setOutputMarkupId(true);
         queue(annotatorList);
 
         var documentList = new ListMultipleChoice<SourceDocument>("documents");
         documentList.setChoiceRenderer(new ChoiceRenderer<>("name"));
         documentList.setChoices(listDocuments());
+        documentList.setOutputMarkupId(true);
         queue(documentList);
 
         calculatePairwiseAgreementButton = new LambdaAjaxButton<>("calculatePairwiseAgreement",
                 this::actionCalculatePairwiseAgreement);
         calculatePairwiseAgreementButton.triggerAfterSubmit();
         calculatePairwiseAgreementButton
-                .add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+                .add(enabledWhen(() -> form.getModelObject().measure != null));
         queue(calculatePairwiseAgreementButton);
 
         calculatePerDocumentAgreement = new LambdaAjaxButton<>("calculatePerDocumentAgreement",
@@ -211,7 +237,7 @@ public class AgreementPage
 
         exportCsvDiffButton = new LambdaAjaxButton<>("exportCsvDiff", this::actionExportDiff);
         exportCsvDiffButton.triggerAfterSubmit();
-        exportCsvDiffButton.add(enabledWhen(() -> measureDropDown.getModelObject() != null));
+        exportCsvDiffButton.add(enabledWhen(() -> form.getModelObject().measure != null));
         queue(exportCsvDiffButton);
 
         exportJsonButton = new LambdaAjaxButton<>("exportJson", this::actionExportJson);
@@ -233,26 +259,95 @@ public class AgreementPage
 
     private void preselectBestAgreementMeasures()
     {
-        if (measureDropDown.getChoices().isEmpty()) {
-            measureDropDown.setModelObject(null);
+        var applicable = listMeasures();
+        if (applicable.isEmpty()) {
+            setSelectedMeasure(null);
             return;
         }
 
         // If possible use Krippendorff Alpha
-        measureDropDown.getChoices().stream() //
+        applicable.stream() //
                 .filter(p -> p.getKey().equals(KrippendorffAlphaAgreementMeasureSupport.ID))
-                .findFirst().ifPresent(measureDropDown::setModelObject);
+                .findFirst().ifPresent(this::setSelectedMeasure);
 
         // ... or even better - if available use Krippendorff Alpha Unitizing
-        measureDropDown.getChoices().stream() //
+        applicable.stream() //
                 .filter(p -> p.getKey()
                         .equals(KrippendorffAlphaUnitizingAgreementMeasureSupport.ID))
-                .findFirst().ifPresent(measureDropDown::setModelObject);
+                .findFirst().ifPresent(this::setSelectedMeasure);
+
+        // Neither of the preferred measures may apply - e.g. to a feature only a measure from a
+        // plugin supports. The previous selection must then not survive if it does not apply to
+        // the new feature either, as nothing else would replace it before it is used.
+        var selected = form.getModelObject().measure;
+        if (selected == null
+                || applicable.stream().noneMatch(p -> p.getKey().equals(selected.getKey()))) {
+            setSelectedMeasure(applicable.get(0));
+        }
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void setSelectedMeasure(Pair<String, String> aMeasure)
+    {
+        if (Objects.equals(form.getModelObject().measure, aMeasure)) {
+            return;
+        }
+
+        form.getModelObject().measure = aMeasure;
+
+        Component newTraits;
+        if (aMeasure != null) {
+            AgreementMeasureSupport ams = agreementRegistry
+                    .getAgreementMeasureSupport(aMeasure.getKey());
+            var layer = featureList.getModel().map(Pair::getKey);
+            var feature = featureList.getModel().map(Pair::getValue);
+            newTraits = ams.createTraitsEditor(MID_TRAITS, layer, feature,
+                    Model.of((DefaultAgreementTraits) ams.createTraits()));
+        }
+        else {
+            newTraits = new EmptyPanel(MID_TRAITS);
+        }
+
+        traitsContainer.addOrReplace(newTraits);
+    }
+
+    private void actionOpenMeasureDialog(AjaxRequestTarget aTarget)
+    {
+        var layerAndFeature = form.getModelObject().layerAndFeature;
+        if (layerAndFeature == null) {
+            return;
+        }
+
+        var dialogContent = new AgreementMeasureSelectionDialogPanel(
+                BootstrapModalDialog.CONTENT_ID, layerAndFeature.getKey(),
+                layerAndFeature.getValue(), this::actionSelectMeasure);
+        measureDialog.open(dialogContent, aTarget);
+    }
+
+    private void actionSelectMeasure(AjaxRequestTarget aTarget, String aMeasureId)
+    {
+        var ams = agreementRegistry.getAgreementMeasureSupport(aMeasureId);
+        var previousMeasure = form.getModelObject().measure;
+        setSelectedMeasure(Pair.of(ams.getId(), ams.getName()));
+
+        // Results and notes shown so far were computed with the previous measure - keeping them
+        // under the name of the new one would misattribute them.
+        if (previousMeasure == null || !previousMeasure.getKey().equals(ams.getId())) {
+            clearResults(aTarget);
+        }
+
+        // Only the label inside the button is re-rendered, not the button itself: the dialog
+        // returns the focus to the element it was opened from when it closes, which it can only do
+        // if that element was not replaced in the same response. Whether the button is enabled
+        // depends on the feature only, which picking a measure does not change.
+        aTarget.add(selectedMeasureLabel, traitsContainer, calculatePairwiseAgreementButton,
+                calculatePerDocumentAgreement, exportCsvDiffButton, exportJsonButton,
+                exportCsvButton);
     }
 
     private boolean isMeasureSupportingMoreThanTwoRaters()
     {
-        var measure = measureDropDown.getModelObject();
+        var measure = form.getModelObject().measure;
         if (measure == null) {
             return false;
         }
@@ -286,44 +381,6 @@ public class AgreementPage
         return choice;
     }
 
-    private DropDownChoice<Pair<String, String>> makeMeasuresDropdown(String aId)
-    {
-        var dropdown = new DropDownChoice<Pair<String, String>>(aId, this::listMeasures)
-        {
-            private static final long serialVersionUID = -2666048788050249581L;
-
-            @SuppressWarnings({ "rawtypes", "unchecked" })
-            @Override
-            protected void onModelChanged()
-            {
-                super.onModelChanged();
-
-                // If the feature type has changed, we need to set up a new traits
-                // editor
-                Component newTraits;
-                if (getModelObject() != null) {
-                    AgreementMeasureSupport ams = agreementRegistry
-                            .getAgreementMeasureSupport(getModelObject().getKey());
-                    var layer = featureList.getModel().map(Pair::getKey);
-                    var feature = featureList.getModel().map(Pair::getValue);
-                    newTraits = ams.createTraitsEditor(MID_TRAITS, layer, feature,
-                            Model.of((DefaultAgreementTraits) ams.createTraits()));
-                }
-                else {
-                    newTraits = new EmptyPanel(MID_TRAITS);
-                }
-
-                traitsContainer.addOrReplace(newTraits);
-            }
-        };
-        dropdown.setChoiceRenderer(new ChoiceRenderer<>("value"));
-        dropdown.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                _target -> _target.add(calculatePairwiseAgreementButton,
-                        calculatePerDocumentAgreement, exportCsvDiffButton, exportJsonButton,
-                        exportCsvButton, traitsContainer)));
-        return dropdown;
-    }
-
     // private CalculatePairwiseAgreementTask getCurrentTask()
     // {
     // var maybeTask = schedulingService.findTask(t -> t instanceof CalculatePairwiseAgreementTask
@@ -354,30 +411,33 @@ public class AgreementPage
     private void refreshResults(AjaxRequestTarget aTarget, AgreementResult_ImplBase aResult)
     {
         var ams = agreementRegistry
-                .getAgreementMeasureSupport(measureDropDown.getModelObject().getKey());
+                .getAgreementMeasureSupport(form.getModelObject().measure.getKey());
         var resultsPanel = ams.createResultsPanel(MID_RESULTS, Model.of(aResult), getTraits());
         resultsContainer.addOrReplace(resultsPanel);
+
+        // Report what the data looks like and what that means for the measure that was just used.
+        // This can only be done now - before the computation there is no study to inspect.
+        resultsContainer.addOrReplace(
+                new AgreementConcernsPanel(MID_CONCERNS, Model.of(aResult), ams.getId()));
+
+        aTarget.add(resultsContainer);
+    }
+
+    private void clearResults(AjaxRequestTarget aTarget)
+    {
+        resultsContainer.addOrReplace(new EmptyPanel(MID_RESULTS));
+        resultsContainer.addOrReplace(new EmptyPanel(MID_CONCERNS));
         aTarget.add(resultsContainer);
     }
 
     private void actionSelectFeature(AjaxRequestTarget aTarget)
     {
-        // // If the currently selected measure is not compatible with the selected feature, then
-        // // we clear the measure selection.
-        // var selectedFeature = featureList.getModelObject();
-        // var measureCompatibleWithFeature = measureDropDown.getModel() //
-        // .map(k -> agreementRegistry.getAgreementMeasureSupport(k.getKey())) //
-        // .map(s -> selectedFeature != null && s.accepts(selectedFeature)) //
-        // .orElse(false) //
-        // .getObject();
-        //
-        // if (!measureCompatibleWithFeature) {
-        // preselectBestAgreementMeasures();
-        // }
-
         preselectBestAgreementMeasures();
 
-        aTarget.add(measureDropDown, calculatePerDocumentAgreement,
+        // Results shown so far were computed on a different layer / feature.
+        clearResults(aTarget);
+
+        aTarget.add(selectedMeasureLabel, chooseMeasureButton, calculatePerDocumentAgreement,
                 calculatePairwiseAgreementButton, traitsContainer, exportCsvDiffButton,
                 exportJsonButton, exportCsvButton);
     }

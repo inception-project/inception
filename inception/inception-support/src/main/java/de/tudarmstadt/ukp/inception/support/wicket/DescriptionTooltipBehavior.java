@@ -47,6 +47,16 @@ public class DescriptionTooltipBehavior
 
     private Mode mode = Mode.DEFAULT;
 
+    /**
+     * Font Awesome icon class rendered in front of the title, e.g. {@code fa-exclamation-triangle}.
+     * Used to repeat the icon shown on the element the tooltip belongs to, so the relation between
+     * the two is visible. This is a fixed CSS class rather than free-form markup - the title itself
+     * stays escaped because callers pass user-controlled content into it.
+     */
+    private String titleIcon;
+
+    private String titleIconCssClass;
+
     public DescriptionTooltipBehavior(String aTitle, String aDescription)
     {
         super(makeTooltipOptions());
@@ -67,6 +77,22 @@ public class DescriptionTooltipBehavior
     public Mode getMode()
     {
         return mode;
+    }
+
+    /**
+     * Renders an icon in front of the tooltip title.
+     *
+     * @param aIcon
+     *            a Font Awesome icon class, e.g. {@code fa-exclamation-triangle}.
+     * @param aCssClass
+     *            additional CSS classes for the icon, e.g. {@code text-warning}. May be null.
+     * @return this behavior, for chaining.
+     */
+    public DescriptionTooltipBehavior withTitleIcon(String aIcon, String aCssClass)
+    {
+        titleIcon = aIcon;
+        titleIconCssClass = aCssClass;
+        return this;
     }
 
     @Override
@@ -93,6 +119,19 @@ public class DescriptionTooltipBehavior
         public DescriptionTooltipPanel(String aId, IModel<DescriptionTooltipBehavior> aModel)
         {
             super(aId, CompoundPropertyModel.of(aModel));
+
+            var behavior = aModel.getObject();
+
+            var icon = new WebMarkupContainer("titleIcon");
+            icon.setVisible(behavior.titleIcon != null);
+            if (behavior.titleIcon != null) {
+                icon.add(new AttributeAppender("class", behavior.titleIcon, " "));
+                if (behavior.titleIconCssClass != null) {
+                    icon.add(new AttributeAppender("class", behavior.titleIconCssClass, " "));
+                }
+            }
+            add(icon);
+
             add(new Label("title"));
             switch (aModel.getObject().mode) {
             case MARKDOWN: {

@@ -35,7 +35,11 @@ import org.dkpro.statistics.agreement.IAnnotationUnit;
 import org.dkpro.statistics.agreement.coding.ICodingAnnotationStudy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import de.tudarmstadt.ukp.clarin.webanno.agreement.AgreementSummary;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDataTally;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.krippendorffalpha.KrippendorffAlphaAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.ConfigurationSet;
@@ -76,6 +80,62 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
         assertThat(diff.getIncompleteConfigurationSets()).hasSize(2);
 
         assertThat(result.getAgreement()).isNaN();
+    }
+
+    /**
+     * The exclusion count shown in the lower half of the pairwise agreement table is derived as
+     * {@code relevant - used}, and its tooltip explains that number as the sum of the incomplete
+     * and stacked sets. That explanation is only truthful if those counts actually add up to it.
+     * <p>
+     * This lives here rather than on one of the Kappa measures because Krippendorff's Alpha is one
+     * of the few measures that honours the {@code excludeIncomplete} trait (and exposes it in a
+     * traits editor). The measures that hard-code it cannot exercise the second mode at all, so
+     * parameterising their tests over the trait only runs the same branch twice.
+     */
+    @ParameterizedTest
+    @ValueSource(booleans = { true, false })
+    public void thatExcludedSetsAreFullyAccountedFor(boolean aExcludeIncomplete) throws Exception
+    {
+        traits.setExcludeIncomplete(aExcludeIncomplete);
+
+        var result = twoWithoutLabelTest(sut, traits);
+        var summary = AgreementSummary.of(result);
+
+        var excluded = summary.getRelevantSetCount() - summary.getUsedSetCount();
+
+        // Mirrors what the tooltip lists: incomplete sets only count towards the exclusion when
+        // the computation actually excluded them. When they were included instead, they are still
+        // tagged incomplete but excluded nothing by the setting - yet Alpha does not score items
+        // with a value from only one rater, so the measure itself excludes those.
+        var breakdown = summary.getPluralitySets() + summary.getUnscoredSetCount();
+        if (summary.isExcludeIncomplete()) {
+            breakdown += summary.getIncompleteSetsByPosition() + summary.getIncompleteSetsByLabel();
+        }
+
+        assertThat(excluded) //
+                .as("excluded sets are fully explained by the tooltip breakdown") //
+                .isEqualTo(breakdown);
+
+        // Guard against the assertion above holding trivially: the fixture has incomplete sets in
+        // both modes, and the trait has to decide whether they were scored or dropped.
+        assertThat(summary.getIncompleteSetsByPosition()) //
+                .as("the fixture contributes incomplete sets in either mode") //
+                .isEqualTo(2);
+        // Both incomplete sets have a value from only one of the two raters, so Alpha scores
+        // neither of them, whether or not the setting excludes them.
+        assertThat(summary.getUsedSetCount()) //
+                .as("incomplete sets with a single value are never scored by Alpha") //
+                .isEqualTo(2);
+        assertThat(summary.getUnscoredSetCount()) //
+                .as("the measure ignores the incomplete sets only when the setting keeps them") //
+                .isEqualTo(aExcludeIncomplete ? 0 : 2);
+
+        // The table and the diagnostics notes must agree on how many items the measure ignored
+        var tally = new AgreementDataTally();
+        tally.add(result.getStudy(), result.isScoringSingleValueItems());
+        assertThat(summary.getUnscoredSetCount()) //
+                .as("the table reports the same unscored count as the diagnostics") //
+                .isEqualTo(tally.getUnscoredItemCount());
     }
 
     @Test
@@ -150,7 +210,8 @@ public class KrippendorffAlphaNominalAgreementMeasureTest
                         tuple(Set.of("user2"), Set.of(INCOMPLETE_POSITION, USED)), //
                         tuple(Set.of("user1", "user2"), Set.of(DIFFERENCE, COMPLETE, USED)));
         assertThat(result.getAgreement()).isCloseTo(0.4, within(0.01));
-
+        // The two single-value items are part of the study, but alpha cannot pair their values
+        assertThat(result.isScoringSingleValueItems()).isFalse();
     }
 
     @Test

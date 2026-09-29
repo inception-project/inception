@@ -17,12 +17,115 @@
   limitations under the License.
 -->
 <html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    /* The measure control looks like the feature dropdown (form-select) but acts as a
+       dialog trigger. The form-select class gives it the chevron and makes Bootstrap's
+       form-floating label float automatically; we just need to align the value vertically
+       (the link does not do this like a native select) and show a pointer cursor. */
+    .measure-select {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    /* A flex item does not shrink below its content by default, so the ellipsis has to be set up
+       on the measure name itself for a long name to be truncated rather than clipped. */
+    .measure-select > span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Wicket drops the href of a disabled link. Mirror how Bootstrap renders a disabled
+       form-select so the control does not look clickable while no layer / feature is chosen. */
+    .measure-select:not([href]) {
+      cursor: default;
+      background-color: var(--bs-secondary-bg);
+    }
+
+    /* The notes sit above the results table and must never crowd it out: on a short window, or
+       with many notes expanded, they take at most part of the available height and scroll
+       internally, leaving the rest to the table. */
+    .agreement-concerns-slot {
+      /* A column flex container, so the card inside stretches to the full width instead of
+         shrinking to the width of its own text. */
+      display: flex;
+      flex-direction: column;
+      /* Never grow past the content, and shrink freely: the notes must give way to the results
+         rather than push the page past the viewport. The cap keeps a long list of notes from
+         taking the whole column - now that every ancestor can shrink, the percentage resolves
+         against the results column rather than against nothing. */
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: 45%;
+      overflow: hidden;
+    }
+
+    /* A flex item does not shrink below its content by default, which would let the table push
+       itself out of the container instead of scrolling inside it. */
+    .agreement-results-slot {
+      min-height: 0;
+    }
+
+    /* The results column must take exactly the height the page row offers and no more. */
+    .agreement-results-area {
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    /* Flex items default to min-height:auto, which refuses to shrink below their content. The
+       whole column from the page body up to the page content therefore grows when the notes are
+       expanded, pushing the footer past the bottom of the window - and since the body clips
+       rather than scrolls, the bottom of the page simply becomes unreachable. Allowing these to
+       shrink keeps the page within the viewport and lets the notes and the table scroll
+       internally instead. */
+    .agreement-page-root,
+    .agreement-page-root > .flex-content,
+    .agreement-page-body {
+      min-height: 0;
+    }
+
+    /* The shared page wrapper is the last link in that chain and lives outside this page's
+       markup, so it has to be reached from here. Scoped via :has() to this page only, so no
+       other page's layout is affected. */
+    main.page-content:has(.agreement-page-root) {
+      min-height: 0;
+    }
+
+    /* The settings form asks for a comfortable 30em. On a window too narrow to grant that and
+       still leave room for the results, insisting on it would squeeze the results into a sliver,
+       so below that point the two stack instead and each gets the full width. */
+    .agreement-settings {
+      min-width: 30em;
+    }
+
+    @media (max-width: 62em) {
+      .agreement-page-body {
+        flex-wrap: wrap;
+        overflow-y: auto;
+      }
+
+      .agreement-settings {
+        min-width: 100%;
+      }
+
+      /* Once stacked, the results need a height of their own - a wrapped flex item would
+         otherwise collapse to its content and the table would lose its scroll container. */
+      .agreement-page-body > .agreement-results-area {
+        min-width: 100%;
+        min-height: 30em;
+      }
+    }
+  </style>
+</wicket:head>
 <body>
   <wicket:extend>
-    <div class="flex-content flex-v-container flex-gutter">
+    <div class="agreement-page-root flex-content flex-v-container flex-gutter">
       <h1 class="px-3"><wicket:container wicket:id="name"/></h1>
-      <div class="flex-content flex-h-container flex-gutter">
-        <form wicket:id="agreementForm" class="d-flex flex-column" style="min-width: 30em;">
+      <div class="agreement-page-body flex-content flex-h-container flex-gutter">
+        <form wicket:id="agreementForm" class="agreement-settings d-flex flex-column">
           <div class="card flex-fill">
             <div class="card-header">
               <wicket:message key="settings"/>
@@ -35,10 +138,15 @@
                 <select wicket:id="layerAndFeature" class="form-select"/>
                 <label wicket:for="layerAndFeature"><wicket:label key="feature"/></label>
               </div>
-              <div class="form-row form-floating" wicket:enclosure="measure">
-                <select wicket:id="measure" class="form-select"/>
-                <label wicket:for="measure"><wicket:label key="measure"/></label>
+              <div class="form-row form-floating">
+                <a wicket:id="chooseMeasure" aria-haspopup="dialog"
+                   class="form-select measure-select text-truncate text-reset text-decoration-none">
+                  <span class="visually-hidden"><wicket:message key="measure"/>: </span>
+                  <span wicket:id="selectedMeasure"></span>
+                </a>
+                <label><wicket:message key="measure"/></label>
               </div>
+              <div wicket:id="measureDialog"></div>
               <div wicket:id="traitsContainer">
                 <div wicket:id="traits"></div>
               </div>
@@ -103,8 +211,13 @@
             </div>
           </div>
         </form>
-        <div wicket:id="resultsContainer" class="flex-content flex-h-container">
-          <div class="flex-content flex-h-container" wicket:id="results"></div>
+        <div wicket:id="resultsContainer"
+          class="agreement-results-area flex-content flex-v-container overflow-hidden">
+          <!-- The notes take only the height they need and scroll internally once there are many
+               of them, so that they cannot squeeze the results table out of view. -->
+          <div wicket:id="concerns" class="agreement-concerns-slot"></div>
+          <div class="agreement-results-slot flex-content flex-h-container overflow-hidden"
+            wicket:id="results"></div>
         </div>  
       </div>
     </div>

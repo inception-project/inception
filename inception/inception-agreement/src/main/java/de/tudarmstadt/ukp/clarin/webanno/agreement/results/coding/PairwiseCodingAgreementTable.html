@@ -16,6 +16,67 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
+<wicket:head xmlns:wicket="http://wicket.apache.org">
+  <style>
+    /* The shared table styling (_inception-tables.scss) highlights a whole row on hover. Here the
+       tooltip and the click handler belong to an individual cell, so a row-wide highlight points
+       at the wrong thing. The zebra colours are declared once here and applied to the cells, which
+       leaves the row itself with no background to highlight - and lets the cell hover simply
+       darken whatever striping the cell already has. */
+    .pairwise-agreement-table tr.odd {
+      --agreement-row-bg: #eeeeee;
+    }
+
+    .pairwise-agreement-table tr.even {
+      --agreement-row-bg: #dddddd;
+    }
+
+    .pairwise-agreement-table tr.odd,
+    .pairwise-agreement-table tr.even,
+    .pairwise-agreement-table tr.odd:hover,
+    .pairwise-agreement-table tr.even:hover {
+      background: transparent;
+    }
+
+    /* Use background-color rather than the background shorthand: the shorthand resets
+       background-image, which is what the hover highlight below paints on top of. */
+    .pairwise-agreement-table tr > td {
+      background-color: var(--agreement-row-bg);
+    }
+
+    .pairwise-agreement-table td.agreement-cell-interactive:hover {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.15), rgba(0, 0, 0, 0.15));
+    }
+
+    /* The matrix grows with the number of annotators, so it has to be able to scroll in both
+       directions. Keep the rater names visible while it does - without them a cell in the middle
+       of a large matrix cannot be attributed to a pair of annotators. */
+    .pairwise-agreement-table {
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    /* Column headers stick to the top, the rater-name column to the left. Both are header cells
+       carrying the opaque .headers background, so the cells scrolling underneath stay hidden. */
+    .pairwise-agreement-table tr:first-child th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+
+    .pairwise-agreement-table th.text-end {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+    }
+
+    /* The top-left corner belongs to both sticky axes and has to win against each of them. */
+    .pairwise-agreement-table tr:first-child th:first-child {
+      left: 0;
+      z-index: 3;
+    }
+  </style>
+</wicket:head>
 <wicket:panel xmlns:wicket="http://wicket.apache.org">
   <div class="flex-content card">
     <div class="card-header">
@@ -26,8 +87,8 @@
         </button>
       </div>
     </div>
-    <div class="scrolling card-body fit-child-snug p-0 overflow-hidden rounded">
-      <table style="width: 100%;">
+    <div class="scrolling card-body fit-child-snug p-0">
+      <table class="pairwise-agreement-table w-auto">
         <tr wicket:id="rows">
           <td wicket:id="cells">
             <div wicket:id="cell"></div>
@@ -49,19 +110,26 @@
     <th class="headers text-end"><div wicket:id="label"></div></th>
   </wicket:fragment>
   <wicket:fragment wicket:id="td-upper-ok">
-    <td class="text-center">
-      <div wicket:id="label"></div>
+    <td wicket:id="content" class="text-center text-nowrap">
+      <span wicket:id="label"></span>
+      <wicket:container wicket:id="notes"/>
     </td>
   </wicket:fragment>
   <wicket:fragment wicket:id="td-upper-warn">
-    <td class="text-center small fw-light"><i class="fas fa-exclamation-triangle text-warning"></i>
-      <span wicket:id="label" /></td>
+    <td wicket:id="content" class="text-center small fw-light"><i
+      class="fas fa-exclamation-triangle text-warning"></i> <span wicket:id="label" />
+      <wicket:container wicket:id="notes"/></td>
+  </wicket:fragment>
+  <wicket:fragment wicket:id="notes-badge">
+    <span class="badge rounded-pill text-bg-light border fw-normal ms-1 agreement-notes-badge"><i
+      class="fas fa-circle-info text-body-secondary"></i> <span wicket:id="count"></span><span
+      class="visually-hidden"> <wicket:message key="notes"/></span></span>
   </wicket:fragment>
   <wicket:fragment wicket:id="td-lower-ok">
     <td class="text-center small fw-light"><span wicket:id="label" /></td>
   </wicket:fragment>
   <wicket:fragment wicket:id="td-lower-warn">
-    <td class="text-center small text-nowrap fw-light"><i
+    <td wicket:id="content" class="text-center small text-nowrap fw-light"><i
       class="fas fa-exclamation-triangle text-warning"></i> <span wicket:id="label" /></td>
   </wicket:fragment>
 </wicket:panel>

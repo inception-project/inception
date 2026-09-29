@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<!--
+  Licensed to the Technische Universität Darmstadt under one
+  or more contributor license agreements.  See the NOTICE file
+  distributed with this work for additional information
+  regarding copyright ownership.  The Technische Universität Darmstadt
+  licenses this file to you under the Apache License, Version 2.0 (the
+  "License"); you may not use this file except in compliance
+  with the License.
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<html xmlns:wicket="http://wicket.apache.org">
+<wicket:head>
+  <style>
+    .agreement-concerns .concern-toggle {
+      text-decoration: none;
+      text-align: start;
+    }
+    .agreement-concerns .concern-caret {
+      min-width: 0.75em;
+    }
+    /* The observation is the evidence, so it leads. The implication and suggestion are
+       progressively less prominent to keep a long list scannable. */
+    .agreement-concerns .concern-observation {
+      font-weight: 600;
+    }
+    .agreement-concerns .concern-suggestion {
+      font-style: italic;
+    }
+    /* Fill the slot the page gives us and scroll the list rather than the whole card, so that the
+       header with the note count stays reachable however many notes there are. */
+    .agreement-concerns {
+      display: flex;
+      flex-direction: column;
+      /* Shrink rather than grow - the card must fit whatever height the page gives its slot. */
+      flex: 0 1 auto;
+      min-height: 0;
+    }
+    .agreement-concerns > .card-body {
+      overflow-y: auto;
+      min-height: 0;
+    }
+  </style>
+</wicket:head>
+<wicket:panel>
+  <div class="card mb-2 agreement-concerns">
+    <div class="card-header p-0">
+      <a wicket:id="toggle" href="#"
+         class="concern-toggle btn btn-link text-reset d-block px-2 py-1">
+        <i wicket:id="caret" class="fas concern-caret me-1"></i>
+        <i class="fas fa-circle-info text-body-secondary me-1"></i>
+        <span wicket:id="concernCount"/>
+      </a>
+    </div>
+    <div wicket:id="body" class="card-body p-0">
+      <ul class="list-group list-group-flush">
+        <li wicket:id="concerns" class="list-group-item">
+          <div wicket:id="observation" class="concern-observation"/>
+          <div wicket:id="implication" class="small"/>
+          <div wicket:id="suggestion" class="small text-body-secondary concern-suggestion mt-1"/>
+          <div wicket:id="scope" class="small text-body-secondary mt-1"/>
+          <div wicket:id="range" class="small text-body-secondary"/>
+          <div wicket:id="criterion" class="small text-body-secondary"/>
+        </li>
+      </ul>
+    </div>
+  </div>
+</wicket:panel>
+</html>

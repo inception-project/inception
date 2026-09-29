@@ -17,7 +17,17 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.fleisskappa;
 
+import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
+import static java.util.EnumSet.of;
+
+import java.util.Optional;
+import java.util.Set;
+
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcern;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementConcerns;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.diagnostics.AgreementDiagnostic;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasure;
+import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.measures.DefaultAgreementTraits;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.AbstractCodingAgreementMeasureSupport;
 import de.tudarmstadt.ukp.clarin.webanno.agreement.results.coding.FullCodingAgreementResult;
@@ -54,11 +64,52 @@ public class FleissKappaAgreementMeasureSupport
     }
 
     @Override
+    public Optional<String> getDescription()
+    {
+        return Optional.of("Chance-corrected agreement on categorical labels generalised to any "
+                + "number of raters. The multi-rater counterpart of Cohen's Kappa.");
+    }
+
+    @Override
+    public Set<AgreementMeasureCapability> getDeclaredCapabilities()
+    {
+        return of(CHANCE_CORRECTED);
+    }
+
+    @Override
     public AgreementMeasure<FullCodingAgreementResult> createMeasure(AnnotationLayer aLayer,
             AnnotationFeature aFeature, DefaultAgreementTraits aTraits)
     {
         return new FleissKappaAgreementMeasure(aFeature, aTraits, annotationService,
                 diffAdapterRegistry);
+    }
+
+    @Override
+    public Optional<AgreementConcern> getConcern(AgreementDiagnostic aDiagnostic)
+    {
+        switch (aDiagnostic.getType()) {
+        case SKEWED_PREVALENCE:
+            return Optional.of(new AgreementConcern(aDiagnostic,
+                    "When one label dominates, the agreement expected by chance approaches the "
+                            + "agreement actually observed. Kappa divides by the difference between "
+                            + "the two, so it can report a low score even though the raters agree on "
+                            + "almost every item - the so-called Kappa paradox.",
+                    "Compare against the raw observed agreement, and consider Gwet's AC2, which "
+                            + "supports more than two raters and estimates chance agreement in a "
+                            + "way that is robust to this kind of skew."));
+
+        case MARGINAL_ASYMMETRY:
+            return Optional.of(new AgreementConcern(aDiagnostic,
+                    "The raters applied the labelling scheme at noticeably different rates. This "
+                            + "measure pools the marginals across raters, so the difference in "
+                            + "label usage counts as disagreement and lowers the score. Cohen's "
+                            + "Kappa would report a higher score on the same data because it does "
+                            + "not count this rater bias against the raters.",
+                    "Check whether the annotation guidelines leave this label ambiguous."));
+
+        default:
+            return AgreementConcerns.generic(aDiagnostic);
+        }
     }
 
     @Override

@@ -73,6 +73,10 @@ public class GwetAC2AgreementMeasure
         var agreementResult = makeCodingStudy(diff, feature.getLayer().getName(), feature.getName(),
                 tagset, traits.isExcludeIncomplete(), aCasMap);
 
+        // AC2 skips items rated by fewer than two raters, both in the observed agreement and in
+        // the category prevalences behind the chance agreement
+        agreementResult.setScoringSingleValueItems(false);
+
         if (agreementResult.isEmpty()) {
             agreementResult.setAgreement(NaN);
         }

@@ -36,6 +36,15 @@ public class FullCodingAgreementResult
     protected final DiffResult diff;
     protected final List<ConfigurationSet> allSets;
 
+    /**
+     * Whether the measure scores items on which only one rater gave a value. The study may contain
+     * such items when incomplete positions are included, yet some measures - e.g. Krippendorff's
+     * alpha or Gwet's AC2 - cannot pair a single value with anything and ignore those items. The
+     * measure knows, so it declares it here, and the diagnostics then describe the data the score
+     * is actually based on.
+     */
+    private boolean scoringSingleValueItems = true;
+
     public FullCodingAgreementResult(String aType, String aFeature, DiffResult aDiff,
             ICodingAnnotationStudy aStudy, List<String> aCasGroupIds,
             List<ConfigurationSet> aTaggedConfigurations, boolean aExcludeIncomplete)
@@ -44,6 +53,16 @@ public class FullCodingAgreementResult
 
         allSets = aTaggedConfigurations;
         diff = aDiff;
+    }
+
+    public boolean isScoringSingleValueItems()
+    {
+        return scoringSingleValueItems;
+    }
+
+    public void setScoringSingleValueItems(boolean aScoringSingleValueItems)
+    {
+        scoringSingleValueItems = aScoringSingleValueItems;
     }
 
     public boolean noPositions()
