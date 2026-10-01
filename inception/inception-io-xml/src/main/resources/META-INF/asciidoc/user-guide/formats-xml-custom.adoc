@@ -21,7 +21,7 @@
 CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `format.custom-xml.enabled` to the `settings.properties` file.
 ====
 
-Custom XML document support allows defining own XML annotation formats that can be displayed as formatted documents in HTML-based editors (e.g. the Apache Annotator editor or the RecogitoJS editor). 
+Custom XML document support allows defining own XML annotation formats that can be displayed as formatted documents in HTML-based editors (e.g. the Apache Annotator editor).
 
 The custom XML document support has the goal to provide means of suitably formatting and rendering XML documents in the browser. It does **not** aim at being able to extract potential annotations from the XML document and making them accessible and editable as annotations within {product-name}. It only offers support for **importing** custom XML documents, but not for exporting them. To **export** the annotated document, another format such as <<sect_formats_uimajson>> has to be used. 
 
