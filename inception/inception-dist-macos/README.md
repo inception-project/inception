@@ -51,8 +51,8 @@ Example `~/.m2/settings.xml` snippet:
       <id>inception-macos</id>
       <properties>
         <mac.signing.identity>Developer ID Application: Jane Doe (TEAMID)</mac.signing.identity>
-        <jdk.aarch64.home>/Library/Java/JavaVirtualMachines/temurin-21-aarch64/Contents/Home</jdk.aarch64.home>
-        <jdk.x86_64.home>/Library/Java/JavaVirtualMachines/temurin-21-x86_64/Contents/Home</jdk.x86_64.home>
+        <jdk.aarch64.home>/Library/Java/JavaVirtualMachines/temurin-25-aarch64/Contents/Home</jdk.aarch64.home>
+        <jdk.x86_64.home>/Library/Java/JavaVirtualMachines/temurin-25-x86_64/Contents/Home</jdk.x86_64.home>
         <mac.notarization.keychain.profile>AC_NOTARY</mac.notarization.keychain.profile>
       </properties>
     </profile>
