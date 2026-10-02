@@ -257,7 +257,7 @@ import type { AnnotationEditorFactory, AnnotationEditorProperties, DiamClientFac
 const PROP_EDITOR = "__editor__";
 
 export class MyEditorFactory implements AnnotationEditorFactory {
-  public async getOrInitialize(element: HTMLElement, diam : DiamClientFactory, props: AnnotationEditorProperties): Promise<RecogitoEditor> {
+  public async getOrInitialize(element: HTMLElement, diam : DiamClientFactory, props: AnnotationEditorProperties): Promise<MyEditor> {
     if (element[PROP_EDITOR] != null) {
       return element[PROP_EDITOR];
     }
@@ -283,7 +283,7 @@ import type { AnnotationEditor, DiamAjax } from "@inception-project/inception-js
 
 const ANNOTATIONS_SERIALIZER = "Brat"; // The annotation format requested from the server
 
-export class RecogitoEditor implements AnnotationEditor {
+export class MyEditor implements AnnotationEditor {
   private ajax: DiamAjax;
 
   public constructor(element: HTMLElement, ajax: DiamAjax) {

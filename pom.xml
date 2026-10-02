@@ -262,9 +262,6 @@
     <popperjs.version>^2.11.8</popperjs.version>
     <prettier.version>^3.9.6</prettier.version>
     <prettier-plugin-svelte.version>^3.5.2</prettier-plugin-svelte.version>
-    <recogitojs.version>^1.8.4</recogitojs.version>
-    <recogito-connections.version>^0.1.11</recogito-connections.version>
-    <recogito-client-core.version>^1.7.9</recogito-client-core.version>
     <rollup.version>^4.62.5</rollup.version>
     <sass.version>^1.102.0</sass.version>
     <stomp-stompjs.version>^7.2.1</stomp-stompjs.version>

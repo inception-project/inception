@@ -43,21 +43,17 @@ import de.tudarmstadt.ukp.inception.support.xml.XmlParserUtils;
 public class XmlCas2SaxEvents
     extends Cas2SaxEvents
 {
-    private static final String WRAPPER_ELEMENT = "wrapper";
-
     public static final String DATA_CAPTURE_ROOT_ATTR = "data-capture-root";
 
-    private final XmlDocument xml;
     private final Set<XmlNode> captureRoots;
 
     public XmlCas2SaxEvents(XmlDocument aXml, ContentHandler aHandler)
     {
         super(aHandler);
-        xml = aXml;
 
-        if (xml.getCaptureRoots() != null) {
+        if (aXml.getCaptureRoots() != null) {
             captureRoots = new HashSet<>();
-            xml.getCaptureRoots().forEach(captureRoots::add);
+            aXml.getCaptureRoots().forEach(captureRoots::add);
         }
         else {
             captureRoots = null;
@@ -76,22 +72,6 @@ public class XmlCas2SaxEvents
         var sh = new TextSanitizingContentHandler(th);
 
         return sh;
-    }
-
-    @Override
-    public void process(XmlElement aElement, ProcessElementOptions... aOptions) throws SAXException
-    {
-        // HACK: adding a wrapper because otherwise RecogitoJS cannot insert its own
-        // wrapper...
-        if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
-            handler.startElement(null, null, WRAPPER_ELEMENT, null);
-        }
-
-        super.process(aElement, aOptions);
-
-        if (captureRoots != null && aElement == xml.getRoot() && captureRoots.contains(aElement)) {
-            handler.endElement(null, null, WRAPPER_ELEMENT);
-        }
     }
 
     @Override

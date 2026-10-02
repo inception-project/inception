@@ -44,11 +44,6 @@ provides.
 | yes
 | no
 
-| <<sect_editors_html_recogitojs>>
-| `ui.html-recogitojs.enabled`
-| yes
-| yes
-
 | <<sect_editors_pdf>>
 | `ui.pdf.enabled`
 | yes
@@ -105,15 +100,6 @@ annotation, or kbd:[Esc] to close the popup without selecting or deleting.
 
 NOTE: When the document contains protected elements (e.g. images or tables), the cursor and
 selection automatically skip over them so that such elements are never partially selected.
-
-[[sect_editors_html_recogitojs]]
-== 🧪 HTML (RecogitoJS)
-
-====
-CAUTION: Experimental feature. To use this functionality, you need to enable it first by adding `ui.html-recogitojs.enabled` to the `settings.properties` file.
-====
-
-This editor renders documents imported using a XML/HTML-based format such as <<sect_formats_mhtml>> or <<sect_formats_htmldoc>>. It is build on top of link:https://github.com/recogito/recogito-js[RecogitoJS]. It supports rendering span annotations, relations and link features.
 
 [[sect_editors_pdf]]
 == PDF
