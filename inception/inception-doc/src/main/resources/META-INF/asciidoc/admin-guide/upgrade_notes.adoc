@@ -24,6 +24,22 @@ NOTE: It is a good idea to back up your installation and data before an upgrade.
       you can actually re-create a working installation by restoring your backup. A backup which cannot be
       successfully restored is worthless.
 
+== INCEpTION 43.0
+
+=== Java 25 required
+
+{product-name} now requires Java 25 or higher.
+If you run the platform-independent JAR, make sure that a Java 25 runtime is installed before upgrading.
+The Docker image and the macOS and Windows distributions ship with a suitable Java runtime.
+If you build your own Docker image on top of {product-name}, make sure that its base image provides Java 25.
+
+=== Credentials in SPARQL URLs no longer supported
+
+Remote knowledge bases can no longer pass credentials as part of the SPARQL URL (`https://USERNAME:PASSWORD@host/sparql`).
+When {product-name} starts, it migrates existing remote knowledge bases automatically: the credentials are removed from the URL and stored as HTTP basic authentication in the knowledge base settings.
+If a knowledge base already had an authentication method configured, the credentials in the URL are discarded and the configured method is kept.
+If the migration fails for a knowledge base, an error is logged and you need to correct its URL and authentication settings manually.
+
 == INCEpTION 42.0
 
 === Legacy remote API disabled by default

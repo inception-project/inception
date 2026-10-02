@@ -57,7 +57,7 @@ NOTE: *Hey system operators and admins!* If you are installing {product-name}
 
 == Linux / platform independent (JAR)
 
-The platform-independent JAR requires Java 21 or higher to be installed on
+The platform-independent JAR requires Java {min-java-version} or higher to be installed on
 your system. If you do not have Java installed, you can obtain it for example
 from link:https://adoptium.net[Adoptium].
 

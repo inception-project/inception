@@ -352,7 +352,7 @@ stardog-admin db create -n DATABASE-NAME -o search.enabled=true -- knowledgebase
 ----
 
 Stardog databases are usually accessible via SPARQL at `http://localhost:5820/DATABASE-NAME/query`.
-You may have to specify credentials as part of the URL to gain access.
+If the database requires credentials, configure them as described in the next section.
 
 ==== SPARQL Endpoint Authentication
 
@@ -374,12 +374,9 @@ This is a simple mechanism that sends a username and password on every request.
 This mechanism uses the client ID and client secret to obtain an authentication token which is then
 used for subsequent requests. Once the token expires, a new token is requested.
 
-====
-CAUTION: Legacy feature. It is also possible to use HTTP basic authentication by prefixing the 
-      SPARQL URL with the username and password (`http://USERNAME:PASSWORD@localhost:5820/mock/query`). 
-      However, this is not recommended. For example, the password will be visible to anybody being able to access the knowledge base settings.
-      This option is only supported for backwards compatibility and will be removed in future versions.
-====
+NOTE: Credentials cannot be specified as part of the SPARQL URL
+      (`http://USERNAME:PASSWORD@localhost:5820/mock/query`). If you enter such a URL, the
+      credentials are removed from it. Use the **Authentication** dropdown instead.
 
 === Importing RDF
 
