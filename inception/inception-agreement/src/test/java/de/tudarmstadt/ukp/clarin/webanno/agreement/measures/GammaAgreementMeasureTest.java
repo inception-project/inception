@@ -45,16 +45,6 @@ public class GammaAgreementMeasureTest
     }
 
     @Test
-    public void multiLinkWithRoleLabelDifference() throws Exception
-    {
-        var result = multiLinkWithRoleLabelDifferenceTest(sut);
-
-        // The link hosts are zero-width annotations which gamma cannot handle, so the study is
-        // empty
-        assertThat(result.getAgreement()).isNaN();
-    }
-
-    @Test
     public void twoEmptyCasTest() throws Exception
     {
         var result = twoEmptyCasTest(sut);

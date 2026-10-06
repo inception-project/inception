@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.clarin.webanno.agreement.measures.gamma;
 
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureCapability.CHANCE_CORRECTED;
 import static de.tudarmstadt.ukp.clarin.webanno.agreement.measures.AgreementMeasureParadigm.ALIGNING;
+import static de.tudarmstadt.ukp.clarin.webanno.model.LinkMode.NONE;
 import static java.util.EnumSet.of;
 
 import java.util.Optional;
@@ -91,6 +92,12 @@ public class GammaAgreementMeasureSupport
         if (!SpanLayerSupport.TYPE.equals(aLayer.getType())) {
             return Optional.of("Gamma aligns annotations by their text position, so it only "
                     + "supports span layers.");
+        }
+
+        if (aFeature != null && aFeature.getLinkMode() != NONE) {
+            return Optional.of("Gamma compares the links of an annotation only as "
+                    + "exact labels. Use a coding measure, which compares links according to the "
+                    + "multiplicity mode of the link feature.");
         }
 
         return Optional.empty();

@@ -99,7 +99,8 @@ class AgreementMeasureApplicabilityTest
                 Arguments.of("span / characters", layer(SPAN, CHARACTERS), feature(), true),
                 Arguments.of("relation", layer(RELATION, TOKENS), feature(), false),
                 Arguments.of("document metadata", layer(DOCUMENT, TOKENS), feature(), false),
-                Arguments.of("chain", layer(CHAIN, TOKENS), feature(), false));
+                Arguments.of("chain", layer(CHAIN, TOKENS), feature(), false),
+                Arguments.of("link feature", layer(SPAN, TOKENS), linkFeature(), false));
 
         return cases.flatMap(c -> positionMeasures().stream().map(
                 m -> Arguments.of(m.getId(), c.get()[0], m, c.get()[1], c.get()[2], c.get()[3])));
