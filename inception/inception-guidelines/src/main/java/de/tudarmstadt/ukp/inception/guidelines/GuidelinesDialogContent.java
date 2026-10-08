@@ -29,9 +29,7 @@ import org.apache.wicket.markup.html.list.AbstractItem;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.markup.repeater.RepeatingView;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.request.resource.ResourceStreamResource;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.apache.wicket.util.resource.FileResourceStream;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
@@ -71,9 +69,8 @@ public class GuidelinesDialogContent
             var popupSettings = new PopupSettings(RESIZABLE | SCROLLBARS).setHeight(500)
                     .setWidth(700);
 
-            var stream = new FileResourceStream(
+            var resource = new GuidelineResource(
                     guidelinesService.getGuideline(aProject.getObject(), guidelineFileName));
-            var resource = new ResourceStreamResource(stream);
             var rlink = new ResourceLink<Void>("guideine", resource);
             rlink.setPopupSettings(popupSettings);
             item.queue(rlink);
