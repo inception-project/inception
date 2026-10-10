@@ -17,18 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.guidelines.exporters;
 
-import static org.apache.commons.io.FileUtils.copyInputStreamToFile;
-import static org.apache.commons.io.FileUtils.forceMkdir;
+import static java.nio.file.Files.newInputStream;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.nio.file.Files;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +35,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.ProjectImportRequest;
 import de.tudarmstadt.ukp.clarin.webanno.export.model.ExportedProject;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
+import de.tudarmstadt.ukp.inception.guidelines.InvalidGuidelineException;
 import de.tudarmstadt.ukp.inception.guidelines.config.GuidelinesServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.io.ZipUtils;
 
@@ -74,17 +71,15 @@ public class GuidelinesExporter
             ExportedProject aExProject, ZipOutputStream aStage)
         throws IOException
     {
-        var annotationGuidlines = guidelinesService.getGuidelinesFolder(aRequest.getProject());
+        var project = aRequest.getProject();
 
-        if (annotationGuidlines.exists()) {
-            for (var annotationGuideline : annotationGuidlines.listFiles()) {
-                ProjectExporter.writeEntry(aStage,
-                        GUIDELINES_FOLDER + "/" + annotationGuideline.getName(), os -> {
-                            try (var is = Files.newInputStream(annotationGuideline.toPath())) {
-                                is.transferTo(os);
-                            }
-                        });
-            }
+        for (var name : guidelinesService.listGuidelines(project)) {
+            var guideline = guidelinesService.getGuideline(project, name);
+            ProjectExporter.writeEntry(aStage, GUIDELINES_FOLDER + "/" + name, os -> {
+                try (var is = newInputStream(guideline.toPath())) {
+                    is.transferTo(os);
+                }
+            });
         }
     }
 
@@ -110,16 +105,22 @@ public class GuidelinesExporter
             var entryName = ZipUtils.normalizeEntryName(entry);
 
             if (entryName.startsWith(GUIDELINE + "/")) {
-                var fileName = FilenameUtils.getName(entry.getName());
-                if (fileName.trim().isEmpty()) {
+                // The exporter writes the guidelines flat. Directory entries and anything nested in
+                // a subfolder do not come from it and are ignored.
+                var fileName = entryName.substring(GUIDELINE.length() + 1);
+                if (fileName.isEmpty() || fileName.contains("/")) {
                     continue;
                 }
-                var guidelineDir = guidelinesService.getGuidelinesFolder(aProject);
-                forceMkdir(guidelineDir);
-                copyInputStreamToFile(aZip.getInputStream(entry), new File(guidelineDir, fileName));
-
-                LOG.info("Imported guideline [" + fileName + "] for project [" + aProject.getName()
-                        + "] with id [" + aProject.getId() + "]");
+                try (var is = aZip.getInputStream(entry)) {
+                    guidelinesService.createGuideline(aProject, is, fileName);
+                    LOG.info("Imported guideline [{}] for project {}", fileName, aProject);
+                }
+                catch (InvalidGuidelineException e) {
+                    LOG.warn("Skipped guideline [{}] while importing project {}: {}", fileName,
+                            aProject, e.getMessage());
+                    aRequest.addMessage(
+                            "Guideline [" + fileName + "] was not imported: " + e.getMessage());
+                }
             }
         }
     }

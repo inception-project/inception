@@ -41,6 +41,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.settings.ProjectSettingsPanelBase;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapFileInputField;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
+import de.tudarmstadt.ukp.inception.guidelines.InvalidGuidelineException;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 
 public class ImportGuidelinesPanel
@@ -103,6 +104,9 @@ public class ImportGuidelinesPanel
                 finally {
                     tempFile.delete();
                 }
+            }
+            catch (InvalidGuidelineException e) {
+                error(guidelineFile.getClientFileName() + ": " + e.getMessage());
             }
             catch (Exception e) {
                 error("Unable to write guideline file " + ExceptionUtils.getRootCauseMessage(e));
