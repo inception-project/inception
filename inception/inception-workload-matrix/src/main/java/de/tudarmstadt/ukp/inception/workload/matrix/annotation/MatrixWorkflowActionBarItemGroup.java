@@ -320,6 +320,7 @@ public class MatrixWorkflowActionBarItemGroup
     }
 
     private void actionToggleDocumentState(AjaxRequestTarget aTarget)
+        throws IOException, AnnotationException
     {
         var state = editorContext.getAnnotatorState();
         var document = state.getDocument();
@@ -332,6 +333,17 @@ public class MatrixWorkflowActionBarItemGroup
                 editorContext.refreshAfterDocumentStateChange(aTarget);
                 break;
             default:
+                // Curation must not be finished with invalid annotations - same as on the
+                // other curation pages
+                try {
+                    page.actionValidateDocument(aTarget, editorContext);
+                }
+                catch (ValidationException e) {
+                    page.error("Document cannot be marked as finished: " + e.getMessage());
+                    aTarget.addChildren(page, IFeedback.class);
+                    return;
+                }
+
                 documentService.setSourceDocumentState(document, CURATION_FINISHED);
                 editorContext.refreshAfterDocumentStateChange(aTarget);
                 break;
