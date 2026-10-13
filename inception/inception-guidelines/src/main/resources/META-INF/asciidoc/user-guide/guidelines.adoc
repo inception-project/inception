@@ -23,7 +23,7 @@ Clear annotation guidelines ensure that every team member understands what is ex
 
 *Project managers* can upload and manage these guidelines via the *Guidelines* tab in the *project settings*.
 
-Guidelines are provided as files (e.g., PDF documents).
+Guidelines must be PDF documents. Documents in other formats need to be converted to PDF before they can be uploaded.
 
 To upload guideline document:
 1. Click *Choose files*.

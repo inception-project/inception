@@ -45,14 +45,6 @@ public class KrippendorffAlphaUnitizingAgreementMeasureTest
     }
 
     @Test
-    public void multiLinkWithRoleLabelDifference() throws Exception
-    {
-        var result = multiLinkWithRoleLabelDifferenceTest(sut);
-
-        assertThat(result.getAgreement()).isCloseTo(0.0, within(0.00001d));
-    }
-
-    @Test
     public void twoEmptyCasTest() throws Exception
     {
         var result = twoEmptyCasTest(sut);

@@ -18,9 +18,10 @@
 package de.tudarmstadt.ukp.clarin.webanno.security;
 
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCharacterMatching;
+import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static org.apache.commons.lang3.StringUtils.contains;
 import static org.apache.commons.lang3.StringUtils.containsAny;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
-import static org.apache.commons.lang3.StringUtils.startsWithAny;
 
 import de.tudarmstadt.ukp.inception.support.text.TextUtils;
 
@@ -44,7 +45,7 @@ public final class ValidationUtils
             return false;
         }
 
-        if (startsWithAny(aFilename, FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS)) {
+        if (startsWithMatching(aFilename, c -> contains(FILESYSTEM_ILLEGAL_PREFIX_CHARACTERS, c))) {
             return false;
         }
 
