@@ -23,7 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.INITIAL_CAS_PSEUDO_USER;
 import static java.lang.String.join;
 
 import java.io.IOException;
@@ -53,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument_;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.event.AfterCasWrittenEvent;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
@@ -71,7 +69,6 @@ public class CurationDocumentServiceImpl
 {
     private static final Logger LOG = LoggerFactory.getLogger(CurationDocumentServiceImpl.class);
 
-    private final CurationProperties curationProperties;
     private final EntityManager entityManager;
     private final CasStorageService casStorageService;
     private final AnnotationSchemaService annotationService;
@@ -80,14 +77,12 @@ public class CurationDocumentServiceImpl
 
     @Autowired
     public CurationDocumentServiceImpl(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
-            EntityManager aEntityManager, DocumentService aDocumentService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            AnnotationSchemaService aAnnotationService, EntityManager aEntityManager,
+            DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         casStorageService = aCasStorageService;
         annotationService = aAnnotationService;
         entityManager = aEntityManager;
-        curationProperties = aCurationProperties;
         documentService = aDocumentService;
         applicationEventPublisher = aApplicationEventPublisher;
     }
@@ -201,62 +196,6 @@ public class CurationDocumentServiceImpl
     @Transactional
     public List<SourceDocument> listCuratableSourceDocuments(Project aProject)
     {
-        if (curationProperties.isLegacyCuratableDocumentsStrategy()) {
-            return listCuratableSourceDocuments_legacy(aProject);
-        }
-        else {
-            return listCuratableSourceDocuments_new(aProject);
-        }
-    }
-
-    /**
-     * @deprecated To be removed when the legacy curatable document startegy is removed.
-     */
-    @Deprecated
-    @Transactional
-    List<SourceDocument> listCuratableSourceDocuments_legacy(Project aProject)
-    {
-        Validate.notNull(aProject, "Project must be specified");
-
-        // Curation that has already started may always be continued, matching isDocumentCuratable.
-        // Once a document reached a curation state, the workload managers stop updating its state
-        // (see e.g. MatrixWorkloadExtensionImpl#isInCuration), so resetting the annotators leaves
-        // it in curation with no finished annotation document.
-        //
-        // Otherwise the legacy rule is "at least one annotator has finished". Documents that
-        // annotators only set to IGNORE do not qualify, whether or not they left a CAS behind -
-        // unlike listCuratableUsers, which collects all data worth merging once curation has
-        // started.
-        // A finished annotation document always has a CAS, so no CAS check is needed. Former
-        // annotators count as well, so that their data stays accessible after they were removed
-        // from
-        // the project or lost the role.
-        //
-        // The query is rooted in SourceDocument rather than in AnnotationDocument because a
-        // document
-        // in a curation state need not have any annotation document at all.
-        var query = join("\n", //
-                "SELECT doc FROM SourceDocument AS doc", //
-                "WHERE doc.project = :project", //
-                "AND (doc.state IN (:curationStates)", //
-                "     OR EXISTS (", //
-                "       SELECT adoc FROM AnnotationDocument AS adoc", //
-                "       WHERE adoc.document = doc", //
-                "       AND adoc.user NOT IN (:pseudoUsers)", //
-                "       AND adoc.state = :state))", //
-                "ORDER BY doc.name ASC");
-
-        return entityManager.createQuery(query, SourceDocument.class) //
-                .setParameter("project", aProject) //
-                .setParameter("curationStates", List.of(CURATION_IN_PROGRESS, CURATION_FINISHED)) //
-                .setParameter("pseudoUsers", List.of(CURATION_USER, INITIAL_CAS_PSEUDO_USER)) //
-                .setParameter("state", AnnotationDocumentState.FINISHED) //
-                .getResultList();
-    }
-
-    @Transactional
-    List<SourceDocument> listCuratableSourceDocuments_new(Project aProject)
-    {
         Validate.notNull(aProject, "Project must be specified");
 
         var cb = entityManager.getCriteriaBuilder();
@@ -301,13 +240,7 @@ public class CurationDocumentServiceImpl
             return true;
         }
 
-        if (curationProperties.isLegacyCuratableDocumentsStrategy()) {
-            // Legacy rule: the document state does not matter, but at least one annotator must have
-            // marked their annotation document as finished.
-            return hasFinishedAnnotationDocument(aDocument);
-        }
-
-        // Default rule: the document itself must have reached the annotation-finished state.
+        // The document itself must have reached the annotation-finished state.
         if (!ANNOTATION_FINISHED.equals(state)) {
             return false;
         }
@@ -347,30 +280,6 @@ public class CurationDocumentServiceImpl
                     aDocument, e);
             return false;
         }
-    }
-
-    /**
-     * @deprecated To be removed when the legacy curatable document startegy is removed.
-     */
-    @Deprecated
-    private boolean hasFinishedAnnotationDocument(SourceDocument aDocument)
-    {
-        // Must stay in sync with the finished-annotation branch of
-        // listCuratableSourceDocuments_legacy, otherwise a document offered in the curation list
-        // cannot actually be opened, or vice versa. The caller has already checked the curation
-        // state and the curation CAS, which is what the other branch of that query covers. Former
-        // annotators count here as well.
-        var query = join("\n", //
-                "SELECT COUNT(*) FROM AnnotationDocument", //
-                "WHERE document = :document", //
-                "  AND user NOT IN (:pseudoUsers)", //
-                "  AND state = :state");
-
-        return entityManager.createQuery(query, Long.class) //
-                .setParameter("document", aDocument) //
-                .setParameter("pseudoUsers", List.of(CURATION_USER, INITIAL_CAS_PSEUDO_USER)) //
-                .setParameter("state", AnnotationDocumentState.FINISHED) //
-                .getSingleResult() > 0;
     }
 
     @Override

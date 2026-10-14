@@ -54,7 +54,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
-import de.tudarmstadt.ukp.inception.curation.config.CurationProperties;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 
@@ -65,7 +64,6 @@ class DocumentAccessImplTest
     private @Mock ProjectService projectService;
     private @Mock UserDao userService;
     private @Mock DocumentService documentService;
-    private @Mock CurationProperties curationProperties;
     private @Mock Project project;
     private @Mock SourceDocument sourceDocument;
 
@@ -277,45 +275,8 @@ class DocumentAccessImplTest
     }
 
     @Test
-    void canEdit_annotator_legacyStrategy_curationInProgress_allowed()
+    void canEdit_annotator_finishedAnnotationDocument_duringCurationFinished_denied()
     {
-        // Under the legacy curatable-documents strategy, curation may start while annotation is
-        // still in progress, so an annotator that has not started yet must not be locked out.
-        when(curationProperties.isLegacyCuratableDocumentsStrategy()).thenReturn(true);
-        when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
-        when(sourceDocument.getProject()).thenReturn(project);
-        when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);
-        when(documentService.existsAnnotationDocument(any(SourceDocument.class),
-                any(AnnotationSet.class))).thenReturn(false);
-
-        // should not throw
-        sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername());
-    }
-
-    @Test
-    void canEdit_annotator_legacyStrategy_curationFinished_allowed()
-    {
-        // Deliberately also applies to CURATION_FINISHED: under the legacy strategy, a single
-        // finished annotator is enough to start curation, so the curation states do not imply that
-        // annotation was ever completed. Once a document is in curation, the workload managers stop
-        // updating its state (see MatrixWorkloadExtensionImpl#isInCuration), so locking annotators
-        // out here would evict them from assigned work permanently rather than temporarily.
-        when(curationProperties.isLegacyCuratableDocumentsStrategy()).thenReturn(true);
-        when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
-        when(sourceDocument.getProject()).thenReturn(project);
-        when(sourceDocument.getState()).thenReturn(CURATION_FINISHED);
-        when(documentService.existsAnnotationDocument(any(SourceDocument.class),
-                any(AnnotationSet.class))).thenReturn(false);
-
-        // should not throw
-        sut.assertCanEditAnnotationDocument(user, sourceDocument, user.getUsername());
-    }
-
-    @Test
-    void canEdit_annotator_legacyStrategy_finishedAnnotationDocument_denied()
-    {
-        // The annotator whose finished work enabled curation in the first place stays locked out.
-        when(curationProperties.isLegacyCuratableDocumentsStrategy()).thenReturn(true);
         when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
         when(sourceDocument.getProject()).thenReturn(project);
         lenient().when(sourceDocument.getState()).thenReturn(CURATION_FINISHED);
@@ -335,10 +296,8 @@ class DocumentAccessImplTest
     }
 
     @Test
-    void canEdit_annotator_legacyStrategy_ignoredAnnotationDocument_denied()
+    void canEdit_annotator_ignoredAnnotationDocument_duringCurationInProgress_denied()
     {
-        // ... but a document that is locked for the annotator stays locked, regardless of strategy.
-        when(curationProperties.isLegacyCuratableDocumentsStrategy()).thenReturn(true);
         when(projectService.listRoles(project, user)).thenReturn(List.of(ANNOTATOR));
         when(sourceDocument.getProject()).thenReturn(project);
         lenient().when(sourceDocument.getState()).thenReturn(CURATION_IN_PROGRESS);

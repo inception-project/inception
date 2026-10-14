@@ -216,7 +216,7 @@ public class CurationEditingServiceImpl
     {
         return new DocumentNotCuratableException(aDocument, "Document [" + aDocument.getName()
                 + "] has the state " + aDocument.getState()
-                + " and is not ready for curation. By default, a document can "
+                + " and is not ready for curation. A document can "
                 + "only be curated once annotation on it is complete (the document has reached the "
                 + AnnotationDocumentState.FINISHED + " state) - depending on the workload regime, "
                 + "this may require more than a single annotator to finish. This can also happen "
@@ -224,9 +224,7 @@ public class CurationEditingServiceImpl
                 + "were removed from the project, disabled or put back into "
                 + AnnotationDocumentState.IN_PROGRESS
                 + " mode, or after importing a project without "
-                + "importing/enabling its users. To curate incomplete data on purpose, an "
-                + "administrator can enable the legacy curatable-documents strategy in the "
-                + "application configuration. Otherwise, use the monitoring page to reset the "
+                + "importing/enabling its users. Use the monitoring page to reset the "
                 + "curation state of this document.");
     }
 }

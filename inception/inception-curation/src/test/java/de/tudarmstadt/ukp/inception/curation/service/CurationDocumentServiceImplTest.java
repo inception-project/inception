@@ -30,7 +30,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATI
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCas;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
@@ -44,7 +43,6 @@ import java.nio.file.Path;
 
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +71,6 @@ import de.tudarmstadt.ukp.clarin.webanno.security.config.SecurityAutoConfigurati
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentAccess;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
@@ -111,7 +108,6 @@ class CurationDocumentServiceImplTest
     private @Autowired TestEntityManager testEntityManager;
 
     private @Autowired DocumentService documentService;
-    private @Autowired DocumentAccess documentAccess;
     private @Autowired CasStorageService casStorageService;
     private @Autowired CurationDocumentServiceImpl sut;
 
@@ -144,80 +140,47 @@ class CurationDocumentServiceImplTest
     }
 
     @Test
-    void testListCuratableSourceDocuments_legacy()
+    void testListCuratableSourceDocuments()
     {
-        var ann = documentService.createOrUpdateAnnotationDocument(
-                new AnnotationDocument(beate.getUsername(), testDocument));
-
-        assertThat(sut.listCuratableSourceDocuments_legacy(testProject))
-                .as("No curatable documents as long as no document is marked as finished")
-                .isEmpty();
-
-        documentService.setAnnotationDocumentState(ann, FINISHED);
-
-        assertThat(sut.listCuratableSourceDocuments_legacy(testProject)) //
-                .as("Finished documents become curatable") //
-                .contains(testDocument);
-    }
-
-    @Test
-    void listCuratableSourceDocuments_legacy_ShouldIncludeFormerAnnotatorsDocuments()
-    {
-        // "current" has a user account but no ANNOTATOR permission in the project (e.g. removed
-        // from the project or role changed). A document with only their finished data must still
-        // surface for curation so their data stays accessible.
-        var ann = documentService
-                .createOrUpdateAnnotationDocument(new AnnotationDocument("current", testDocument));
-        documentService.setAnnotationDocumentState(ann, FINISHED);
-
-        assertThat(sut.listCuratableSourceDocuments_legacy(testProject)) //
-                .as("Documents with only former-annotator data are curatable") //
-                .contains(testDocument);
-    }
-
-    @Test
-    void listCuratableSourceDocuments_legacy_ShouldNotIncludeIgnoredDocuments() throws Exception
-    {
-        var withData = new SourceDocument("withData", testProject, "text");
-        var withoutData = new SourceDocument("withoutData", testProject, "text");
-        testEntityManager.persist(withData);
-        testEntityManager.persist(withoutData);
-
-        // kevin opened "withData" (a CAS exists) before setting it to IGNORE.
-        testEntityManager.persist(AnnotationDocument.builder() //
-                .withUser("kevin") //
-                .forDocument(withData) //
-                .withAnnotatorState(IGNORE) //
-                .build());
-        writeCasFor(withData, "kevin");
-
-        // kevin set "withoutData" to IGNORE without ever opening it (no CAS).
-        testEntityManager.persist(AnnotationDocument.builder() //
-                .withUser("kevin") //
-                .forDocument(withoutData) //
-                .withAnnotatorState(IGNORE) //
-                .build());
-
-        // IGNORE says "I am not going to annotate this", not "this is done".
-        try (var session = openNested(true)) {
-            assertThat(sut.listCuratableSourceDocuments_legacy(testProject)) //
-                    .as("IGNORE documents are not curatable, even with leftover data") //
-                    .isEmpty();
-        }
-    }
-
-    @Test
-    void testListCuratableSourceDocuments_new()
-    {
-        assertThat(sut.listCuratableSourceDocuments_new(testProject))
+        assertThat(sut.listCuratableSourceDocuments(testProject))
                 .as("No curatable documents as long as source document is not marked as finished")
                 .isEmpty();
 
         documentService.setSourceDocumentState(testDocument, ANNOTATION_FINISHED);
 
-        assertThat(sut.listCuratableSourceDocuments_new(testProject)) //
+        assertThat(sut.listCuratableSourceDocuments(testProject)) //
                 .as("Source documents marked ANNOTATION_FINISHED become curatable") //
                 .contains(testDocument);
+    }
+
+    @Test
+    void listCuratableSourceDocuments_ShouldKeepDocumentsAlreadyInCuration() throws Exception
+    {
+        // Curation was started and the annotators were reset afterwards - e.g. from the workload
+        // management page. The workload managers no longer touch the state of a document in
+        // curation, so it stays in a curation state while no annotation document is finished any
+        // longer. The curator must not lose access to the work already done.
+        var inProgress = new SourceDocument("inProgress", testProject, "text");
+        inProgress.updateState(CURATION_IN_PROGRESS);
+        var curationFinished = new SourceDocument("curationFinished", testProject, "text");
+        curationFinished.updateState(CURATION_FINISHED);
+        testEntityManager.persist(inProgress);
+        testEntityManager.persist(curationFinished);
+
+        testEntityManager.persist(AnnotationDocument.builder() //
+                .withUser("kevin") //
+                .forDocument(inProgress) //
+                .withState(AnnotationDocumentState.NEW) //
+                .build());
+
+        try (var session = openNested(true)) {
+            assertThat(sut.listCuratableSourceDocuments(testProject)) //
+                    .as("Documents already in curation remain offered for curation") //
+                    .containsExactly(curationFinished, inProgress);
+            assertThat(sut.isDocumentCuratable(inProgress)) //
+                    .as("The list agrees with the open gate") //
+                    .isTrue();
+        }
     }
 
     @Test
@@ -558,187 +521,6 @@ class CurationDocumentServiceImplTest
         var finishedUsers = sut.listCuratableUsers(testDocument);
 
         assertThat(finishedUsers).containsExactly(beate, kevin);
-    }
-
-    /**
-     * The legacy strategy drops the requirement that the document itself has reached
-     * annotation-finished, but it must still require annotation data to curate.
-     */
-    @Nested
-    @DataJpaTest(showSql = false, //
-            properties = { //
-                    "spring.main.banner-mode=off", //
-                    "curation.legacy-curatable-documents-strategy=true" })
-    class LegacyCuratableDocumentsStrategy
-    {
-        @Test
-        void isDocumentCuratable_ShouldAcceptDocumentWithFinishedAnnotationRegardlessOfDocumentState()
-            throws Exception
-        {
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("beate") //
-                    .forDocument(testDocument) //
-                    .withState(FINISHED) //
-                    .build());
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isDocumentCuratable(testDocument)) //
-                        .as("Under the legacy strategy a single finished annotator is enough") //
-                        .isTrue();
-            }
-        }
-
-        @Test
-        void isDocumentCuratable_ShouldRefuseDocumentWithoutAnyData() throws Exception
-        {
-            try (var session = openNested(true)) {
-                assertThat(sut.isDocumentCuratable(testDocument)) //
-                        .as("Even the legacy strategy needs annotation data to curate") //
-                        .isFalse();
-            }
-        }
-
-        @Test
-        void isDocumentCuratable_ShouldRefuseDocumentWithoutAnyFinishedAnnotation() throws Exception
-        {
-            // Every annotator opened the document - so data exists that could serve as a template -
-            // but then locked it instead of finishing it. The legacy strategy requires an annotator
-            // to have *finished*, so mere IGNORE data does not open the gate.
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("beate") //
-                    .forDocument(testDocument) //
-                    .withAnnotatorState(IGNORE) //
-                    .build());
-            writeCasFor(testDocument, "beate");
-
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("kevin") //
-                    .forDocument(testDocument) //
-                    .withAnnotatorState(IGNORE) //
-                    .build());
-            writeCasFor(testDocument, "kevin");
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isDocumentCuratable(testDocument)) //
-                        .as("The legacy strategy requires a finished annotation, not just data") //
-                        .isFalse();
-            }
-        }
-
-        @Test
-        void isDocumentCuratable_ShouldAcceptDocumentWithOneFinishedAnnotationAmongIgnored()
-            throws Exception
-        {
-            // Only one of the annotators finished, the other locked the document. A single finished
-            // annotator is all the legacy strategy asks for.
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("beate") //
-                    .forDocument(testDocument) //
-                    .withAnnotatorState(IGNORE) //
-                    .build());
-            writeCasFor(testDocument, "beate");
-
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("kevin") //
-                    .forDocument(testDocument) //
-                    .withState(FINISHED) //
-                    .build());
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isDocumentCuratable(testDocument)) //
-                        .as("One finished annotator among locked ones is enough") //
-                        .isTrue();
-            }
-        }
-
-        @Test
-        void markCurationInProgress_ShouldGrantTheCuratorEditAccess() throws Exception
-        {
-            // Under the legacy strategy a document is curatable while still being
-            // ANNOTATION_IN_PROGRESS, but a curator is granted edit access only once it has reached
-            // a curation state. So putting it into curation is the precondition for editing it -
-            // see AnnotationPageBase2#transitionDocumentStateOnLoadDocument, which therefore must
-            // not gate that transition on editability.
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("kevin") //
-                    .forDocument(testDocument) //
-                    .withState(FINISHED) //
-                    .build());
-
-            assertThat(documentAccess.canEditAnnotationDocument("beate",
-                    String.valueOf(testProject.getId()), testDocument.getId(), CURATION_USER)) //
-                            .as("Curator cannot edit the document before it is put into curation") //
-                            .isFalse();
-
-            sut.markCurationInProgress(testDocument);
-
-            assertThat(documentAccess.canEditAnnotationDocument("beate",
-                    String.valueOf(testProject.getId()), testDocument.getId(), CURATION_USER)) //
-                            .as("Putting the document into curation grants the curator edit access") //
-                            .isTrue();
-        }
-
-        @Test
-        void listCuratableSourceDocuments_ShouldRequireAFinishedAnnotation() throws Exception
-        {
-            // The document list must apply the same rule as the open-gate above, otherwise a
-            // document offered in the curation list cannot actually be opened.
-            var onlyLocked = new SourceDocument("onlyLocked", testProject, "text");
-            var finished = new SourceDocument("finished", testProject, "text");
-            testEntityManager.persist(onlyLocked);
-            testEntityManager.persist(finished);
-
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("kevin") //
-                    .forDocument(onlyLocked) //
-                    .withAnnotatorState(IGNORE) //
-                    .build());
-            writeCasFor(onlyLocked, "kevin");
-
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("kevin") //
-                    .forDocument(finished) //
-                    .withState(FINISHED) //
-                    .build());
-
-            try (var session = openNested(true)) {
-                assertThat(sut.listCuratableSourceDocuments(testProject)) //
-                        .as("Only documents with a finished annotation are offered for curation") //
-                        .containsExactly(finished);
-            }
-        }
-
-        @Test
-        void listCuratableSourceDocuments_ShouldKeepDocumentsAlreadyInCuration() throws Exception
-        {
-            // Curation was started and the annotators were reset afterwards - e.g. from the
-            // workload
-            // management page. The workload managers no longer touch the state of a document in
-            // curation, so it stays in a curation state while no annotation document is finished
-            // any
-            // longer. The curator must not lose access to the work already done.
-            var inProgress = new SourceDocument("inProgress", testProject, "text");
-            inProgress.updateState(CURATION_IN_PROGRESS);
-            var curationFinished = new SourceDocument("curationFinished", testProject, "text");
-            curationFinished.updateState(CURATION_FINISHED);
-            testEntityManager.persist(inProgress);
-            testEntityManager.persist(curationFinished);
-
-            testEntityManager.persist(AnnotationDocument.builder() //
-                    .withUser("kevin") //
-                    .forDocument(inProgress) //
-                    .withState(AnnotationDocumentState.NEW) //
-                    .build());
-
-            try (var session = openNested(true)) {
-                assertThat(sut.listCuratableSourceDocuments(testProject)) //
-                        .as("Documents already in curation remain offered for curation") //
-                        .containsExactly(curationFinished, inProgress);
-                assertThat(sut.isDocumentCuratable(inProgress)) //
-                        .as("The list agrees with the open gate") //
-                        .isTrue();
-            }
-        }
     }
 
     @SpringBootConfiguration

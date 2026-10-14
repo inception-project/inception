@@ -40,6 +40,15 @@ When {product-name} starts, it migrates existing remote knowledge bases automati
 If a knowledge base already had an authentication method configured, the credentials in the URL are discarded and the configured method is kept.
 If the migration fails for a knowledge base, an error is logged and you need to correct its URL and authentication settings manually.
 
+=== Legacy curatable-documents strategy removed
+
+The `curation.legacy-curatable-documents-strategy` setting has been removed.
+Previously, enabling it made a document available for curation as soon as a single annotator had finished it.
+Now, a document only becomes available for curation once annotation on it is complete: with the dynamic workload manager, once the required number of annotators has finished it; with the matrix workload manager, once every annotator has either finished or locked it.
+If the setting is still present in your `settings.properties` file, it is ignored and can be removed.
+
+Documents on which curation has already started are not affected - their curation can be continued.
+
 == INCEpTION 42.0
 
 === Legacy remote API disabled by default
