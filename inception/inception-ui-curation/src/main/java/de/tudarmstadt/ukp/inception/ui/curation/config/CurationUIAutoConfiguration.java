@@ -21,9 +21,18 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.annotation.rendering.PreRenderer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationDocumentNavigatorActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationUndoActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationWorkflowActionBarExtension;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRenderer;
+import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.render.CurationRendererImpl;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.rendering.coloring.ColoringService;
+import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.schema.api.config.AnnotationSchemaProperties;
 import de.tudarmstadt.ukp.inception.ui.curation.editor.SplitCurationEditorFactory;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPageMenuItem;
 import de.tudarmstadt.ukp.inception.ui.curation.page.SplitCurationPageMenuItem;
@@ -42,6 +51,42 @@ public class CurationUIAutoConfiguration
     {
         return new CurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
                 aPreferencesService, aSplitCurationPageMenuItem);
+    }
+
+    @Bean
+    public SplitCurationPageMenuItem splitCurationPageMenuItem(UserDao aUserRepo,
+            ProjectService aProjectService, ServletContext aServletContext,
+            PreferencesService aPreferencesService)
+    {
+        return new SplitCurationPageMenuItem(aUserRepo, aProjectService, aServletContext,
+                aPreferencesService);
+    }
+
+    @Bean
+    public CurationUndoActionBarExtension curationUndoActionBarExtension()
+    {
+        return new CurationUndoActionBarExtension();
+    }
+
+    @Bean
+    public CurationDocumentNavigatorActionBarExtension curationDocumentNavigatorActionBarExtension()
+    {
+        return new CurationDocumentNavigatorActionBarExtension();
+    }
+
+    @Bean
+    public CurationWorkflowActionBarExtension curationWorkflowActionBarExtension()
+    {
+        return new CurationWorkflowActionBarExtension();
+    }
+
+    @Bean
+    public CurationRenderer curationRenderer(PreRenderer aPreRenderer,
+            AnnotationSchemaService aSchemaService, ColoringService aColoringService,
+            AnnotationSchemaProperties aAnnotationEditorProperties, UserDao aUserService)
+    {
+        return new CurationRendererImpl(aPreRenderer, aSchemaService, aColoringService,
+                aAnnotationEditorProperties, aUserService);
     }
 
     /**

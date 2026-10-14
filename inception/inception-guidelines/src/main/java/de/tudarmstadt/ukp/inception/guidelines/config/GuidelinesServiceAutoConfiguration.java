@@ -22,13 +22,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
-import de.tudarmstadt.ukp.inception.guidelines.GuidelinesActionBarExtension;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesService;
 import de.tudarmstadt.ukp.inception.guidelines.GuidelinesServiceImpl;
 import de.tudarmstadt.ukp.inception.guidelines.exporters.GuidelinesExporter;
 import de.tudarmstadt.ukp.inception.guidelines.settings.ProjectGuidelinesMenuItem;
 import de.tudarmstadt.ukp.inception.guidelines.sidebar.GuidelinesSidebarFactory;
-import de.tudarmstadt.ukp.inception.curation.settings.LegacySplitCurationPageProperties;
 
 @Configuration
 public class GuidelinesServiceAutoConfiguration
@@ -56,15 +54,5 @@ public class GuidelinesServiceAutoConfiguration
     public GuidelinesSidebarFactory guidelinesSidebarFactory(GuidelinesService aGuidelinesService)
     {
         return new GuidelinesSidebarFactory(aGuidelinesService);
-    }
-
-    @SuppressWarnings("deprecation")
-    @ConditionalOnWebApplication
-    @Bean
-    public GuidelinesActionBarExtension guidelinesActionBarExtension(
-            GuidelinesService aGuidelinesService,
-            LegacySplitCurationPageProperties aCurationPageProperties)
-    {
-        return new GuidelinesActionBarExtension(aGuidelinesService, aCurationPageProperties);
     }
 }

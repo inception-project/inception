@@ -23,15 +23,14 @@ import org.springframework.core.annotation.Order;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarContext;
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExtension;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.actionbar.undo.UndoPanel;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.config.LegacyCurationUIAutoConfiguration;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
+import de.tudarmstadt.ukp.inception.ui.curation.config.CurationUIAutoConfiguration;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.ui.curation.page.SplitCurationPage;
 
 /**
  * <p>
  * This class is exposed as a Spring Component via
- * {@link LegacyCurationUIAutoConfiguration#curationUndoActionBarExtension}.
+ * {@link CurationUIAutoConfiguration#curationUndoActionBarExtension}.
  * </p>
  */
 @Order(ActionBarExtension.ORDER_UNDO)
@@ -50,8 +49,7 @@ public class CurationUndoActionBarExtension
             return false;
         }
 
-        return aContext.page() instanceof LegacyCurationPage
-                || aContext.page() instanceof CurationPage
+        return aContext.page() instanceof CurationPage
                 || aContext.page() instanceof SplitCurationPage;
     }
 

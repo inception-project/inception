@@ -33,10 +33,8 @@ import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.menu.ProjectMenuItem;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.LegacyCurationPage;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.curation.settings.LegacySplitCurationPageProperties;
 import jakarta.servlet.ServletContext;
 import wicket.contrib.input.events.key.KeyType;
 
@@ -49,28 +47,20 @@ public class SplitCurationPageMenuItem
     private final ProjectService projectService;
     private final ServletContext servletContext;
     private final PreferencesService preferencesService;
-    private final LegacySplitCurationPageProperties curationPageProperties;
 
     public SplitCurationPageMenuItem(UserDao aUserRepo, ProjectService aProjectService,
-            ServletContext aServletContext, PreferencesService aPreferencesService,
-            LegacySplitCurationPageProperties aCurationPageProperties)
+            ServletContext aServletContext, PreferencesService aPreferencesService)
     {
         userRepo = aUserRepo;
         projectService = aProjectService;
         servletContext = aServletContext;
         preferencesService = aPreferencesService;
-        curationPageProperties = aCurationPageProperties;
-    }
-
-    private boolean isLegacy()
-    {
-        return curationPageProperties.isEnabled();
     }
 
     @Override
     public String getPath()
     {
-        return isLegacy() ? LegacyCurationPage.PAGE_PATH : SplitCurationPage.PAGE_PATH;
+        return SplitCurationPage.PAGE_PATH;
     }
 
     public String getUrl(Project aProject, long aDocumentId)
@@ -114,7 +104,7 @@ public class SplitCurationPageMenuItem
     @Override
     public Class<? extends Page> getPageClass()
     {
-        return isLegacy() ? LegacyCurationPage.class : SplitCurationPage.class;
+        return SplitCurationPage.class;
     }
 
     @Override
