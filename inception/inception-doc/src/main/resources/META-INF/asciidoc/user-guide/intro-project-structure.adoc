@@ -44,7 +44,9 @@ Where annotators mark up documents — the same page you used in <<sect_intro_fi
 
 == Curation
 
-When several annotators work on the same document, their annotations rarely match exactly. *Curation* is the step where someone with the Curator role decides which annotations to keep in the final result. Only documents that at least one annotator has marked as finished are available for curation.
+When several annotators work on the same document, their annotations rarely match exactly.
+*Curation* is the step where someone with the Curator role decides which annotations to keep in the final result.
+Only documents on which annotation is complete are available for curation - depending on the workload manager and its settings, this may require more than one annotator to mark the document as finished.
 
 To try it out:
 

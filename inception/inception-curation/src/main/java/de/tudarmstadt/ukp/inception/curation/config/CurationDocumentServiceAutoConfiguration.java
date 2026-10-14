@@ -39,11 +39,10 @@ public class CurationDocumentServiceAutoConfiguration
 {
     @Bean(CurationDocumentService.SERVICE_NAME)
     public CurationDocumentService curationDocumentService(CasStorageService aCasStorageService,
-            AnnotationSchemaService aAnnotationService, CurationProperties aCurationProperties,
-            EntityManager aEntityManager, DocumentService aDocumentService,
-            ApplicationEventPublisher aApplicationEventPublisher)
+            AnnotationSchemaService aAnnotationService, EntityManager aEntityManager,
+            DocumentService aDocumentService, ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new CurationDocumentServiceImpl(aCasStorageService, aAnnotationService,
-                aCurationProperties, aEntityManager, aDocumentService, aApplicationEventPublisher);
+                aEntityManager, aDocumentService, aApplicationEventPublisher);
     }
 }

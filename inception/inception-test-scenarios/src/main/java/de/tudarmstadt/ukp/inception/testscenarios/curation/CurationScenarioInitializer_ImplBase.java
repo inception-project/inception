@@ -203,9 +203,9 @@ public abstract class CurationScenarioInitializer_ImplBase
             annotateAs(document, annotator1, 1);
             annotateAs(document, annotator2, 2);
 
-            // The default curatable-documents strategy keys on the SOURCE document state, not on
-            // the individual annotation document states (CurationDocumentServiceImpl
-            // #listCuratableSourceDocuments_new). Normally the workload manager makes this
+            // Whether a document is curatable depends on the SOURCE document state, not on the
+            // individual annotation document states (CurationDocumentServiceImpl
+            // #listCuratableSourceDocuments). Normally the workload manager makes this
             // transition once every annotator has finished; since we set the annotation documents
             // directly, we have to move the source document along too or the document never shows
             // up for curation.

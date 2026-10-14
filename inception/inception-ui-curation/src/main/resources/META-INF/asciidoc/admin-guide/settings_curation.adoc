@@ -27,16 +27,6 @@ This section describes the global settings related to curation.
 | Default
 | Example
 
-| `curation.legacy-curatable-documents-strategy`
-| When enabled, a document can be opened for curation as soon as at least one annotator has marked
-  their annotation document as *finished*. When disabled (the default), a document can only be
-  opened for curation once it has reached the *annotation-finished* state at the document level -
-  which, depending on the workload regime and its configuration, may require more than a single
-  annotator to finish. Curation that has already been started may always be continued regardless of
-  this setting.
-| `false`
-| `true`
-
 | `curation.legacy-split-curation-page.enabled`
 | Selects which page the *split-pane* curation mode opens. When disabled (the default), it opens the
   current split-pane curation page. When enabled, it opens the legacy one instead. The two are
