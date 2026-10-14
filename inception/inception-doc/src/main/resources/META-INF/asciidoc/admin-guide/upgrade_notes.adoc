@@ -49,6 +49,13 @@ If the setting is still present in your `settings.properties` file, it is ignore
 
 Documents on which curation has already started are not affected - their curation can be continued.
 
+=== Legacy split-pane curation page removed
+
+The legacy split-pane curation page and the `curation.legacy-split-curation-page.enabled` setting that switched to it have been removed.
+The split-pane curation mode now always opens the current split-pane curation page.
+If the setting is still present in your `settings.properties` file, it is ignored and can be removed.
+Bookmarks pointing to the legacy page (URLs containing `/curate-split-legacy`) no longer work.
+
 == INCEpTION 42.0
 
 === Legacy remote API disabled by default

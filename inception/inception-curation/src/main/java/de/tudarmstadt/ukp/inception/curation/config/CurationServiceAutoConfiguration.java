@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.curation.config;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -51,7 +50,6 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPanelFactory;
-import de.tudarmstadt.ukp.inception.curation.settings.LegacySplitCurationPagePropertiesImpl;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
@@ -60,7 +58,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Configuration
-@EnableConfigurationProperties({ LegacySplitCurationPagePropertiesImpl.class })
 public class CurationServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
