@@ -20,10 +20,12 @@ package de.tudarmstadt.ukp.inception.annotation.storage.driver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasBackup;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
@@ -47,6 +49,8 @@ public interface CasStorageDriver
     boolean deleteCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 
     boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
+
+    List<CasBackup> listCasBackups(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 
     Optional<CasStorageMetadata> getCasMetadata(SourceDocument aDocument, AnnotationSet aSet)
         throws IOException;

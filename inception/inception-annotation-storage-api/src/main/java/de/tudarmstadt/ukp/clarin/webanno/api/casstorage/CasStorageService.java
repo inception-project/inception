@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.clarin.webanno.api.casstorage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -146,6 +147,20 @@ public interface CasStorageService
         throws IOException;
 
     boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
+
+    /**
+     * Lists the copies the storage keeps of the given CAS besides its current version. They are
+     * kept when the CAS is deleted, so they can show that a CAS existed even if it is gone now.
+     *
+     * @param aDocument
+     *            the document to which the CAS belongs.
+     * @param aSet
+     *            the set to which the CAS belongs.
+     * @return the copies, oldest first.
+     * @throws IOException
+     *             if the copies could not be listed.
+     */
+    List<CasBackup> listCasBackups(SourceDocument aDocument, AnnotationSet aSet) throws IOException;
 
     /**
      * Runs {@code CasDoctor} in repair mode on the given CAS (if repairs are active), otherwise it
