@@ -88,6 +88,8 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.logging.BaseLoggers;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasBackup;
+import java.util.List;
 
 /**
  * <p>
@@ -1080,6 +1082,26 @@ public class CasStorageServiceImpl
                     realWriteCas(aDocument, aSet, cas);
                 }
             }
+        }
+        catch (IOException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public List<CasBackup> listCasBackups(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException
+    {
+        Validate.notNull(aDocument, "Source document must be specified");
+        Validate.notNull(aSet, "Set must be specified");
+
+        // Ensure that the CAS is not being re-written while we list the copies - a write
+        // temporarily keeps the previous version and may prune the history
+        try (var access = new WithExclusiveAccess(aDocument, aSet)) {
+            return driver.listCasBackups(aDocument, aSet);
         }
         catch (IOException e) {
             throw e;

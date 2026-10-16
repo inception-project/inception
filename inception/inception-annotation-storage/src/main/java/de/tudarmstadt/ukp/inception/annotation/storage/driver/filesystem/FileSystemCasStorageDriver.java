@@ -60,6 +60,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.ConcurentCasModificationException;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.DocumentRef;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils;
 import de.tudarmstadt.ukp.inception.annotation.storage.CasStorageMetadata;
@@ -69,6 +70,11 @@ import de.tudarmstadt.ukp.inception.annotation.storage.driver.CasStorageDriver;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.WicketUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasBackup;
+import java.util.stream.Stream;
+import java.util.List;
+import java.time.Instant;
+import static java.util.Collections.emptyList;
 
 public class FileSystemCasStorageDriver
     implements CasStorageDriver
@@ -460,6 +466,28 @@ public class FileSystemCasStorageDriver
     public boolean existsCas(SourceDocument aDocument, AnnotationSet aSet) throws IOException
     {
         return getCasFile(aDocument, aSet).exists();
+    }
+
+    @Override
+    public List<CasBackup> listCasBackups(SourceDocument aDocument, AnnotationSet aSet)
+        throws IOException
+    {
+        var casFile = getCasFile(aDocument, aSet);
+        // The history kept by manageHistory and the previous version an interrupted write leaves
+        var matcher = compile(
+                quote(casFile.getName()) + "(\\.[0-9]+\\.bak|" + quote(OLD_EXTENSION) + ")")
+                        .matcher("");
+        var files = casFile.getParentFile().listFiles(f -> matcher.reset(f.getName()).matches());
+        if (files == null) {
+            return emptyList();
+        }
+
+        var document = DocumentRef.of(aDocument);
+        return Stream.of(files) //
+                .sorted(LASTMODIFIED_COMPARATOR) //
+                .map(f -> new CasBackup(document, aSet, f.getName(),
+                        Instant.ofEpochMilli(f.lastModified()))) //
+                .toList();
     }
 
     @Override

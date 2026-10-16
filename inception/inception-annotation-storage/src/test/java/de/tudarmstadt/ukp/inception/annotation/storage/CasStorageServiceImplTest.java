@@ -84,6 +84,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasSessionExcept
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
 import de.tudarmstadt.ukp.clarin.webanno.api.type.CASMetadata;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.DocumentRef;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageBackupProperties;
@@ -94,6 +95,8 @@ import de.tudarmstadt.ukp.inception.documents.api.RepositoryProperties;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryPropertiesImpl;
 import de.tudarmstadt.ukp.inception.schema.api.event.LayerConfigurationChangedEvent;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasBackup;
+import org.apache.commons.io.FileUtils;
 
 @Execution(CONCURRENT)
 public class CasStorageServiceImplTest
@@ -163,6 +166,42 @@ public class CasStorageServiceImplTest
             sut.deleteCas(doc, set);
             assertThat(sut.existsCas(doc, set)).isFalse();
             assertThat(casStorageSession.contains(cas)).isFalse();
+        }
+    }
+
+    @Test
+    public void testThatBackupsOfADeletedCasAreStillListed() throws Exception
+    {
+        try (var casStorageSession = openNested(true)) {
+            var doc = makeSourceDocument(24l, 24l, "test");
+            var set = AnnotationSet.forTest("test");
+            var otherSet = AnnotationSet.forTest("test2");
+            var cas = createCas(createTypeSystemDescription());
+            cas.setDocumentText("This is a test");
+            casStorageSession.add(AnnotationSet.forTest("cas"), EXCLUSIVE_WRITE_ACCESS, cas);
+
+            assertThat(sut.listCasBackups(doc, set)).isEmpty();
+
+            // With the default backup settings, the first write starts the history
+            sut.writeCas(doc, cas, set);
+            sut.writeCas(doc, cas, otherSet);
+            assertThat(sut.listCasBackups(doc, set)).singleElement().satisfies(b -> {
+                assertThat(b.document()).isEqualTo(DocumentRef.of(doc));
+                assertThat(b.set()).isEqualTo(set);
+                assertThat(b.name()).matches("test\\.ser\\.[0-9]+\\.bak");
+            });
+
+            // An interrupted write leaves the previous version behind
+            var casFile = driver.getCasFile(doc, set);
+            FileUtils.copyFile(casFile, new File(casFile.getPath() + ".old"));
+
+            sut.deleteCas(doc, set);
+
+            assertThat(sut.existsCas(doc, set)).isFalse();
+            assertThat(sut.listCasBackups(doc, set)) //
+                    .extracting(CasBackup::name) //
+                    .hasSize(2) //
+                    .contains("test.ser.old");
         }
     }
 
