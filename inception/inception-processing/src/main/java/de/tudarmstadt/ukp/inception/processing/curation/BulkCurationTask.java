@@ -120,7 +120,7 @@ public class BulkCurationTask
                     var users = curationDocumentService.listCuratableUsers(doc);
                     users.removeIf(u -> targetUser.equals(u.getUsername()));
 
-                    var targetCas = documentService.readAnnotationCas(doc,
+                    var targetCas = documentService.readOrCreateAnnotationCas(doc,
                             AnnotationSet.forUser(targetUser), FORCE_CAS_UPGRADE,
                             EXCLUSIVE_WRITE_ACCESS);
 

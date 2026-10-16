@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.curation.service;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +67,9 @@ public interface CurationEditingService
      * {@link #readOrCreateCurationCas(SourceDocument, String, List, MergeStrategy, CurationMergeMode)}
      * for callers that already know which CASes to merge from - e.g. when calculating the agreement
      * overview.
+     * <p>
+     * Never creates the curation CAS - that only happens when curation starts. With
+     * {@link CurationMergeMode#RECREATE}, the curation CAS is cleared and merged into.
      *
      * @param aDocument
      *            the document to curate.
@@ -73,9 +77,6 @@ public interface CurationEditingService
      *            the name of the user owning the curation CAS.
      * @param aCasses
      *            the CASes to merge from.
-     * @param aTemplateUser
-     *            the annotation document used as a template when the curation CAS has to be created
-     *            from scratch. May be {@code null} only if a curation CAS already exists.
      * @param aUpgrade
      *            whether to upgrade the curation CAS to the current type system.
      * @param aLayers
@@ -87,12 +88,14 @@ public interface CurationEditingService
      * @return the curation CAS.
      * @throws UIMAException
      *             if there was an UIMA-level problem.
+     * @throws FileNotFoundException
+     *             if there is no curation CAS.
      * @throws IOException
      *             if an I/O error occurs.
      */
     CAS readCurationCas(SourceDocument aDocument, String aCurationUser, Map<String, CAS> aCasses,
-            String aTemplateUser, boolean aUpgrade, List<AnnotationLayer> aLayers,
-            MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
+            boolean aUpgrade, List<AnnotationLayer> aLayers, MergeStrategy aMergeStrategy,
+            CurationMergeMode aMergeMode)
         throws UIMAException, IOException;
 
     /**

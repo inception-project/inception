@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.inception.testscenarios.curation;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static java.util.Arrays.asList;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -94,9 +99,18 @@ public class CurationMixedEditabilityScenarioInitializer
     }
 
     @Override
-    protected void finalizeDocument(SourceDocument aDocument, int aIndex)
+    protected void finalizeDocument(SourceDocument aDocument, int aIndex) throws IOException
     {
         if (FINISHED_DOCUMENT.equals(aDocument.getName())) {
+            // A finished curation has a curation CAS - without one, the document cannot be opened
+            try {
+                getDocumentService().readOrCreateAnnotationCas(aDocument, CURATION_SET,
+                        NO_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
+            }
+            catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+
             // A curator may not edit a document whose curation is already finished, so this is the
             // document that must come back as not editable.
             getDocumentService().setSourceDocumentState(aDocument, CURATION_FINISHED);

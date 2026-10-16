@@ -988,7 +988,7 @@ public class DocumentServiceImpl
         throws IOException
     {
         return readAnnotationCas(aAnnotationDocument.getDocument(),
-                AnnotationSet.forUser(aAnnotationDocument.getUser()), NO_CAS_UPGRADE, aMode);
+                aAnnotationDocument.getAnnotationSet(), NO_CAS_UPGRADE, aMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1008,8 +1008,8 @@ public class DocumentServiceImpl
             CasAccessMode aMode)
         throws IOException
     {
-        return readAnnotationCas(aAnnDoc.getDocument(), AnnotationSet.forUser(aAnnDoc.getUser()),
-                aUpgradeMode, aMode);
+        return readAnnotationCas(aAnnDoc.getDocument(), aAnnDoc.getAnnotationSet(), aUpgradeMode,
+                aMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
@@ -1017,6 +1017,38 @@ public class DocumentServiceImpl
     @Override
     public CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
             CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
+        throws IOException
+    {
+        // A curation CAS that exists counts as curation having started. Creating it here would
+        // let anything that reads it for writing - e.g. an editor still showing the document after
+        // its curation was reset - start curation behind the back of the curation state. Only
+        // exclusive access persists a created CAS, so the other modes may still create it.
+        if (CURATION_SET.equals(aSet) && aMode == EXCLUSIVE_WRITE_ACCESS) {
+            return casStorageService.readOrCreateCas(aDocument, aSet, aUpgradeMode, () -> {
+                throw new FileNotFoundException("The curation of document [" + aDocument.getName()
+                        + "] has not been started or has been reset.");
+            }, aMode);
+        }
+
+        return readOrCreateAnnotationCas(aDocument, aSet, aUpgradeMode, aMode);
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public CAS readOrCreateAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasAccessMode aMode)
+        throws IOException
+    {
+        return readOrCreateAnnotationCas(aDocument, aSet, aUpgradeMode, aMode, () -> {
+        });
+    }
+
+    // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
+    // need to be in a transaction here. Avoiding the transaction speeds up the call.
+    @Override
+    public CAS readOrCreateAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasAccessMode aMode, Runnable aOnCreate)
         throws IOException
     {
         // If there is no CAS yet for the source document, create one.
@@ -1030,6 +1062,8 @@ public class DocumentServiceImpl
                             .getFormatById(aDocument.getFormat());
                     maybeFormatSupport
                             .ifPresent(fmt -> fmt.prepareAnnotationCas(initialCas, aDocument));
+
+                    aOnCreate.run();
 
                     return initialCas;
                 }, aMode);
@@ -1056,10 +1090,8 @@ public class DocumentServiceImpl
     {
         Validate.notNull(aAnnotationDocument, "Annotation document must be specified");
 
-        var doc = aAnnotationDocument.getDocument();
-        var set = AnnotationSet.forUser(aAnnotationDocument.getUser());
-
-        return readAnnotationCas(doc, set, aUpgradeMode);
+        return readAnnotationCas(aAnnotationDocument.getDocument(),
+                aAnnotationDocument.getAnnotationSet(), aUpgradeMode);
     }
 
     // NO TRANSACTION REQUIRED - This does not do any should not do a database access, so we do not
