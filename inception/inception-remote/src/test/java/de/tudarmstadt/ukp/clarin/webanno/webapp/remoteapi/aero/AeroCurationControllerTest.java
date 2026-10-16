@@ -17,9 +17,14 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.webapp.remoteapi.aero;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_ADMIN;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_REMOTE;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
+import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,11 +32,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.file.Path;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -49,8 +56,11 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.web.context.WebApplicationContext;
 
+import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
+import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.search.config.SearchServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.support.deployment.DeploymentModeServiceImpl;
 
@@ -81,6 +91,7 @@ public class AeroCurationControllerTest
 
     private @Autowired WebApplicationContext context;
     private @Autowired UserDao userRepository;
+    private @Autowired DocumentService documentService;
 
     private MockAeroClient adminActor;
 
@@ -180,6 +191,78 @@ public class AeroCurationControllerTest
         adminActor.listDocuments(1l) //
                 .andExpect(status().isOk()) //
                 .andExpect(jsonPath("$.body[0].state").value("NEW"));
+    }
+
+    @Test
+    public void testCurationDeleteDiscardsTheCuration() throws Exception
+    {
+        adminActor.importCurations(1, 1, "This is a test.", "CURATION-IN-PROGRESS")
+                .andExpect(status().isCreated());
+        markCurationAnnotationDocumentInProgress();
+
+        adminActor.deleteCurations(1, 1) //
+                .andExpect(status().isOk());
+
+        assertCurationDiscarded();
+    }
+
+    @Test
+    public void testCurationDeleteDiscardsTheCurationOfDocumentNotInCuration() throws Exception
+    {
+        adminActor.importCurations(1, 1, "This is a test.", "CURATION-IN-PROGRESS")
+                .andExpect(status().isCreated());
+        markCurationAnnotationDocumentInProgress();
+        // E.g. the leftover of an earlier curation
+        documentService.setSourceDocumentState(documentService.getSourceDocument(1l, 1l),
+                ANNOTATION_IN_PROGRESS);
+
+        adminActor.deleteCurations(1, 1) //
+                .andExpect(status().isOk());
+
+        assertCurationDiscarded();
+        assertThat(documentService.getSourceDocument(1l, 1l).getState()) //
+                .as("A document not in curation keeps its state") //
+                .isEqualTo(ANNOTATION_IN_PROGRESS);
+    }
+
+    private void markCurationAnnotationDocumentInProgress()
+    {
+        setRepositoryPathInMdc();
+        var curationDocument = documentService.createOrGetAnnotationDocument(
+                documentService.getSourceDocument(1l, 1l), CURATION_SET);
+        documentService.setAnnotationDocumentState(curationDocument, IN_PROGRESS);
+    }
+
+    private void assertCurationDiscarded() throws Exception
+    {
+        setRepositoryPathInMdc();
+        try (var session = CasStorageSession.open()) {
+            assertThat(documentService.existsCas(documentService.getSourceDocument(1l, 1l),
+                    CURATION_SET)) //
+                            .as("The curation CAS is deleted") //
+                            .isFalse();
+        }
+
+        assertThat(documentService
+                .getAnnotationDocument(documentService.getSourceDocument(1l, 1l), CURATION_SET)
+                .getState()) //
+                        .as("The curation annotation document is back to NEW") //
+                        .isEqualTo(AnnotationDocumentState.NEW);
+    }
+
+    /**
+     * Calling the services directly, outside of a request, needs the repository path that the
+     * request handling otherwise provides.
+     */
+    private void setRepositoryPathInMdc()
+    {
+        MDC.put(KEY_REPOSITORY_PATH, tempFolder.toAbsolutePath().toString());
+    }
+
+    @AfterEach
+    public void tearDown()
+    {
+        MDC.remove(KEY_REPOSITORY_PATH);
     }
 
     @SpringBootConfiguration

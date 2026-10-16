@@ -49,6 +49,7 @@ import static de.tudarmstadt.ukp.inception.support.text.TextUtils.containsAnyCha
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.endsWithMatching;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.sortAndRemoveDuplicateCharacters;
 import static de.tudarmstadt.ukp.inception.support.text.TextUtils.startsWithMatching;
+import static jakarta.persistence.LockModeType.PESSIMISTIC_WRITE;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Arrays.asList;
@@ -82,6 +83,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -527,6 +529,21 @@ public class DocumentServiceImpl
                 .setParameter("docid", aSourceDocId) //
                 .setParameter("pid", aProjectId) //
                 .getSingleResult();
+    }
+
+    @Override
+    @Transactional
+    public <T> T updateSourceDocument(long aProjectId, long aSourceDocId,
+            Function<SourceDocument, T> aAction)
+    {
+        var doc = getSourceDocument(aProjectId, aSourceDocId);
+
+        // If the document was already loaded into the persistence context, the query above
+        // returns that instance without updating it from the database. Refreshing it re-reads
+        // the current state and locks the row in one go.
+        entityManager.refresh(doc, PESSIMISTIC_WRITE);
+
+        return aAction.apply(doc);
     }
 
     @Override

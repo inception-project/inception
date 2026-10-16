@@ -226,16 +226,15 @@ public class AeroCurationController
         var project = getProject(aProjectId, MANAGER);
 
         var doc = getDocument(project, aDocumentId);
-        curationService.deleteCurationCas(doc);
 
-        switch (doc.getState()) {
-        case CURATION_IN_PROGRESS: // Fall-through
-        case CURATION_FINISHED:
-            documentService.setSourceDocumentState(doc, SourceDocumentState.ANNOTATION_IN_PROGRESS);
-            workloadManagementService.getWorkloadManagerExtension(project).recalculate(doc);
-            break;
-        default:
-            // Nothing to do
+        // A curator may move the document into curation while this request runs, so whether it is
+        // in curation is decided by the reset itself and not on the state loaded above. A document
+        // not in curation keeps its state - only the curation data is discarded, if any.
+        if (curationService.resetCuration(doc)) {
+            // The document loaded above may still have its state from before the reset, and the
+            // workload manager does not touch a document that claims to be in curation
+            workloadManagementService.getWorkloadManagerExtension(project)
+                    .recalculate(getDocument(project, aDocumentId));
         }
 
         return ResponseEntity.ok(new RResponse<>(INFO, "Curated annotations for document ["
