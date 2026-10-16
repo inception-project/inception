@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -109,6 +110,30 @@ public interface DocumentService
      * @return the source document
      */
     SourceDocument getSourceDocument(long projectId, long documentId);
+
+    /**
+     * Loads the given {@link SourceDocument} from the database, locks it against concurrent
+     * modification and passes it to the given action. The lock is held until the surrounding
+     * transaction ends, so a check made on the document in the action remains valid for any changes
+     * the action makes. Use this to decide on a new state based on the current state.
+     * <p>
+     * The action must work with the document it is passed, not with an instance obtained elsewhere,
+     * and must change the state via {@link #setSourceDocumentState} so that the appropriate events
+     * are published. Keep the action short: other transactions trying to change the document are
+     * blocked while it runs.
+     *
+     * @param <T>
+     *            the result type of the action
+     * @param projectId
+     *            the id for the {@link Project}
+     * @param documentId
+     *            the id for the {@link SourceDocument}
+     * @param aAction
+     *            the action to perform on the locked document
+     * @return the result of the action
+     */
+    <T> T updateSourceDocument(long projectId, long documentId,
+            Function<SourceDocument, T> aAction);
 
     /**
      * List all source documents in a project. The source documents are the original TCF documents

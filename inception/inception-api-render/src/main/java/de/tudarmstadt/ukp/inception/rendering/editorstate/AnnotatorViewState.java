@@ -160,6 +160,10 @@ public interface AnnotatorViewState
 
     Project getProject();
 
+    /**
+     * @deprecated We should introduce a {@code getDataOwner(AnnotationSet)} instead
+     */
+    @Deprecated
     User getUser();
 
     // ---------------------------------------------------------------------------------------------

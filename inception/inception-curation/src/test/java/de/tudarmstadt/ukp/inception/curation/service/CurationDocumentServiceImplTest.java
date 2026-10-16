@@ -25,11 +25,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static de.tudarmstadt.ukp.clarin.webanno.security.model.Role.ROLE_USER;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCas;
 import static java.util.Arrays.asList;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
@@ -43,6 +45,7 @@ import java.nio.file.Path;
 
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,6 +58,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
 import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
@@ -74,6 +79,7 @@ import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoC
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
@@ -95,6 +101,7 @@ import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoCon
         AnnotationSchemaServiceAutoConfiguration.class, //
         SecurityAutoConfiguration.class, //
         CurationDocumentServiceAutoConfiguration.class })
+@RecordApplicationEvents
 class CurationDocumentServiceImplTest
 {
     static @TempDir Path tempFolder;
@@ -110,6 +117,7 @@ class CurationDocumentServiceImplTest
     private @Autowired DocumentService documentService;
     private @Autowired CasStorageService casStorageService;
     private @Autowired CurationDocumentServiceImpl sut;
+    private @Autowired ApplicationEvents applicationEvents;
 
     private User current;
     private User beate;
@@ -521,6 +529,123 @@ class CurationDocumentServiceImplTest
         var finishedUsers = sut.listCuratableUsers(testDocument);
 
         assertThat(finishedUsers).containsExactly(beate, kevin);
+    }
+
+    @Nested
+    class InitialMerge
+    {
+        @Test
+        void resetCuration_ShouldWorkWithoutCurationAnnotationDocument() throws Exception
+        {
+            writeCurationCasFor(testDocument);
+
+            try (var session = openNested(true)) {
+                sut.resetCuration(testDocument);
+                assertThat(sut.existsCurationCas(testDocument)) //
+                        .as("The curation CAS is deleted") //
+                        .isFalse();
+            }
+        }
+
+        @Test
+        void resetCuration_ShouldMoveDocumentInCurationBackToAnnotation() throws Exception
+        {
+            var curationDocument = createCurationAnnotationDocument(testDocument,
+                    AnnotationDocumentState.IN_PROGRESS);
+            documentService.setSourceDocumentState(testDocument, CURATION_FINISHED);
+            writeCurationCasFor(testDocument);
+
+            try (var session = openNested(true)) {
+                assertThat(sut.resetCuration(testDocument)) //
+                        .as("The document was in curation") //
+                        .isTrue();
+            }
+
+            try (var session = openNested(true)) {
+                assertThat(sut.existsCurationCas(testDocument)) //
+                        .as("The curation CAS is deleted") //
+                        .isFalse();
+            }
+            assertThat(documentService.getSourceDocument(testProject.getId(), testDocument.getId())
+                    .getState()) //
+                            .as("The document is moved out of curation") //
+                            .isEqualTo(ANNOTATION_IN_PROGRESS);
+            assertThat(testEntityManager.find(AnnotationDocument.class, curationDocument.getId())
+                    .getState()) //
+                            .as("The curation annotation document is back to NEW") //
+                            .isEqualTo(AnnotationDocumentState.NEW);
+
+            try (var session = openNested(true)) {
+                assertThat(sut.isInitialMergeRequired(testDocument)) //
+                        .as("Curating the document again starts with the initial merge") //
+                        .isTrue();
+            }
+        }
+
+        @Test
+        void resetCuration_ShouldKeepStateOfDocumentNotInCuration() throws Exception
+        {
+            documentService.setSourceDocumentState(testDocument, ANNOTATION_FINISHED);
+            writeCurationCasFor(testDocument);
+
+            try (var session = openNested(true)) {
+                assertThat(sut.resetCuration(testDocument)) //
+                        .as("The document was not in curation") //
+                        .isFalse();
+            }
+
+            try (var session = openNested(true)) {
+                assertThat(sut.existsCurationCas(testDocument)) //
+                        .as("The curation CAS is deleted") //
+                        .isFalse();
+            }
+            assertThat(documentService.getSourceDocument(testProject.getId(), testDocument.getId())
+                    .getState()) //
+                            .as("The document keeps its state") //
+                            .isEqualTo(ANNOTATION_FINISHED);
+        }
+
+        @Test
+        void resetCuration_ShouldDecideOnTheCurrentStateNotOnAStaleCopy() throws Exception
+        {
+            // A copy of the document loaded before a curator moved it into curation
+            var staleCopy = new SourceDocument(testDocument.getName(), testProject,
+                    testDocument.getFormat());
+            staleCopy.setId(testDocument.getId());
+            staleCopy.setState(ANNOTATION_FINISHED);
+
+            documentService.setSourceDocumentState(testDocument, CURATION_IN_PROGRESS);
+            writeCurationCasFor(testDocument);
+            applicationEvents.clear();
+
+            try (var session = openNested(true)) {
+                assertThat(sut.resetCuration(staleCopy)) //
+                        .as("The document is in curation, although the copy claims otherwise") //
+                        .isTrue();
+            }
+
+            assertThat(documentService.getSourceDocument(testProject.getId(), testDocument.getId())
+                    .getState()) //
+                            .as("The stale state is not written back") //
+                            .isEqualTo(ANNOTATION_IN_PROGRESS);
+            assertThat(applicationEvents.stream(DocumentStateChangedEvent.class)) //
+                    .as("The state change is announced from the current state") //
+                    .singleElement() //
+                    .satisfies(e -> {
+                        assertThat(e.getPreviousState()).isEqualTo(CURATION_IN_PROGRESS);
+                        assertThat(e.getNewState()).isEqualTo(ANNOTATION_IN_PROGRESS);
+                    });
+        }
+
+        private AnnotationDocument createCurationAnnotationDocument(SourceDocument aDocument,
+                AnnotationDocumentState aState)
+        {
+            return testEntityManager.persist(AnnotationDocument.builder() //
+                    .withUser(CURATION_USER) //
+                    .forDocument(aDocument) //
+                    .withState(aState) //
+                    .build());
+        }
     }
 
     @SpringBootConfiguration

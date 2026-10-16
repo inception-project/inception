@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.curation.service;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -123,6 +124,39 @@ public class CurationDocumentServiceImpl
     public void deleteCurationCas(SourceDocument aDocument) throws IOException
     {
         casStorageService.deleteCas(aDocument, CURATION_SET);
+    }
+
+    @Override
+    @Transactional
+    public boolean resetCuration(SourceDocument aDocument) throws IOException
+    {
+        // Deleting the curation CAS blocks while another request holds the lock on it. An initial
+        // merge holds that lock until its request ends and moves the document into curation before
+        // that, so reading the state after the delete sees a curation started in the meantime.
+        deleteCurationCas(aDocument);
+        resetCurationAnnotationDocument(aDocument);
+
+        return documentService.updateSourceDocument(aDocument.getProject().getId(),
+                aDocument.getId(), lockedDoc -> {
+                    var state = lockedDoc.getState();
+                    if (!CURATION_IN_PROGRESS.equals(state) && !CURATION_FINISHED.equals(state)) {
+                        return false;
+                    }
+
+                    documentService.setSourceDocumentState(lockedDoc, ANNOTATION_IN_PROGRESS);
+                    return true;
+                });
+    }
+
+    private void resetCurationAnnotationDocument(SourceDocument aDocument)
+    {
+        // Nobody has curated the document anymore
+        if (documentService.existsAnnotationDocument(aDocument, CURATION_SET)) {
+            var annotationDocument = documentService.getAnnotationDocument(aDocument, CURATION_SET);
+            annotationDocument.setTimestamp(null);
+            documentService.setAnnotationDocumentState(annotationDocument,
+                    AnnotationDocumentState.NEW);
+        }
     }
 
     @Override
