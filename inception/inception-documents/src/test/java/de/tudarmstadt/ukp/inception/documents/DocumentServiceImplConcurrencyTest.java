@@ -17,13 +17,18 @@
  */
 package de.tudarmstadt.ukp.inception.documents;
 
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
+import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.session.CasStorageSession.openNested;
+import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.annotation.storage.CasMetadataUtils.getInternalTypeSystem;
 import static java.lang.Thread.sleep;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static org.apache.commons.lang3.StringUtils.repeat;
@@ -31,6 +36,7 @@ import static org.apache.uima.fit.factory.CasFactory.createCas;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.apache.uima.util.CasCreationUtils.mergeTypeSystems;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.parallel.ExecutionMode.CONCURRENT;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
@@ -38,6 +44,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodHandles;
 import java.time.Instant;
@@ -184,6 +191,104 @@ public class DocumentServiceImplConcurrencyTest
             assertThat(cas.getDocumentText()).isEqualTo("Test");
             assertThat(casStorageService.existsCas(sourceDocument, set)).isTrue();
         }
+    }
+
+    @Test
+    public void thatReadingNonExistentCurationCasForWritingDoesNotCreateIt() throws Exception
+    {
+        try (var session = CasStorageSession.open()) {
+            var sourceDocument = makeSourceDocument(1l, 1l, "test");
+
+            assertThatExceptionOfType(FileNotFoundException.class) //
+                    .isThrownBy(() -> sut.readAnnotationCas(sourceDocument, CURATION_SET)) //
+                    .withMessageContaining("has not been started or has been reset");
+
+            assertThat(casStorageService.existsCas(sourceDocument, CURATION_SET)).isFalse();
+        }
+    }
+
+    @Test
+    public void thatReadingNonExistentCurationCasReadOnlyDoesNotPersistIt() throws Exception
+    {
+        try (var session = CasStorageSession.open()) {
+            var sourceDocument = makeSourceDocument(1l, 1l, "test");
+
+            var cas = sut.readAnnotationCas(sourceDocument, CURATION_SET, AUTO_CAS_UPGRADE,
+                    SHARED_READ_ONLY_ACCESS);
+
+            assertThat(cas.getDocumentText()).isEqualTo("Test");
+            assertThat(casStorageService.existsCas(sourceDocument, CURATION_SET)).isFalse();
+        }
+    }
+
+    @Test
+    public void thatReadOrCreateCreatesTheCurationCas() throws Exception
+    {
+        try (var session = CasStorageSession.open()) {
+            var sourceDocument = makeSourceDocument(1l, 1l, "test");
+
+            var cas = sut.readOrCreateAnnotationCas(sourceDocument, CURATION_SET, NO_CAS_UPGRADE,
+                    EXCLUSIVE_WRITE_ACCESS);
+
+            assertThat(cas.getDocumentText()).isEqualTo("Test");
+            assertThat(casStorageService.existsCas(sourceDocument, CURATION_SET)).isTrue();
+            assertThat(sut.readAnnotationCas(sourceDocument, CURATION_SET)).isSameAs(cas);
+        }
+    }
+
+    @Test
+    public void thatOnlyOneOfConcurrentReadOrCreateCallsCreatesTheCas() throws Exception
+    {
+        var sourceDocument = makeSourceDocument(1l, 1l, "test");
+        var firstCreated = new AtomicBoolean();
+        var secondCreated = new AtomicBoolean();
+        var firstHoldsLock = new CountDownLatch(1);
+        var firstMayFinish = new CountDownLatch(1);
+        var secondDone = new CountDownLatch(1);
+
+        var first = new Thread(() -> {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            try (var session = CasStorageSession.open()) {
+                sut.readOrCreateAnnotationCas(sourceDocument, CURATION_SET, NO_CAS_UPGRADE,
+                        EXCLUSIVE_WRITE_ACCESS, () -> firstCreated.set(true));
+                firstHoldsLock.countDown();
+                firstMayFinish.await();
+            }
+            catch (Exception e) {
+                LOG.error("First reader failed", e);
+                exception.set(true);
+            }
+        });
+
+        var second = new Thread(() -> {
+            MDC.put(Logging.KEY_REPOSITORY_PATH, repositoryProperties.getPath().toString());
+            try (var session = CasStorageSession.open()) {
+                sut.readOrCreateAnnotationCas(sourceDocument, CURATION_SET, NO_CAS_UPGRADE,
+                        EXCLUSIVE_WRITE_ACCESS, () -> secondCreated.set(true));
+            }
+            catch (Exception e) {
+                LOG.error("Second reader failed", e);
+                exception.set(true);
+            }
+            finally {
+                secondDone.countDown();
+            }
+        });
+
+        first.start();
+        assertThat(firstHoldsLock.await(10, SECONDS)).isTrue();
+
+        // The second reader must wait for the first one's session to end
+        second.start();
+        assertThat(secondDone.await(500, MILLISECONDS)).isFalse();
+
+        firstMayFinish.countDown();
+        assertThat(secondDone.await(10, SECONDS)).isTrue();
+        first.join();
+
+        assertThat(exception).isFalse();
+        assertThat(firstCreated).isTrue();
+        assertThat(secondCreated).isFalse();
     }
 
     @Test

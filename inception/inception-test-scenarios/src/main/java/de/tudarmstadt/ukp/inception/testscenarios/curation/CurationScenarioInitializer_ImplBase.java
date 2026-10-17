@@ -126,7 +126,7 @@ public abstract class CurationScenarioInitializer_ImplBase
      * @param aIndex
      *            its zero-based position in {@link #listDocuments()}.
      */
-    protected void finalizeDocument(SourceDocument aDocument, int aIndex)
+    protected void finalizeDocument(SourceDocument aDocument, int aIndex) throws IOException
     {
         // Nothing by default.
     }

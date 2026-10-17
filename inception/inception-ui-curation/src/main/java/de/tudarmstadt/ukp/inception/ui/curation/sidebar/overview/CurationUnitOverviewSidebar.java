@@ -224,7 +224,7 @@ public class CurationUnitOverviewSidebar
 
         // Load CAS without updating its timestamp since the sidebar is only an auxiliary view
         var editorCas = curationEditingService.readCurationCas(document,
-                aState.getUser().getUsername(), casses, null, false, aState.getAnnotationLayers(),
+                aState.getUser().getUsername(), casses, false, aState.getAnnotationLayers(),
                 curationService.getDefaultMergeStrategy(document.getProject()), LOAD_ONLY);
         casses.put(CURATION_USER, editorCas);
 

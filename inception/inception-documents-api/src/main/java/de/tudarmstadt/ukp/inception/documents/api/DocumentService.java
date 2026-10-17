@@ -17,6 +17,7 @@
  */
 package de.tudarmstadt.ukp.inception.documents.api;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -421,37 +422,79 @@ public interface DocumentService
     AnnotationDocument getAnnotationDocument(SourceDocument aDocument, AnnotationSet aSet);
 
     /**
-     * Gets the CAS for the given annotation document. Converts it form the source document if
-     * necessary. The converted CAS is analyzed using CAS doctor and saved.
+     * Gets the CAS for the given annotation document for writing. Creates it from the initial CAS
+     * if necessary and saves it.
+     * <p>
+     * A missing curation CAS is not created, see
+     * {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}.
      *
      * @param annotationDocument
      *            the annotation document.
      * @return the CAS.
+     * @throws FileNotFoundException
+     *             if this is the curation CAS and it does not exist.
      * @throws IOException
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(AnnotationDocument annotationDocument) throws IOException;
 
+    /**
+     * Gets the CAS for the given annotation document. Creates it from the initial CAS if necessary.
+     * <p>
+     * See {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}.
+     *
+     * @param aAnnDoc
+     *            the annotation document.
+     * @param aUpgradeMode
+     *            the upgrade mode.
+     * @param aMode
+     *            the access mode.
+     * @return the CAS.
+     * @throws FileNotFoundException
+     *             if this is the curation CAS, it is read for writing and it does not exist.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
     CAS readAnnotationCas(AnnotationDocument aAnnDoc, CasUpgradeMode aUpgradeMode,
             CasAccessMode aMode)
         throws IOException;
 
     /**
-     * Gets the CAS for the given annotation document. Converts it form the source document if
-     * necessary. The converted CAS is analyzed using CAS doctor and saved. If the CAS already
-     * existed on disk, its type system is <b>NOT</b> upgraded.
+     * Gets the CAS for the given annotation document. Creates it from the initial CAS if necessary.
+     * If the CAS already existed on disk, its type system is <b>NOT</b> upgraded.
+     * <p>
+     * See {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}.
      *
      * @param annotationDocument
      *            the annotation document.
      * @param aMode
      *            CAS access mode.
      * @return the CAS.
+     * @throws FileNotFoundException
+     *             if this is the curation CAS, it is read for writing and it does not exist.
      * @throws IOException
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(AnnotationDocument annotationDocument, CasAccessMode aMode)
         throws IOException;
 
+    /**
+     * Gets the CAS for the given annotation document for writing. Creates it from the initial CAS
+     * if necessary and saves it.
+     * <p>
+     * A missing curation CAS is not created, see
+     * {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}.
+     *
+     * @param aAnnotationDocument
+     *            the annotation document.
+     * @param aUpgradeMode
+     *            the upgrade mode.
+     * @return the CAS.
+     * @throws FileNotFoundException
+     *             if this is the curation CAS and it does not exist.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
     CAS readAnnotationCas(AnnotationDocument aAnnotationDocument, CasUpgradeMode aUpgradeMode)
         throws IOException;
 
@@ -460,22 +503,30 @@ public interface DocumentService
     void deleteAnnotationCas(SourceDocument aSourceDocument, AnnotationSet aSet) throws IOException;
 
     /**
-     * Gets the CAS for the given source document. Converts it form the source document if
-     * necessary. The state of the source document is not changed.
+     * Gets the CAS for the given source document for writing. Creates it from the initial CAS if
+     * necessary and saves it. The state of the source document is not changed.
+     * <p>
+     * A missing curation CAS is not created, see
+     * {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}.
      *
      * @param document
      *            the source document.
      * @param aSet
-     *            the set the CAs belongs to.
+     *            the set the CAS belongs to.
      * @return the CAS.
+     * @throws FileNotFoundException
+     *             if this is the curation CAS and it does not exist.
      * @throws IOException
      *             if there was an I/O error.
      */
     CAS readAnnotationCas(SourceDocument document, AnnotationSet aSet) throws IOException;
 
     /**
-     * Gets the CAS for the given source document. Converts it form the source document if
-     * necessary. The state of the source document is not changed.
+     * Gets the CAS for the given source document for writing. Creates it from the initial CAS if
+     * necessary and saves it. The state of the source document is not changed.
+     * <p>
+     * A missing curation CAS is not created, see
+     * {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}.
      *
      * @param aDocument
      *            the source document.
@@ -484,6 +535,8 @@ public interface DocumentService
      * @param aUpgradeMode
      *            the upgrade mode.
      * @return the CAS.
+     * @throws FileNotFoundException
+     *             if this is the curation CAS and it does not exist.
      * @throws IOException
      *             if there was an I/O error.
      */
@@ -491,8 +544,38 @@ public interface DocumentService
         throws IOException;
 
     /**
-     * Gets the CAS for the given source document. Converts it form the source document if
-     * necessary. The state of the source document is not changed.
+     * Gets the CAS for the given source document. Creates it from the initial CAS if necessary.
+     * Only {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS} saves a created CAS. The state of the
+     * source document is not changed.
+     * <p>
+     * A missing curation CAS ({@link AnnotationSet#CURATION_SET}) is not created when reading it
+     * with {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}. A curation CAS only exists once curation
+     * of the document has started, so creating it is left to the code that starts curation (see
+     * {@link #readOrCreateAnnotationCas}).
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aSet
+     *            the set to which the CAS belongs.
+     * @param aUpgradeMode
+     *            the upgrade mode.
+     * @param aAccessMode
+     *            the access mode.
+     * @return the CAS.
+     * @throws FileNotFoundException
+     *             if the curation CAS is read for writing but does not exist.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode,
+            CasAccessMode aAccessMode)
+        throws IOException;
+
+    /**
+     * Like
+     * {@link #readAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)}, but
+     * also creates a missing curation CAS. Only use this to start curating a document - a curation
+     * CAS that exists counts as curation having started.
      *
      * @param aDocument
      *            the source document.
@@ -506,8 +589,36 @@ public interface DocumentService
      * @throws IOException
      *             if there was an I/O error.
      */
-    CAS readAnnotationCas(SourceDocument aDocument, AnnotationSet aSet, CasUpgradeMode aUpgradeMode,
-            CasAccessMode aAccessMode)
+    CAS readOrCreateAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasAccessMode aAccessMode)
+        throws IOException;
+
+    /**
+     * Like
+     * {@link #readOrCreateAnnotationCas(SourceDocument, AnnotationSet, CasUpgradeMode, CasAccessMode)},
+     * but tells the caller whether the CAS was created by this call.
+     * <p>
+     * With {@link CasAccessMode#EXCLUSIVE_WRITE_ACCESS}, whether the CAS exists is decided while
+     * holding the exclusive lock on it, and the lock is kept until the CAS storage session ends. So
+     * of several concurrent callers, only one creates the CAS, and nobody else can write to it
+     * before that caller's session ends.
+     *
+     * @param aDocument
+     *            the source document.
+     * @param aSet
+     *            the set to which the CAS belongs.
+     * @param aUpgradeMode
+     *            the upgrade mode.
+     * @param aAccessMode
+     *            the access mode.
+     * @param aOnCreate
+     *            called if the CAS did not exist and is being created by this call.
+     * @return the CAS.
+     * @throws IOException
+     *             if there was an I/O error.
+     */
+    CAS readOrCreateAnnotationCas(SourceDocument aDocument, AnnotationSet aSet,
+            CasUpgradeMode aUpgradeMode, CasAccessMode aAccessMode, Runnable aOnCreate)
         throws IOException;
 
     Map<String, CAS> readAllCasesSharedNoUpgrade(List<AnnotationDocument> aDocuments)

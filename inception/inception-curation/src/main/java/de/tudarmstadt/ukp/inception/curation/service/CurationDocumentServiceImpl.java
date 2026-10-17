@@ -117,7 +117,8 @@ public class CurationDocumentServiceImpl
     @Override
     public CAS readCurationCas(SourceDocument aDocument) throws IOException
     {
-        return casStorageService.readCas(aDocument, CURATION_SET);
+        // Never creates a missing curation CAS - see DocumentService.readAnnotationCas
+        return documentService.readAnnotationCas(aDocument, CURATION_SET);
     }
 
     @Override
@@ -258,19 +259,9 @@ public class CurationDocumentServiceImpl
         var state = getCurrentState(aDocument);
 
         // Curation that has already been started may always be continued, so a document in a
-        // curation state or with an existing curation CAS bypasses the entry rules below.
+        // curation state bypasses the entry rules below. Like listCuratableSourceDocuments, this
+        // decides on the database alone and ignores the curation CAS.
         if (CURATION_IN_PROGRESS.equals(state) || CURATION_FINISHED.equals(state)) {
-            return true;
-        }
-
-        try {
-            if (existsCurationCas(aDocument)) {
-                return true;
-            }
-        }
-        catch (IOException e) {
-            LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
-                    aDocument, e);
             return true;
         }
 
@@ -292,24 +283,24 @@ public class CurationDocumentServiceImpl
         // Make sure we know the latest state from the DB - just in case the given document is stale
         var state = getCurrentState(aDocument);
 
-        if (!CURATION_IN_PROGRESS.equals(state) && !CURATION_FINISHED.equals(state)) {
-            return true;
-        }
-
         // CURATION_FINISHED is only ever reached through an explicit curator action, so a missing
-        // curation CAS there is somebody having reset the curation on purpose - not a failed merge.
+        // curation CAS there means the curation results are missing - not a failed merge. Merging
+        // would create a finished curation nobody has reviewed.
         if (CURATION_FINISHED.equals(state)) {
             return false;
         }
 
+        // A curation CAS is only created when curation starts, so if there is one, it holds the
+        // curation results - even if the document is not in a curation state (any more), e.g.
+        // because a workload update moved it out of curation. Never merge over it. A document
+        // claiming to be in curation but without a curation CAS to back that claim is the result
+        // of a failed initial merge - retry it instead of locking the document up.
         try {
-            // A document claiming to be in curation but without a curation CAS to back that claim
-            // is the result of a failed initial merge - retry it instead of locking the document
-            // up.
             return !existsCurationCas(aDocument);
         }
         catch (IOException e) {
-            // If we cannot tell, assume it is there - that avoids re-merging over curation work
+            // If we cannot tell, assume it is there - that avoids re-merging over curation work.
+            // Opening the document then fails if it really is missing.
             LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
                     aDocument, e);
             return false;

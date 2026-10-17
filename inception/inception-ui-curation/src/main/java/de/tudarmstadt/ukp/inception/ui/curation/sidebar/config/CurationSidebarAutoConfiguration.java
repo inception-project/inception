@@ -32,6 +32,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
 import de.tudarmstadt.ukp.inception.diam.editor.lazydetails.LazyDetailsLookupService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -49,14 +50,15 @@ public class CurationSidebarAutoConfiguration
 {
     @Bean
     public CurationSidebarService curationSidebarService(DocumentService aDocumentService,
-            UserDao aUserRegistry, CasStorageService aCasStorageService,
-            CurationService aCurationService, CurationMergeService aCurationMergeService,
+            CasStorageService aCasStorageService, CurationService aCurationService,
+            CurationMergeService aCurationMergeService,
             CurationSessionServiceImpl aCurationSessionService,
-            CurationDocumentService aCurationDocumentService)
+            CurationDocumentService aCurationDocumentService,
+            PreferencesService aPreferencesService)
     {
-        return new CurationSidebarServiceImpl(aDocumentService, aUserRegistry, aCasStorageService,
+        return new CurationSidebarServiceImpl(aDocumentService, aCasStorageService,
                 aCurationService, aCurationMergeService, aCurationSessionService,
-                aCurationDocumentService);
+                aCurationDocumentService, aPreferencesService);
     }
 
     @Bean(CurationEditorExtension.EXTENSION_ID)
