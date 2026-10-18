@@ -21,14 +21,19 @@ import java.lang.invoke.MethodHandles;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
+import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelLayerInitializer;
+import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
+import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationDocumentMetadataScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationMixedEditabilityScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationSentenceLayerScenarioInitializer;
@@ -50,6 +55,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
  * Maven profile. In a shipped application these classes are not on the classpath at all, so there
  * is no property that could switch them on by accident.
  */
+@AutoConfigureAfter({ InceptionDocumentLabelingProjectInitializersAutoConfiguration.class })
 @Configuration
 public class InceptionTestScenariosAutoConfiguration
 {
@@ -84,6 +90,17 @@ public class InceptionTestScenariosAutoConfiguration
             ScenarioAccountService aScenarioAccountService)
     {
         return new CurationMixedEditabilityScenarioInitializer(aDocumentService, aProjectService,
+                aUserService, aScenarioAccountService);
+    }
+
+    // The document label layer only exists if document metadata support is enabled
+    @ConditionalOnBean(BasicDocumentLabelLayerInitializer.class)
+    @Bean
+    public CurationDocumentMetadataScenarioInitializer curationDocumentMetadataScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new CurationDocumentMetadataScenarioInitializer(aDocumentService, aProjectService,
                 aUserService, aScenarioAccountService);
     }
 

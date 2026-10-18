@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.annotation.layer.document.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
 import static de.tudarmstadt.ukp.inception.recommendation.api.model.LearningRecordChangeLocation.MAIN_EDITOR;
+import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLICK_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
@@ -92,6 +93,7 @@ import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetada
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataEvent;
+import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
@@ -760,25 +762,22 @@ public class DocumentMetadataAnnotationSelectionPanel
 
     private Map<String, List<CurationCandidate>> listCurationCandidatesByLayer(CAS aTargetCas)
     {
-        if (!getPage().getPageClass().getName().contains("Curation")) {
-            // Hack to only show curation items on the curation page without introducing a
-            // circular dependency
-            return Map.of();
-        }
-
         var state = getModelObject();
-        var sessionOwner = userService.getCurrentUsername();
-        if (!curationSessionService.existsSession(sessionOwner, state.getProject().getId())) {
+        var targetUser = state.getUser().getUsername();
+
+        // The curation target can only be opened on the curation pages, so this also limits the
+        // curation items to these pages - and in a split view to the pane showing the target
+        if (!CURATION_USER.equals(targetUser)) {
             return Map.of();
         }
 
-        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
-                state.getProject(), state.getDocument());
+        var selectedDataOwners = curationSessionService.listDataOwnersToCurate(
+                userService.getSessionOwnerName(), state.getDocument(),
+                getPage() instanceof CurationPageWithDataOwnerSelection);
+
         if (selectedDataOwners.isEmpty()) {
             return Map.of();
         }
-
-        var targetUser = state.getUser().getUsername();
 
         // The editable target CAS goes first, then the read-only CASes of the other data owners.
         var casses = new LinkedHashMap<String, CAS>();
