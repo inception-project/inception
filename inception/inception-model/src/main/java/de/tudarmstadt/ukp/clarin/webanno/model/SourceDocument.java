@@ -171,6 +171,19 @@ public class SourceDocument
     }
 
     /**
+     * Take over the state and its timestamp from another copy of this document, e.g. one freshly
+     * loaded from the database.
+     *
+     * @param aOther
+     *            the other copy of this document.
+     */
+    public void copyStateFrom(SourceDocument aOther)
+    {
+        state = aOther.state;
+        stateUpdated = aOther.stateUpdated;
+    }
+
+    /**
      * @param aStateUpdated
      *            the new state updated time.
      * @deprecated Use this only when you need to import the state from an external source and call
