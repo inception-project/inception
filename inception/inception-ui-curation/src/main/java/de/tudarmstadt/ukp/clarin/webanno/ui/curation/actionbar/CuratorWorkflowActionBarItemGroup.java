@@ -98,9 +98,8 @@ public class CuratorWorkflowActionBarItemGroup
         IModel<String> documentNameModel = PropertyModel.of(editorContext.getStateModel(),
                 "document.name");
         add(resetDocumentDialog = new MergeDialog("resetDocumentDialog",
-                new ResourceModel("ResetDocumentDialog.title"),
-                new ResourceModel("ResetDocumentDialog.text"), documentNameModel,
-                curationWorkflowModel));
+                new ResourceModel("reMergeDialog.title"), new ResourceModel("reMergeDialog.text"),
+                documentNameModel, curationWorkflowModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
