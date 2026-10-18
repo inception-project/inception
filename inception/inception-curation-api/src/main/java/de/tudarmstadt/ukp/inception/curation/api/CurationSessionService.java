@@ -69,4 +69,25 @@ public interface CurationSessionService
             SourceDocument aDocument);
 
     List<AnnotationSet> listCuratableDataOwners(SourceDocument aDocument);
+
+    /**
+     * @return the data owners to curate the given document from: on a page where the curator
+     *         selects the data owners (see {@link CurationPageWithDataOwnerSelection}), the ones
+     *         selected in the curation session; otherwise all curatable data owners.
+     * @param aSessionOwner
+     *            the curator.
+     * @param aDocument
+     *            the document being curated.
+     * @param aUseSelection
+     *            whether the page offers a data owner selection.
+     */
+    default List<AnnotationSet> listDataOwnersToCurate(String aSessionOwner,
+            SourceDocument aDocument, boolean aUseSelection)
+    {
+        if (aUseSelection) {
+            return listDataOwnersReadyForCuration(aSessionOwner, aDocument.getProject(), aDocument);
+        }
+
+        return listCuratableDataOwners(aDocument);
+    }
 }

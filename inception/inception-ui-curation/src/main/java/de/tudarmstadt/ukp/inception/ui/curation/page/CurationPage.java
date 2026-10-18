@@ -47,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.DocumentEditorWorkspac
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.mono.SingleDocumentEditorWorkspace;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenDialogBehavior;
+import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -61,6 +62,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
     extends AnnotationPageBase2
+    implements CurationPageWithDataOwnerSelection
 {
     public static final String PAGE_PATH = "/curate";
 
