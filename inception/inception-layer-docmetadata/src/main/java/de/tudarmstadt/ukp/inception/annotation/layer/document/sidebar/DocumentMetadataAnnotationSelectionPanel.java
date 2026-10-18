@@ -109,6 +109,7 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.DocumentEditorManager;
+import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEvent;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
@@ -982,6 +983,21 @@ public class DocumentMetadataAnnotationSelectionPanel
         aEvent.getRequestTarget().ifPresent(target -> target.add(layersContainer));
         manager.getActiveEditor().ifPresent(
                 ctx -> ctx.actionRefreshDocument(aEvent.getRequestTarget().orElse(null)));
+    }
+
+    /**
+     * The document in this editor was replaced in place, e.g. by a curation re-merge, so the
+     * annotations and curation suggestions listed here may no longer exist. The editor has just
+     * reloaded itself, so only the list needs to be repainted.
+     */
+    @OnEvent
+    public void onEditorContentReplaced(EditorContentReplacedEvent aEvent)
+    {
+        if (aEvent.getRequestHandler() == null || !aEvent.isFor(getModelObject())) {
+            return;
+        }
+
+        aEvent.getRequestHandler().add(layersContainer);
     }
 
     /**
