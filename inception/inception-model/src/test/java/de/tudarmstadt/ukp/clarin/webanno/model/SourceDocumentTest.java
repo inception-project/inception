@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.clarin.webanno.model;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.NEW;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofSeconds;
@@ -46,5 +47,22 @@ class SourceDocumentTest
         sut.updateState(ANNOTATION_FINISHED);
         assertThat(sut.getState()).isEqualTo(ANNOTATION_FINISHED);
         assertThat(sut.getStateUpdated()).isNotNull().isNotEqualTo(date);
+    }
+
+    @Test
+    void thatCopyStateFromTakesOverStateAndTimestampOfTheOtherCopy()
+    {
+        var other = new SourceDocument();
+        other.updateState(CURATION_FINISHED);
+
+        await().atMost(ofSeconds(1))
+                .until(() -> currentTimeMillis() != other.getStateUpdated().getTime());
+
+        var sut = new SourceDocument();
+        sut.copyStateFrom(other);
+
+        assertThat(sut.getState()).isEqualTo(CURATION_FINISHED);
+        // The other copy's timestamp, not the time of copying
+        assertThat(sut.getStateUpdated()).isEqualTo(other.getStateUpdated());
     }
 }

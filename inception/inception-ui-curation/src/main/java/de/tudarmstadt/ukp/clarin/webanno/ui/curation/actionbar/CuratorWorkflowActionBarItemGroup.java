@@ -137,7 +137,24 @@ public class CuratorWorkflowActionBarItemGroup
     {
         var state = editorContext.getAnnotatorState();
         var sourceDocument = state.getDocument();
-        var docState = sourceDocument.getState();
+        var latest = documentService.getSourceDocument(sourceDocument.getProject().getId(),
+                sourceDocument.getId());
+
+        // The click is meant for the state the curator sees, which is the editor's copy of the
+        // document. If somebody changed the state in the meantime (another curator, or a reset on
+        // the monitoring page), acting on either state may do something the curator did not
+        // intend - e.g. finish a curation that was just reset - so refuse instead.
+        if (latest.getState() != sourceDocument.getState()) {
+            page.error("The state of document [" + sourceDocument.getName()
+                    + "] has been changed in the meantime. Reload the page to see its current "
+                    + "state.");
+            aTarget.addChildren(page, IFeedback.class);
+            return;
+        }
+
+        // Write through the latest document, not the editor's copy, so the change is announced
+        // with the correct previous state and no other stale fields are written back
+        var docState = latest.getState();
 
         switch (docState) {
         case CURATION_IN_PROGRESS:
@@ -150,11 +167,13 @@ public class CuratorWorkflowActionBarItemGroup
                 return;
             }
 
-            documentService.setSourceDocumentState(sourceDocument, CURATION_FINISHED);
+            documentService.setSourceDocumentState(latest, CURATION_FINISHED);
+            sourceDocument.copyStateFrom(latest);
             editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         case CURATION_FINISHED:
-            documentService.setSourceDocumentState(sourceDocument, CURATION_IN_PROGRESS);
+            documentService.setSourceDocumentState(latest, CURATION_IN_PROGRESS);
+            sourceDocument.copyStateFrom(latest);
             editorContext.refreshAfterDocumentStateChange(aTarget);
             break;
         default:
