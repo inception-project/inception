@@ -55,6 +55,16 @@
     </dependency>
     <dependency>
       <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-project-initializers-doclabeling</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
+      <artifactId>inception-layer-docmetadata-api</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>de.tudarmstadt.ukp.inception.app</groupId>
       <artifactId>inception-schema-api</artifactId>
       <version>${project.version}</version>
     </dependency>
@@ -119,24 +129,4 @@
       <artifactId>dkpro-core-api-segmentation-asl</artifactId>
     </dependency>
   </dependencies>
-
-  <build>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
-          <usedDependencies>
-            <!--
-              Required at runtime: this module contributes an entry to
-              META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports,
-              which Spring Boot reads to discover InceptionTestScenariosAutoConfiguration. There is
-              no compile-time reference for the analyzer to detect.
-            -->
-            <usedDependency>org.springframework.boot:spring-boot-autoconfigure</usedDependency>
-          </usedDependencies>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
 </project>

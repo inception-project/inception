@@ -27,10 +27,12 @@ import static de.tudarmstadt.ukp.inception.testscenarios.ScenarioDocuments.impor
 import static de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccount.ANNOTATOR_1;
 import static de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccount.ANNOTATOR_2;
 import static java.util.Arrays.asList;
+import static java.util.stream.Collectors.joining;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
 import org.apache.uima.cas.Type;
@@ -144,6 +146,29 @@ public abstract class CurationScenarioInitializer_ImplBase
         // Nothing by default.
     }
 
+    /**
+     * Hook for annotations the variant adds on top of the named entities. Runs once per annotator
+     * and document, before the annotator's CAS is written.
+     *
+     * @param aCas
+     *            the annotator's CAS.
+     * @param aVariant
+     *            {@code 1} for the first annotator, {@code 2} for the second.
+     */
+    protected void annotateVariant(CAS aCas, int aVariant)
+    {
+        // Nothing by default.
+    }
+
+    /**
+     * @return a paragraph describing what the variant adds on top of the named entities, appended
+     *         to the project description. Empty by default.
+     */
+    protected Optional<String> describeVariant()
+    {
+        return Optional.empty();
+    }
+
     @Override
     public boolean hasExamples()
     {
@@ -167,16 +192,27 @@ public abstract class CurationScenarioInitializer_ImplBase
     {
         var project = aRequest.getProject();
         project.setName(userService.getCurrentUsername() + " - TEST " + getProjectNameSuffix());
-        project.setDescription("""
+        var documentNames = listDocuments();
+        var documentList = documentNames.stream() //
+                .map(name -> "`" + name + "`") //
+                .collect(joining(", "));
+        var documentsSubject = documentNames.size() == 1 //
+                ? "The document " + documentList + " has" //
+                : "The documents " + documentList + " have";
+
+        var description = new StringBuilder();
+        description.append("""
                 Curation test scenario.
 
-                The document `curation-sample.txt` has been finished by **scenario-annotator-1**
-                and **scenario-annotator-2** (password `admin`). Their named-entity annotations
-                agree on some sentences and disagree on others, so the curation unit overview
-                shows a mix of states and a re-merge has something to do.
+                %s been finished by **scenario-annotator-1** and **scenario-annotator-2**
+                (password `admin`). Their named-entity annotations agree on some sentences and
+                disagree on others, so the curation unit overview shows a mix of states and a
+                re-merge has something to do.
 
-                The current user is a curator and a manager on this project.
-                """);
+                """.formatted(documentsSubject));
+        describeVariant().ifPresent(text -> description.append(text).append("\n\n"));
+        description.append("The current user is a curator and a manager on this project.\n");
+        project.setDescription(description.toString());
 
         // The curator has to be able to open the curation page, and to see the project at all.
         var currentUser = userService.getCurrentUser();
@@ -185,7 +221,6 @@ public abstract class CurationScenarioInitializer_ImplBase
         // Remove annotator role granted by default during project creation.
         projectService.revokeRole(project, currentUser, ANNOTATOR);
 
-        var documentNames = listDocuments();
         var documents = new ArrayList<SourceDocument>();
         for (var documentName : documentNames) {
             documents.add(
@@ -248,6 +283,8 @@ public abstract class CurationScenarioInitializer_ImplBase
             addNamedEntity(cas, neType, "Charles de Gaulle", "PER");
             addNamedEntity(cas, neType, "Le Monde", "ORG");
         }
+
+        annotateVariant(cas, aVariant);
 
         documentService.writeAnnotationCas(cas, aDocument, aUser);
         documentService.setAnnotationDocumentState(annotationDocument, FINISHED);
