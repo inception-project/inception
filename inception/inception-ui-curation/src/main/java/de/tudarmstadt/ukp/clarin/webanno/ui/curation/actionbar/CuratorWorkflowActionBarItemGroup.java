@@ -25,6 +25,7 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabled
 
 import java.io.IOException;
 
+import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
@@ -32,6 +33,7 @@ import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
+import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
 import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
@@ -90,6 +92,8 @@ public class CuratorWorkflowActionBarItemGroup
         add(toggleCurationStateLink = new LambdaAjaxLink("toggleCurationState",
                 this::actionToggleCurationState));
         toggleCurationStateLink.setOutputMarkupId(true);
+        toggleCurationStateLink.add(AttributeModifier.replace("title",
+                LoadableDetachableModel.of(() -> getString(getStateTooltipKey()))));
         toggleCurationStateLink.add(new Label("state")
                 .add(new CssClassNameModifier(LambdaModel.of(this::getStateClass))));
 
@@ -107,6 +111,11 @@ public class CuratorWorkflowActionBarItemGroup
         resetDocumentLink.add(enabledWhen(this::isEditable));
     }
 
+    /**
+     * Like the annotator's finish button on the annotation page, the button shows the state that
+     * clicking it leads to (the tooltip says the current one), so the symbols are the other way
+     * round than in status displays such as the monitoring page.
+     */
     public String getStateClass()
     {
         var state = editorContext.getAnnotatorState();
@@ -116,6 +125,18 @@ public class CuratorWorkflowActionBarItemGroup
         }
         else {
             return FontAwesome7IconType.clipboard_check_s.cssClassName();
+        }
+    }
+
+    private String getStateTooltipKey()
+    {
+        var state = editorContext.getAnnotatorState();
+
+        if (curationDocumentService.isCurationFinished(state.getDocument())) {
+            return "stateToggle.curationFinished";
+        }
+        else {
+            return "stateToggle.curationInProgress";
         }
     }
 
