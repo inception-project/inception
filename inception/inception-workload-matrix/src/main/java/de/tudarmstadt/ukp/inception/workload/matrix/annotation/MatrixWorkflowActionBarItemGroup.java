@@ -231,6 +231,11 @@ public class MatrixWorkflowActionBarItemGroup
         }
     }
 
+    /**
+     * The button shows the state that clicking it leads to (the tooltip says the current one), so
+     * the symbols are the other way round than in status displays such as the monitoring page. The
+     * curator's button on the curation pages follows the same convention.
+     */
     public String getStateClass()
     {
         var state = editorContext.getViewState();
@@ -238,21 +243,21 @@ public class MatrixWorkflowActionBarItemGroup
         // Curation sidebar: when writing to the curation document, we need to update the document
         if (state.getUser().getUsername().equals(CURATION_USER)) {
             if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
-                // SourceDocumentState.CURATION_FINISHED.symbol()
-                return FontAwesome7IconType.clipboard_check_s.cssClassName();
+                // Re-open: SourceDocumentState.CURATION_IN_PROGRESS.symbol()
+                return FontAwesome7IconType.clipboard_s.cssClassName();
             }
             else {
-                // SourceDocumentState.CURATION_IN_PROGRESS.symbol()
-                return FontAwesome7IconType.clipboard_s.cssClassName();
+                // Finish: SourceDocumentState.CURATION_FINISHED.symbol()
+                return FontAwesome7IconType.clipboard_check_s.cssClassName();
             }
         }
 
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
-            // AnnotationDocumentState.FINISHED.symbol();
+            // Re-open: AnnotationDocumentState.IN_PROGRESS.symbol()
             return FontAwesome7IconType.play_circle_r.cssClassName();
         }
         else {
-            // AnnotationDocumentState.IN_PROGRESS.symbol();
+            // Finish: AnnotationDocumentState.FINISHED.symbol()
             return FontAwesome7IconType.check_circle_r.cssClassName();
         }
     }
