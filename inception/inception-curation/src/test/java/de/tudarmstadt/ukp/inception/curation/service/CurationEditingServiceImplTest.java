@@ -23,6 +23,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.FILL_ONLY;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.LOAD_ONLY;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.RECREATE;
+import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -60,7 +61,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.dkpro.core.api.ner.type.NamedEntity;
 import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Token;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
+import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 class CurationEditingServiceImplTest
 {
@@ -69,6 +72,8 @@ class CurationEditingServiceImplTest
     private DocumentService documentService;
     private CurationDocumentService curationDocumentService;
     private CurationMergeService curationMergeService;
+    private PreferencesService preferencesService;
+    private CurationSidebarManagerPrefs curationPrefs;
 
     private CurationEditingServiceImpl sut;
 
@@ -83,12 +88,17 @@ class CurationEditingServiceImplTest
         documentService = mock(DocumentService.class);
         curationDocumentService = mock(CurationDocumentService.class);
         curationMergeService = mock(CurationMergeService.class);
+        preferencesService = mock(PreferencesService.class);
 
         sut = new CurationEditingServiceImpl(documentService, curationDocumentService,
-                curationMergeService);
+                curationMergeService, preferencesService);
 
         project = new Project("project");
         document = new SourceDocument("doc.txt", project, "text");
+
+        curationPrefs = new CurationSidebarManagerPrefs();
+        when(preferencesService.loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS,
+                project)).thenReturn(curationPrefs);
         layers = emptyList();
         mergeStrategy = mock(MergeStrategy.class);
     }
@@ -355,6 +365,40 @@ class CurationEditingServiceImplTest
             var order = inOrder(curationDocumentService);
             order.verify(curationDocumentService).writeCurationCas(curationCas, document, false);
             order.verify(curationDocumentService).markCurationInProgress(document);
+        }
+
+        @Test
+        void thatACreatedCurationCasIsNotMergedIntoWhenAutoMergeIsDisabled() throws Exception
+        {
+            curationPrefs.setAutoMergeCurationSidebar(false);
+            givenCuratableUsers(user("ann1"), user("ann2"));
+            givenTheCurationCasIsCreated();
+            var curationCas = curationCasWithToken();
+
+            assertThat(readOrCreate(LOAD_ONLY)).isSameAs(curationCas);
+
+            // Curation starts from the document without annotations, but it does start
+            verifyNoInteractions(curationMergeService);
+            assertThat(curationCas.select(Token.class).asList()).hasSize(1);
+            verify(curationDocumentService).upgradeCurationCas(curationCas, document);
+            verify(curationDocumentService).markCurationInProgress(document);
+            verify(curationDocumentService, never()).deleteCurationCas(any());
+        }
+
+        @Test
+        void thatAnExplicitMergeIntoACreatedCurationCasMergesWhenAutoMergeIsDisabled()
+            throws Exception
+        {
+            // E.g. a re-merge after the curation CAS was deleted in the meantime
+            curationPrefs.setAutoMergeCurationSidebar(false);
+            givenCuratableUsers(user("ann1"));
+            givenTheCurationCasIsCreated();
+            curationCasWithToken();
+
+            readOrCreate(RECREATE);
+
+            verify(curationMergeService).mergeCasses(eq(document), eq(CURATION_USER), any(),
+                    eq(emptyMap()), eq(mergeStrategy), eq(layers), eq(true));
         }
 
         @Test

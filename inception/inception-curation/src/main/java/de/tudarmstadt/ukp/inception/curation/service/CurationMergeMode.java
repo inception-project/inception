@@ -24,8 +24,9 @@ public enum CurationMergeMode
 {
     /**
      * Do not merge into an existing curation CAS. If a curation CAS already exists, it is loaded
-     * as-is; only if none exists yet is it created from the annotators and a full merge performed.
-     * This is the normal document-loading behavior.
+     * as-is; only if none exists yet is it created from the annotators and a full merge performed -
+     * unless the project disabled the automatic merge, in which case curation starts from the
+     * document without annotations. This is the normal document-loading behavior.
      */
     LOAD_ONLY,
 

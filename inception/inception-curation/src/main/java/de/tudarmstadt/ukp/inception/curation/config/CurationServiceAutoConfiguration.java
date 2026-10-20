@@ -110,10 +110,10 @@ public class CurationServiceAutoConfiguration
     @Bean
     public CurationEditingService curationEditingService(DocumentService aDocumentService,
             CurationDocumentService aCurationDocumentService,
-            CurationMergeService aCurationMergeService)
+            CurationMergeService aCurationMergeService, PreferencesService aPreferencesService)
     {
         return new CurationEditingServiceImpl(aDocumentService, aCurationDocumentService,
-                aCurationMergeService);
+                aCurationMergeService, aPreferencesService);
     }
 
     @Bean

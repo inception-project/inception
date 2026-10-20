@@ -166,10 +166,9 @@ public class SplitCurationPage
     }
 
     /**
-     * Ensure the curation CAS exists before the page's generic load path reads it. Unlike the
-     * modern {@code CurationPage} - which relies on the curation sidebar's opt-in auto-merge - the
-     * split-pane page always presents a merged document, so the initial merge happens here
-     * unconditionally.
+     * Ensure the curation CAS exists before the page's generic load path reads it. Creating it
+     * performs the initial merge, unless the project disabled the automatic merge - the same
+     * setting the {@code CurationPage} follows.
      */
     @Override
     protected void ensureDocumentMayBeOpened(SourceDocument aDocument, AnnotatorState aState)

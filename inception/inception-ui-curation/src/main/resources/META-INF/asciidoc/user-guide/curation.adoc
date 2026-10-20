@@ -80,6 +80,7 @@ When the last finished annotation for a document is reopened, you will be forced
 
 When a document is opened for the first time in the curation page, the application analyzes agreements and disagreements between annotators.
 All annotations on which all annotators agree are automatically copied to the *Annotation* pane. Any annotations on which the annotators disagree are skipped.
+If the automatic merge is disabled in the project settings, the *Annotation* pane starts out empty instead (see <<re-merging>>).
 
 The annotator's panes are color-coded according to their relation with the contents of the *Annotation* pane and according to the agreement status.
 The colors largely match the colors also used in the status over in the left sidebar.
@@ -147,6 +148,8 @@ You can also restart the curation process for a document using the **Re-merge** 
 == Re-merging
 
 When a document is first opened for curation, {product-name} performs an automatic pre-merge of the annotators' data into the curation document (see <<merging-strategies>>).
+This only happens if the project setting **Auto-merge when starting to curate a document** is enabled (the default).
+Otherwise, the curation document starts out as the original document, without any of the annotators' annotations.
 The **Re-merge** button on the curation page allows you to run this automatic merge again at any time, for example after the annotators have changed their annotations or after you have changed the merge strategy.
 
 The **Re-merge** dialog offers the following options:

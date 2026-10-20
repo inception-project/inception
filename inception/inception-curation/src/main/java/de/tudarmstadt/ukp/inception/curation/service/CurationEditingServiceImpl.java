@@ -20,7 +20,9 @@ package de.tudarmstadt.ukp.inception.curation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.LOAD_ONLY;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.RECREATE;
+import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.lang.invoke.MethodHandles.lookup;
@@ -45,6 +47,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 
 /**
  * <p>
@@ -60,14 +63,16 @@ public class CurationEditingServiceImpl
     private final DocumentService documentService;
     private final CurationDocumentService curationDocumentService;
     private final CurationMergeService curationMergeService;
+    private final PreferencesService preferencesService;
 
     public CurationEditingServiceImpl(DocumentService aDocumentService,
             CurationDocumentService aCurationDocumentService,
-            CurationMergeService aCurationMergeService)
+            CurationMergeService aCurationMergeService, PreferencesService aPreferencesService)
     {
         documentService = aDocumentService;
         curationDocumentService = aCurationDocumentService;
         curationMergeService = aCurationMergeService;
+        preferencesService = aPreferencesService;
     }
 
     @Override
@@ -116,10 +121,9 @@ public class CurationEditingServiceImpl
                 throw notCuratable(aDocument);
             }
 
-            // A curation CAS just created holds no more than the initial CAS, so it is always
-            // merged into - regardless of the requested merge mode
             var curationCas = readCurationCas(aDocument, aCurationUser, casses, true, aLayers,
-                    aMergeStrategy, created.get() ? RECREATE : aMergeMode);
+                    aMergeStrategy,
+                    created.get() ? initialMergeMode(aDocument, aMergeMode) : aMergeMode);
             curationDocumentService.markCurationInProgress(aDocument);
             return curationCas;
         }
@@ -141,6 +145,29 @@ public class CurationEditingServiceImpl
 
             throw e;
         }
+    }
+
+    /**
+     * A curation CAS just created holds no more than the initial CAS, so it is merged into
+     * regardless of the requested merge mode - unless the document is only being opened and the
+     * project starts curation without the automatic merge. Then curation starts from the document
+     * without annotations. An explicitly requested merge always merges.
+     */
+    private CurationMergeMode initialMergeMode(SourceDocument aDocument,
+            CurationMergeMode aRequestedMergeMode)
+    {
+        if (aRequestedMergeMode == LOAD_ONLY && !isAutoMergeEnabled(aDocument)) {
+            return LOAD_ONLY;
+        }
+
+        return RECREATE;
+    }
+
+    private boolean isAutoMergeEnabled(SourceDocument aDocument)
+    {
+        var prefs = preferencesService.loadDefaultTraitsForProject(
+                KEY_CURATION_SIDEBAR_MANAGER_PREFS, aDocument.getProject());
+        return prefs.isAutoMergeCurationSidebar();
     }
 
     @Override

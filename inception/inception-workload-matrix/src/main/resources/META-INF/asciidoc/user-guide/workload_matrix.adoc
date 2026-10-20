@@ -64,7 +64,7 @@ image::images/monitoring-curation-states.png[role=right]
 
 To change the curation state of a document, click on the table cell in the row for the respective document and in the column *Curation*.
 
-It is possible to discard all the curation for particular document by right-clicking on the table cell and choosing **Reset**. This is a permanent action that cannot be undone. The state is then set back to **new** and the curation process has to start over.
+It is possible to discard all the curation for particular document by right-clicking on the table cell and choosing **Reset**. This is a permanent action that cannot be undone. The curation document is deleted and the document state goes back to the annotation phase, as determined by the states of the annotators. When the document is opened for curation again, the curation process starts over with the automatic pre-merge of the annotators' data - or, with auto-merge disabled, without it.
 
 The *Curation* column also indicates whether a document is ready to be curated.
 Under static assignment, a document is considered ready for curation once every annotator has either *finished* or *locked* it.
