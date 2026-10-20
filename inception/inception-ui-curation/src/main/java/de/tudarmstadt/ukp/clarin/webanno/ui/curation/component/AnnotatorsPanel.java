@@ -29,6 +29,7 @@ import static de.tudarmstadt.ukp.inception.rendering.selection.FocusPosition.CEN
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.uima.fit.util.CasUtil.select;
 
@@ -93,6 +94,7 @@ import de.tudarmstadt.ukp.inception.support.spring.ApplicationEventPublisherHold
 import de.tudarmstadt.ukp.inception.support.uima.ICasUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.AjaxComponentRespondListener;
 import de.tudarmstadt.ukp.inception.support.wicket.ContextMenu;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 
 /**
  * Panel with the annotator's annotations.
@@ -542,12 +544,24 @@ public class AnnotatorsPanel
         casses.put(CURATION_USER, curationDocumentService.readCurationCas(aDocument));
 
         // The source CASes from the annotators are all ready read-only / shared
-        for (var user : curationDocumentService.listCuratableUsers(aDocument)) {
-            casses.put(user.getUsername(),
-                    documentService.readAnnotationCas(aDocument, AnnotationSet.forUser(user)));
+        for (var dataOwner : listDataOwners(aDocument)) {
+            casses.put(dataOwner.id(), documentService.readAnnotationCas(aDocument, dataOwner));
         }
 
         return casses;
+    }
+
+    private List<AnnotationSet> listDataOwners(SourceDocument aDocument)
+    {
+        // The page decides which annotators are curated from - e.g. only the ones the curator
+        // selected
+        if (getPage() instanceof CuratableDocumentPage page) {
+            return page.listDataOwnersToShow(aDocument);
+        }
+
+        return curationDocumentService.listCuratableUsers(aDocument).stream() //
+                .map(AnnotationSet::forUser) //
+                .toList();
     }
 
     private Map<String, Map<VID, AnnotationState>> calculateAnnotationStates(AnnotatorState aState,
@@ -596,6 +610,21 @@ public class AnnotatorsPanel
         }
 
         var casses = getCasses(aState.getDocument());
+
+        // The annotators to show may have changed since the segments were built - e.g. the curator
+        // changed the selection, possibly on another page sharing it - so rebuild the segments
+        // rather than keep panes of annotators no longer shown and miss the newly shown ones
+        var shownUsers = annotatorSegments.getModelObject().stream() //
+                .map(seg -> seg.getUser().getUsername()) //
+                .collect(toSet());
+        var usersToShow = casses.keySet().stream() //
+                .filter(username -> !CURATION_USER.equals(username)) //
+                .collect(toSet());
+        if (!shownUsers.equals(usersToShow)) {
+            init(aTarget, aState);
+            return;
+        }
+
         var annoStates = calculateAnnotationStates(aState, casses);
 
         // Re-render the segments themselves, not only those that already have a visualizer. Right

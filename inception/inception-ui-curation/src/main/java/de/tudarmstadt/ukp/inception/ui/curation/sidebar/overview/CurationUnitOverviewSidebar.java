@@ -44,11 +44,16 @@ import org.slf4j.Logger;
 import org.wicketstuff.event.annotation.OnEvent;
 
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiffSummaryState;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
+import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationEditingService;
@@ -72,6 +77,8 @@ public class CurationUnitOverviewSidebar
     private @SpringBean CurationEditingService curationEditingService;
     private @SpringBean CurationService curationService;
     private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
+    private @SpringBean CurationSessionService curationSessionService;
+    private @SpringBean UserDao userRepository;
 
     private WebMarkupContainer mainContainer;
 
@@ -96,8 +103,11 @@ public class CurationUnitOverviewSidebar
 
         mainContainer.add(new Label("notComputable", new ResourceModel("notComputable"))
                 .add(visibleWhen(() -> hasDocument() && isNotComputable())));
-        mainContainer.add(new Label("noUnits", new ResourceModel("noUnits"))
+        mainContainer.add(new Label("noDataOwners", new ResourceModel("noDataOwners"))
                 .add(visibleWhen(() -> hasDocument() && !isNotComputable()
+                        && getUnits().getDataOwners().isEmpty())));
+        mainContainer.add(new Label("noUnits", new ResourceModel("noUnits")).add(visibleWhen(
+                () -> hasDocument() && !isNotComputable() && !getUnits().getDataOwners().isEmpty()
                         && getUnitsForCurrentDocument().isEmpty())));
     }
 
@@ -109,9 +119,11 @@ public class CurationUnitOverviewSidebar
         // The units are computed the first time the sidebar is actually shown rather than when the
         // document is loaded: the per-unit CasDiff is expensive and most curators never open this
         // tab at all. Recomputing on a document switch is not optional though - the units of the
-        // previous document are simply wrong for this one.
+        // previous document are simply wrong for this one. The same goes for a change of the
+        // annotators to curate from, which may have been made on another page sharing the
+        // selection.
         var document = getActiveEditorState().map(AnnotatorState::getDocument).orElse(null);
-        if (getUnits().isStaleFor(document)) {
+        if (document != null && getUnits().isStaleFor(document, listDataOwners(document))) {
             refreshUnits(null);
         }
     }
@@ -168,7 +180,9 @@ public class CurationUnitOverviewSidebar
                 return;
             }
 
-            buildUnitOverview(state).ifPresent(units -> getUnits().set(state.getDocument(), units));
+            var dataOwners = listDataOwners(state.getDocument());
+            buildUnitOverview(state, dataOwners)
+                    .ifPresent(units -> getUnits().set(state.getDocument(), dataOwners, units));
         }
         catch (Exception e) {
             handleException(LOG, this, aTarget, e);
@@ -201,6 +215,12 @@ public class CurationUnitOverviewSidebar
                 .isStaleFor(getActiveEditorState().map(AnnotatorState::getDocument).orElse(null));
     }
 
+    private List<AnnotationSet> listDataOwners(SourceDocument aDocument)
+    {
+        return curationSessionService.listDataOwnersToCurate(userRepository.getSessionOwnerName(),
+                aDocument, getPage() instanceof CurationPageWithDataOwnerSelection);
+    }
+
     private CurationUnits getUnits()
     {
         return CurationUnitsMetaDataKey.get(getPage());
@@ -210,7 +230,8 @@ public class CurationUnitOverviewSidebar
      * @return the computed units, or {@link Optional#empty()} if they could not be computed for the
      *         given state.
      */
-    private Optional<List<CurationUnit>> buildUnitOverview(AnnotatorState aState)
+    private Optional<List<CurationUnit>> buildUnitOverview(AnnotatorState aState,
+            List<AnnotationSet> aDataOwners)
         throws UIMAException, ClassNotFoundException, IOException, AnnotationException
     {
         var document = aState.getDocument();
@@ -219,8 +240,13 @@ public class CurationUnitOverviewSidebar
             return Optional.empty();
         }
 
-        var curatableUsers = curationDocumentService.listCuratableUsers(document);
-        var casses = documentService.readAllCasesSharedNoUpgrade(document, curatableUsers);
+        // Without any annotators, every unit the curator has not touched would count as agreed
+        if (aDataOwners.isEmpty()) {
+            return Optional.of(emptyList());
+        }
+
+        var casses = documentService.readAllCasesSharedNoUpgrade(document,
+                aDataOwners.stream().map(AnnotationSet::id).toArray(String[]::new));
 
         // Load CAS without updating its timestamp since the sidebar is only an auxiliary view
         var editorCas = curationEditingService.readCurationCas(document,

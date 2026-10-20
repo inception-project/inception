@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
 import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 import static java.util.Collections.emptyList;
 
@@ -66,6 +65,7 @@ import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
+import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class CurationSidebar
@@ -113,13 +113,13 @@ public class CurationSidebar
         queue(usersForm = createUserSelection("usersForm"));
 
         showMerged = new CheckBox("showMerged", Model.of(false));
-        showMerged.add(visibleWhen(this::isSessionActive));
+        showMerged.add(visibleWhen(() -> isSessionActive() && isCurationEditorExtensionEnabled()));
         showMerged.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionToggleShowMerged));
         queue(showMerged);
 
         showScore = new CheckBox("showScore", Model.of(true));
-        showScore.add(visibleWhen(this::isSessionActive));
+        showScore.add(visibleWhen(() -> isSessionActive() && isCurationEditorExtensionEnabled()));
         showScore.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
                 this::actionToggleShowScore));
         queue(showScore);
@@ -204,13 +204,23 @@ public class CurationSidebar
 
     private boolean isSessionActive()
     {
-        return curationSessionService.existsSession(userRepository.getCurrentUsername(),
+        return curationSessionService.existsSession(userRepository.getSessionOwnerName(),
                 getProject().getId());
+    }
+
+    /**
+     * The "show all" and "show score" options only affect the curation suggestions rendered into
+     * the editor, which only happens where the curation editor extension is enabled.
+     */
+    private boolean isCurationEditorExtensionEnabled()
+    {
+        var state = getModelObject();
+        return state != null && state.isExtensionEnabled(CurationEditorExtension.EXTENSION_ID);
     }
 
     private Form<Void> createUserSelection(String aId)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getSessionOwnerName();
         var project = getProject();
 
         var form = new Form<Void>(aId);
@@ -221,8 +231,10 @@ public class CurationSidebar
         form.add(new LambdaAjaxLink("selectNone", this::actionSelectNone));
         form.add(new LambdaAjaxLink("invertSelection", this::actionInvertSelection));
 
+        // Pages that curate a document offer the re-merge in the action bar
         form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
-                .add(visibleWhenNot(isTargetFinished)));
+                .add(visibleWhen(() -> !(getPage() instanceof CuratableDocumentPage)
+                        && !isTargetFinished.getObject())));
 
         users = new ListView<AnnotationSet>("users",
                 LoadableDetachableModel.of(this::listCuratableDataOwners))
@@ -273,7 +285,7 @@ public class CurationSidebar
     {
         var project = getProject();
         if (project.isAnonymousCuration()
-                && !projectService.hasRole(userRepository.getCurrentUser(), project, MANAGER)) {
+                && !projectService.hasRole(userRepository.getSessionOwner(), project, MANAGER)) {
             return Model.of("Anonymized annotator " + (aDataOwnerListItem.getIndex() + 1));
         }
 
@@ -319,7 +331,7 @@ public class CurationSidebar
 
     private void actionInvertSelection(AjaxRequestTarget aTarget)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getSessionOwnerName();
         var projectId = getProject().getId();
         var candidates = users.getModelObject();
         var selected = curationSessionService.getSelectedDataOwners(sessionOwner, projectId,
@@ -332,7 +344,7 @@ public class CurationSidebar
 
     private void setSelectedDataOwners(Collection<AnnotationSet> aSelected)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = userRepository.getSessionOwnerName();
         var projectId = getProject().getId();
         curationSessionService.setSelectedDataOwners(sessionOwner, projectId,
                 users.getModelObject(), aSelected);

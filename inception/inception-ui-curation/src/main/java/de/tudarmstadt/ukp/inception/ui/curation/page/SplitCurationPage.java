@@ -25,6 +25,8 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.LOAD_ONLY;
 
+import java.util.List;
+
 import org.apache.wicket.Component;
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.model.IModel;
@@ -46,6 +48,8 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.DocumentEditorWorkspac
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.mono.SingleDocumentEditorWorkspace;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenDialogBehavior;
+import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationEditingService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationNotPossibleException;
@@ -64,7 +68,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         + PAGE_PARAM_DOCUMENT + "}")
 public class SplitCurationPage
     extends AnnotationPageBase2
-    implements CuratableDocumentPage
+    implements CuratableDocumentPage, CurationPageWithDataOwnerSelection
 {
     public static final String PAGE_PATH = "/curate-split";
 
@@ -77,6 +81,7 @@ public class SplitCurationPage
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CurationEditingService curationEditingService;
     private @SpringBean CurationService curationService;
+    private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean AnnotationEditorRegistry editorRegistry;
 
     public SplitCurationPage(PageParameters aPageParameters)
@@ -87,6 +92,17 @@ public class SplitCurationPage
         addToFooter(new CurationOpenDocumentDialog(ApplicationPageBase.CID_FOOTER_ITEM,
                 getProjectModel(), LoadableDetachableModel.of(this::listCuratableDocuments),
                 this::actionOpenCuratedDocument));
+
+        // The page shares the curation session - and hence the annotator selection in the curation
+        // sidebar - with the CurationPage
+        curationSessionService.startSession(userRepository.getSessionOwnerName(), getProject());
+    }
+
+    @Override
+    public List<AnnotationSet> listDataOwnersToShow(SourceDocument aDocument)
+    {
+        return curationSessionService.listDataOwnersToCurate(userRepository.getSessionOwnerName(),
+                aDocument, true);
     }
 
     private void actionOpenCuratedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
@@ -129,7 +145,7 @@ public class SplitCurationPage
     protected DocumentEditorWorkspace_ImplBase createWorkspace(String aId)
     {
         return new SingleDocumentEditorWorkspace(aId, this::createDocumentEditorPanel,
-                new SingleDocumentEditorUrlParameterStrategy(userRepository::getCurrentUsername,
+                new SingleDocumentEditorUrlParameterStrategy(userRepository::getSessionOwnerName,
                         getPinnedDataOwner() != null));
     }
 

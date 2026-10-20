@@ -32,6 +32,7 @@ import org.apache.wicket.Session;
 import org.apache.wicket.request.mapper.parameter.PageParameters;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
@@ -74,6 +75,20 @@ public interface CuratableDocumentPage
         var project = getProject();
         getWorkloadManagementService().getWorkloadManagerExtension(project).freshenStatus(project);
         return getCurationDocumentService().listCuratableSourceDocuments(project);
+    }
+
+    /**
+     * @return the data owners whose annotations the annotator views show. By default all curatable
+     *         annotators; a page that lets the curator select the annotators overrides this. Merges
+     *         do not use this.
+     * @param aDocument
+     *            the document being curated.
+     */
+    default List<AnnotationSet> listDataOwnersToShow(SourceDocument aDocument)
+    {
+        return getCurationDocumentService().listCuratableUsers(aDocument).stream() //
+                .map(AnnotationSet::forUser) //
+                .toList();
     }
 
     /**
