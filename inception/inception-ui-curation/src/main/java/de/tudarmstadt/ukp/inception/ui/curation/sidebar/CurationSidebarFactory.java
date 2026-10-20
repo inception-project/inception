@@ -30,9 +30,9 @@ import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebarFactory_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
+import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
-import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
 /**
@@ -83,7 +83,7 @@ public class CurationSidebarFactory
     @Override
     public boolean accepts(SidebarContext aContext)
     {
-        if (!(aContext.page() instanceof CurationPage)) {
+        if (!(aContext.page() instanceof CurationPageWithDataOwnerSelection)) {
             return false;
         }
 
@@ -92,6 +92,6 @@ public class CurationSidebarFactory
             return false;
         }
 
-        return projectService.hasRole(userService.getCurrentUsername(), project, CURATOR);
+        return projectService.hasRole(userService.getSessionOwnerName(), project, CURATOR);
     }
 }

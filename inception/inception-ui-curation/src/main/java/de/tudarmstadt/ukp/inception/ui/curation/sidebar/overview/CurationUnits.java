@@ -17,15 +17,21 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar.overview;
 
+import static java.util.Collections.emptySet;
+
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 
 /**
- * The computed curation units together with the document they were computed from.
+ * The computed curation units together with the document and the data owners they were computed
+ * from.
  */
 public class CurationUnits
     implements Serializable
@@ -34,24 +40,39 @@ public class CurationUnits
 
     private List<CurationUnit> units = new ArrayList<>();
     private SourceDocument document;
+    private Set<AnnotationSet> dataOwners = emptySet();
 
     public List<CurationUnit> getUnits()
     {
         return units;
     }
 
+    public Set<AnnotationSet> getDataOwners()
+    {
+        return dataOwners;
+    }
+
     /**
      * @param aDocument
      *            the document the units were computed from.
+     * @param aDataOwners
+     *            the data owners the units were computed from.
      */
-    public void set(SourceDocument aDocument, List<CurationUnit> aUnits)
+    public void set(SourceDocument aDocument, Collection<AnnotationSet> aDataOwners,
+            List<CurationUnit> aUnits)
     {
         units = aUnits;
         document = aDocument;
+        dataOwners = Set.copyOf(aDataOwners);
     }
 
     public boolean isStaleFor(SourceDocument aDocument)
     {
         return aDocument != null && !aDocument.equals(document);
+    }
+
+    public boolean isStaleFor(SourceDocument aDocument, Collection<AnnotationSet> aDataOwners)
+    {
+        return isStaleFor(aDocument) || !dataOwners.equals(Set.copyOf(aDataOwners));
     }
 }
