@@ -26,6 +26,7 @@ import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManag
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.createCasCopy;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.getRealCas;
 import static java.lang.invoke.MethodHandles.lookup;
+import static java.util.Collections.emptyMap;
 import static org.apache.uima.cas.impl.Serialization.deserializeCASComplete;
 import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -81,8 +82,26 @@ public class CurationEditingServiceImpl
             CurationMergeMode aMergeMode)
         throws CurationNotPossibleException, UIMAException, IOException
     {
+        return readOrCreateCurationCas(aDocument, aCurationUser, aLayers, aMergeStrategy,
+                aMergeMode, () -> {
+                    // Nothing to report
+                });
+    }
+
+    @Override
+    public CAS readOrCreateCurationCas(SourceDocument aDocument, String aCurationUser,
+            List<AnnotationLayer> aLayers, MergeStrategy aMergeStrategy,
+            CurationMergeMode aMergeMode, Runnable aInitialMergeListener)
+        throws CurationNotPossibleException, UIMAException, IOException
+    {
         if (!curationDocumentService.isDocumentCuratable(aDocument)) {
             throw notCuratable(aDocument);
+        }
+
+        // Creating an empty or a merged curation CAS in place of the missing one would present a
+        // finished curation nobody has reviewed - and rotate out the backups of the lost one
+        if (isCuratedVersionMissing(aDocument)) {
+            throw curatedVersionMissing(aDocument);
         }
 
         // If there is no curation CAS set and there are no users from whom a template could be
@@ -104,8 +123,6 @@ public class CurationEditingServiceImpl
                             + AnnotationDocumentState.FINISHED + " first.");
         }
 
-        var casses = documentService.readAllCasesSharedNoUpgrade(aDocument, curatableUsers);
-
         // Another curator may have started curation since the checks above, so whether the curation
         // CAS exists is decided here, under the lock on it. The lock is kept until the request
         // ends, so only the request that creates the curation CAS merges into it - everybody else
@@ -114,18 +131,42 @@ public class CurationEditingServiceImpl
         documentService.readOrCreateAnnotationCas(aDocument, CURATION_SET, NO_CAS_UPGRADE,
                 EXCLUSIVE_WRITE_ACCESS, () -> created.set(true));
 
+        CurationMergeMode mergeMode;
+        CAS curationCas;
         try {
             // A curation CAS deleted since the checks above has been re-created without anybody
-            // to merge from
+            // to merge from - or for a curation that has been finished in the meantime
             if (created.get() && curatableUsers.isEmpty()) {
                 throw notCuratable(aDocument);
             }
 
-            var curationCas = readCurationCas(aDocument, aCurationUser, casses, true, aLayers,
-                    aMergeStrategy,
-                    created.get() ? initialMergeMode(aDocument, aMergeMode) : aMergeMode);
+            if (created.get() && curationDocumentService.isCurationFinished(aDocument)) {
+                throw curatedVersionMissing(aDocument);
+            }
+
+            if (created.get()) {
+                // Writing the curation CAS only notifies listeners (search index, recommenders,
+                // ...) about it if its annotation document exists - and when a document is opened
+                // for curation, the page only creates that once the curation CAS has been provided
+                documentService.createOrGetAnnotationDocument(aDocument, CURATION_SET);
+            }
+
+            mergeMode = created.get() ? initialMergeMode(aDocument, aMergeMode) : aMergeMode;
+
+            // The annotators' CASes are only needed for a merge - and whether there is one is only
+            // known now that it is decided whether this request created the curation CAS
+            Map<String, CAS> casses = mergeMode == LOAD_ONLY ? emptyMap()
+                    : documentService.readAllCasesSharedNoUpgrade(aDocument, curatableUsers);
+
+            // The curation CAS is now held by the request, so the page reads it from there and
+            // cannot upgrade it itself - it has to be upgraded here. Only a finished curation that
+            // is merely viewed is handed over as it is: its stored version and backups must stay as
+            // they are.
+            var upgrade = created.get() || mergeMode != LOAD_ONLY
+                    || !curationDocumentService.isCurationFinished(aDocument);
+            curationCas = readCurationCas(aDocument, aCurationUser, casses, upgrade, aLayers,
+                    aMergeStrategy, mergeMode);
             curationDocumentService.markCurationInProgress(aDocument);
-            return curationCas;
         }
         catch (Exception e) {
             if (!created.get()) {
@@ -145,6 +186,14 @@ public class CurationEditingServiceImpl
 
             throw e;
         }
+
+        // Only once curation has been started successfully - and outside of the cleanup above, so
+        // that whatever the listener does cannot undo it
+        if (created.get() && mergeMode != LOAD_ONLY) {
+            aInitialMergeListener.run();
+        }
+
+        return curationCas;
     }
 
     /**
@@ -239,6 +288,10 @@ public class CurationEditingServiceImpl
             return false;
         }
 
+        if (isCuratedVersionMissing(aDocument)) {
+            return false;
+        }
+
         try {
             return !curationDocumentService.listCuratableUsers(aDocument).isEmpty()
                     || curationDocumentService.existsCurationCas(aDocument);
@@ -271,6 +324,35 @@ public class CurationEditingServiceImpl
         }
 
         return Optional.empty();
+    }
+
+    /**
+     * CURATION_FINISHED is only ever reached through an explicit curator action, so a missing
+     * curation CAS there means the curation results are missing.
+     */
+    private boolean isCuratedVersionMissing(SourceDocument aDocument)
+    {
+        if (!curationDocumentService.isCurationFinished(aDocument)) {
+            return false;
+        }
+
+        try {
+            return !curationDocumentService.existsCurationCas(aDocument);
+        }
+        catch (IOException e) {
+            // If we cannot tell, assume it is there - opening the document fails if it is not
+            LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
+                    aDocument, e);
+            return false;
+        }
+    }
+
+    private CurationNotPossibleException curatedVersionMissing(SourceDocument aDocument)
+    {
+        return new CurationNotPossibleException(aDocument,
+                "The curated version of document [" + aDocument.getName()
+                        + "] is missing. A project manager can put its curation "
+                        + "back into progress to curate it again.");
     }
 
     private DocumentNotCuratableException notCuratable(SourceDocument aDocument)
