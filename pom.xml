@@ -361,6 +361,44 @@
 
   <profiles>
     <profile>
+      <!--
+        Checks the licenses of all third-party dependencies of the reactor against the Eclipse
+        Foundation's IP database and ClearlyDefined using the Eclipse Dash License Tool. The goal is
+        an aggregator, so invoke it once on the root instead of binding it to the lifecycle:
+
+          mvn -Pdash-licenses license-tool:license-check
+
+        The results are written to target/dash/summary. Add -Ddash.fail=true to fail the build if
+        any dependency requires review.
+      -->
+      <id>dash-licenses</id>
+      <pluginRepositories>
+        <pluginRepository>
+          <id>dash-licenses-releases</id>
+          <url>https://repo.eclipse.org/content/repositories/dash-licenses-releases/</url>
+          <snapshots>
+            <enabled>false</enabled>
+          </snapshots>
+        </pluginRepository>
+      </pluginRepositories>
+      <build>
+        <pluginManagement>
+          <plugins>
+            <plugin>
+              <groupId>org.eclipse.dash</groupId>
+              <artifactId>license-tool-plugin</artifactId>
+              <version>1.1.0</version>
+              <configuration>
+                <includeScope>runtime</includeScope>
+                <!-- The reactor modules themselves are not third-party content -->
+                <excludeGroupIds>de.tudarmstadt.ukp.inception.app</excludeGroupIds>
+              </configuration>
+            </plugin>
+          </plugins>
+        </pluginManagement>
+      </build>
+    </profile>
+    <profile>
       <id>spotless</id>
       <activation>
         <property>
