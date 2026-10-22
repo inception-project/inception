@@ -35,6 +35,7 @@ jobs:
         disable-sudo: false
         allowed-endpoints: >
           *.data.mcr.microsoft.com:443
+          api.clearlydefined.io:443
           api.github.com:443
           archive.ics.uci.edu:80
           auth.docker.io:443
@@ -62,10 +63,12 @@ jobs:
           quay.io:443
           registry-1.docker.io:443
           registry.npmjs.org:443
+          repo.eclipse.org:443
           repo.maven.apache.org:443
           repository.apache.org:443
           repo.spring.io:443
           repo1.maven.org:443
+          www.eclipse.org:443
           www.ims.uni-stuttgart.de:443
           zoidberg.ukp.informatik.tu-darmstadt.de:443
 
@@ -162,6 +165,21 @@ jobs:
         MAVEN_USERNAME: ${{ secrets.UKP_MAVEN_USER }}
         MAVEN_PASSWORD: ${{ secrets.UKP_MAVEN_TOKEN }}
       run: mvn --show-version --batch-mode --errors --fail-at-end --no-transfer-progress -DdeployAtEnd=true clean deploy -Pci-docker-cleanup
+
+    - name: Check dependency licenses
+      # Report only: the result depends on external services (Eclipse IP database, ClearlyDefined),
+      # so an outage there must not fail the build. Add -Ddash.fail=true to make it a gate.
+      if: matrix.os == 'ubuntu-latest'
+      continue-on-error: true
+      run: mvn --batch-mode --errors --no-transfer-progress -Pdash-licenses license-tool:license-check
+
+    - name: Capture dependency license report
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: dash-license-report
+        path: target/dash/summary
+        if-no-files-found: ignore
 
     - name: Report memory pressure
       # Runs even when the build is killed, so a repeat OOM leaves evidence behind
