@@ -21,19 +21,14 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
-import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.util.Collection;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -43,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
 import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
@@ -52,9 +46,7 @@ import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
-import de.tudarmstadt.ukp.inception.curation.service.DocumentNotCuratableException;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
@@ -75,14 +67,12 @@ public class CurationSidebarServiceImpl
     private final CurationMergeService curationMergeService;
     private final CurationSessionService curationSessionService;
     private final CurationDocumentService curationDocumentService;
-    private final PreferencesService preferencesService;
 
     public CurationSidebarServiceImpl(DocumentService aDocumentService,
             CasStorageService aCasStorageService, CurationService aCurationService,
             CurationMergeService aCurationMergeService,
             CurationSessionService aCurationSessionService,
-            CurationDocumentService aCurationDocumentService,
-            PreferencesService aPreferencesService)
+            CurationDocumentService aCurationDocumentService)
     {
         documentService = aDocumentService;
         casStorageService = aCasStorageService;
@@ -90,7 +80,6 @@ public class CurationSidebarServiceImpl
         curationMergeService = aCurationMergeService;
         curationSessionService = aCurationSessionService;
         curationDocumentService = aCurationDocumentService;
-        preferencesService = aPreferencesService;
     }
 
     /**
@@ -187,101 +176,4 @@ public class CurationSidebarServiceImpl
         LOG.debug("Merge done");
         return factory;
     }
-
-    @Override
-    @Transactional
-    public Optional<MergeStrategyFactory<?>> performInitialMergeIfRequired(AnnotatorState aState)
-        throws IOException, UIMAException, NotEditableException, DocumentNotCuratableException
-    {
-        if (!CURATION_SET.equals(aState.getDataOwner())) {
-            return Optional.empty();
-        }
-
-        // Never merges over curation results, nor into a document whose curation is finished
-        var doc = aState.getDocument();
-        if (!curationDocumentService.isInitialMergeRequired(doc)) {
-            return Optional.empty();
-        }
-
-        var project = aState.getProject();
-        var prefs = preferencesService
-                .loadDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project);
-        if (!prefs.isAutoMergeCurationSidebar()) {
-            // Curation starts from the document without annotations. Upgrade the curation CAS
-            // when creating it - loading the document gets it from the CAS storage session and
-            // does not upgrade it again.
-            var created = new AtomicBoolean();
-            documentService.readOrCreateAnnotationCas(doc, CURATION_SET, FORCE_CAS_UPGRADE,
-                    EXCLUSIVE_WRITE_ACCESS, () -> created.set(true));
-            if (!created.get()) {
-                return Optional.empty();
-            }
-
-            try {
-                // Like a merge, creating the curation CAS starts curation. Moving the document
-                // into curation only when loading it would leave the curation CAS behind if the
-                // loading fails, and an existing curation CAS is never merged into.
-                curationDocumentService.markCurationInProgress(doc);
-            }
-            catch (RuntimeException e) {
-                // Nobody else can have written to the curation CAS since it was created above
-                try {
-                    curationDocumentService.deleteCurationCas(doc);
-                }
-                catch (Exception ex) {
-                    LOG.error("Unable to remove the curation CAS of {} after failing to start "
-                            + "curation", doc, ex);
-                }
-
-                throw e;
-            }
-
-            return Optional.empty();
-        }
-
-        // Create the curation CAS from the initial CAS and upgrade it, so the merge can succeed.
-        // Loading the document reads it again, but that duplication only happens when an initial
-        // merge is required. Another curator may have started curation since the check above, so
-        // whether the curation CAS exists is decided again here, under the lock on it. The lock is
-        // kept until the request ends, so only the request that creates the CAS merges into it.
-        var created = new AtomicBoolean();
-        documentService.readOrCreateAnnotationCas(doc, CURATION_SET, FORCE_CAS_UPGRADE,
-                EXCLUSIVE_WRITE_ACCESS, () -> created.set(true));
-        if (!created.get()) {
-            return Optional.empty();
-        }
-
-        try {
-            // A curation CAS merged from nobody would look curated and never be merged again
-            if (curationDocumentService.listCuratableUsers(doc).isEmpty()) {
-                throw new DocumentNotCuratableException(doc, "Document [" + doc.getName()
-                        + "] cannot be curated: there are no annotators whose annotations could "
-                        + "be merged. This happens when all annotators were removed from the "
-                        + "project, disabled or put back into "
-                        + AnnotationDocumentState.IN_PROGRESS + " mode.");
-            }
-
-            // Always all curatable annotators: the curator's selection in the curation sidebar is
-            // a view filter and is made on another document anyway. To merge from only some of
-            // them, the curator re-merges.
-            var dataOwners = curationSessionService.listCuratableDataOwners(doc);
-            var workflow = curationService.readOrCreateCurationWorkflow(project);
-            return Optional.of(merge(aState, workflow, dataOwners, true));
-        }
-        catch (Exception e) {
-            // The curation CAS was created above and nobody else can have written to it since, so
-            // it holds no curation results. Remove it, so the document does not look merged and
-            // the merge is retried when it is opened the next time.
-            try {
-                curationDocumentService.deleteCurationCas(doc);
-            }
-            catch (Exception ex) {
-                LOG.error("Unable to remove the curation CAS of {} after the failed initial merge",
-                        doc, ex);
-            }
-
-            throw e;
-        }
-    }
-
 }

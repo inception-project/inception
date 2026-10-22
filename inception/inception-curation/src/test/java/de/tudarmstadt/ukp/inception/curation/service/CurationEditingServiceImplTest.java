@@ -32,6 +32,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyCollection;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -55,6 +56,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -361,8 +363,10 @@ class CurationEditingServiceImplTest
 
             verify(curationMergeService).mergeCasses(eq(document), eq(CURATION_USER), any(),
                     eq(emptyMap()), eq(mergeStrategy), eq(layers), eq(true));
+            // Writing the merged CAS notifies listeners only if its annotation document exists.
             // Marking curation as in progress must happen only once the CAS is actually there.
-            var order = inOrder(curationDocumentService);
+            var order = inOrder(documentService, curationDocumentService);
+            order.verify(documentService).createOrGetAnnotationDocument(document, CURATION_SET);
             order.verify(curationDocumentService).writeCurationCas(curationCas, document, false);
             order.verify(curationDocumentService).markCurationInProgress(document);
         }
@@ -415,6 +419,28 @@ class CurationEditingServiceImplTest
                     eq(NO_CAS_UPGRADE), eq(EXCLUSIVE_WRITE_ACCESS), any());
             verifyNoInteractions(curationMergeService);
             assertThat(curationCas.select(Token.class).asList()).hasSize(1);
+            verify(curationDocumentService).markCurationInProgress(document);
+            verify(documentService, never()).createOrGetAnnotationDocument(
+                    any(SourceDocument.class), any(AnnotationSet.class));
+        }
+
+        @Test
+        void thatAFinishedCurationIsOpenedWithoutBeingUpgradedOrWritten() throws Exception
+        {
+            // Viewing a finished curation must leave its stored version and backups alone
+            givenCuratableUsers(user("ann1"));
+            when(curationDocumentService.isCurationFinished(document)).thenReturn(true);
+            when(curationDocumentService.existsCurationCas(document)).thenReturn(true);
+            var curationCas = curationCasWithToken();
+
+            assertThat(readOrCreate(LOAD_ONLY)).isSameAs(curationCas);
+
+            verify(curationDocumentService, never()).upgradeCurationCas(any(), any());
+            verify(curationDocumentService, never()).writeCurationCasSilently(any(), any(),
+                    anyBoolean());
+            verify(curationDocumentService, never()).writeCurationCas(any(), any(), anyBoolean());
+            verify(documentService, never()).readAllCasesSharedNoUpgrade(any(SourceDocument.class),
+                    anyCollection());
             verify(curationDocumentService).markCurationInProgress(document);
         }
 

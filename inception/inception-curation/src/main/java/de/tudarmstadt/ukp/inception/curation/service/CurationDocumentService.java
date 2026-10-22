@@ -113,19 +113,6 @@ public interface CurationDocumentService
     boolean isDocumentCuratable(SourceDocument aDocument);
 
     /**
-     * Whether the curation CAS of the given document still has to be created by an initial merge.
-     * That is the case if the document has no curation CAS - including a document in curation whose
-     * initial merge failed. A curation CAS is only created when curation starts, so an existing one
-     * holds curation results and is never merged over. A document whose curation is finished never
-     * gets an initial merge.
-     *
-     * @param aDocument
-     *            the source document.
-     * @return whether an initial merge has to be performed.
-     */
-    boolean isInitialMergeRequired(SourceDocument aDocument);
-
-    /**
      * @param aSourceDocument
      *            the source document.
      * @return the users that have curatable annotation data for the given document. A user is

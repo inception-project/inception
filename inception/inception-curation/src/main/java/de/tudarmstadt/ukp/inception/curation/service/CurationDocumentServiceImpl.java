@@ -275,39 +275,6 @@ public class CurationDocumentServiceImpl
     }
 
     @Override
-    @Transactional(noRollbackFor = NoResultException.class)
-    public boolean isInitialMergeRequired(SourceDocument aDocument)
-    {
-        Validate.notNull(aDocument, "Document must be specified");
-
-        // Make sure we know the latest state from the DB - just in case the given document is stale
-        var state = getCurrentState(aDocument);
-
-        // CURATION_FINISHED is only ever reached through an explicit curator action, so a missing
-        // curation CAS there means the curation results are missing - not a failed merge. Merging
-        // would create a finished curation nobody has reviewed.
-        if (CURATION_FINISHED.equals(state)) {
-            return false;
-        }
-
-        // A curation CAS is only created when curation starts, so if there is one, it holds the
-        // curation results - even if the document is not in a curation state (any more), e.g.
-        // because a workload update moved it out of curation. Never merge over it. A document
-        // claiming to be in curation but without a curation CAS to back that claim is the result
-        // of a failed initial merge - retry it instead of locking the document up.
-        try {
-            return !existsCurationCas(aDocument);
-        }
-        catch (IOException e) {
-            // If we cannot tell, assume it is there - that avoids re-merging over curation work.
-            // Opening the document then fails if it really is missing.
-            LOG.warn("Unable to determine whether a curation CAS exists for {} - assuming it does",
-                    aDocument, e);
-            return false;
-        }
-    }
-
-    @Override
     public Optional<Long> getCurationCasTimestamp(SourceDocument aDocument) throws IOException
     {
         Validate.notNull(aDocument, "Source document must be specified");

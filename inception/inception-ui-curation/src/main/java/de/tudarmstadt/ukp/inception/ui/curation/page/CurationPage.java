@@ -23,11 +23,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.NS_PROJECT;
 import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.PAGE_PARAM_PROJECT;
+import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.LOAD_ONLY;
 import static java.lang.invoke.MethodHandles.lookup;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 import static org.slf4j.LoggerFactory.getLogger;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.apache.wicket.Component;
@@ -56,13 +56,14 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenD
 import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
+import de.tudarmstadt.ukp.inception.curation.service.CurationEditingService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationNotPossibleException;
+import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.ui.curation.actionbar.opendocument.CurationOpenDocumentDialog;
 import de.tudarmstadt.ukp.inception.ui.curation.readiness.CurationReadinessBadgePanel;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
 
 @MountPath(NS_PROJECT + "/${" + PAGE_PARAM_PROJECT + "}" + CurationPage.PAGE_PATH + "/#{"
@@ -82,7 +83,8 @@ public class CurationPage
     private @SpringBean WorkloadManagementService workloadManagementService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean CurationSessionService curationSessionService;
-    private @SpringBean CurationSidebarService curationSidebarService;
+    private @SpringBean CurationEditingService curationEditingService;
+    private @SpringBean CurationService curationService;
 
     public CurationPage(PageParameters aPageParameters)
     {
@@ -134,39 +136,23 @@ public class CurationPage
             backToProjectPage();
         }
 
-        if (isCurationFinishedWithoutCurationCas(aDocument)) {
-            getSession().error("The curated version of document [" + aDocument.getName()
-                    + "] is missing. A project manager can put its curation back into progress "
-                    + "to curate it again.");
-
-            backToProjectPage();
-        }
-
-        performInitialMergeIfRequired(aDocument, aState);
+        startCuration(aDocument, aState);
     }
 
-    private boolean isCurationFinishedWithoutCurationCas(SourceDocument aDocument)
-    {
-        if (!curationDocumentService.isCurationFinished(aDocument)) {
-            return false;
-        }
-
-        try {
-            return !curationDocumentService.existsCurationCas(aDocument);
-        }
-        catch (IOException e) {
-            // If we cannot tell, try to open the document - that fails if the CAS is missing
-            LOG.warn("Unable to determine whether a curation CAS exists for {}", aDocument, e);
-            return false;
-        }
-    }
-
-    private void performInitialMergeIfRequired(SourceDocument aDocument, AnnotatorState aState)
+    /**
+     * Ensure the curation CAS exists before the page's generic load path reads it, performing the
+     * initial merge unless the project disabled the automatic merge - like the
+     * {@link SplitCurationPage} does.
+     */
+    private void startCuration(SourceDocument aDocument, AnnotatorState aState)
     {
         try {
-            curationSidebarService.performInitialMergeIfRequired(aState)
-                    .ifPresent(mergeStrategyFactory -> {
-                        success("Performed initial merge using [" + mergeStrategyFactory.getLabel()
+            var workflow = curationService.readOrCreateCurationWorkflow(aDocument.getProject());
+            curationEditingService.readOrCreateCurationCas(aDocument,
+                    aState.getUser().getUsername(), aState.getAnnotationLayers(),
+                    curationService.getMergeStrategy(workflow), LOAD_ONLY, () -> {
+                        success("Performed initial merge using ["
+                                + curationService.getMergeStrategyFactory(workflow).getLabel()
                                 + "].");
                         getRequestCycle().find(AjaxRequestTarget.class)
                                 .ifPresent($ -> $.addChildren(this, IFeedback.class));
@@ -177,7 +163,7 @@ public class CurationPage
             backToProjectPage();
         }
         catch (Exception e) {
-            var message = "Unable to perform initial merge for [" + aDocument.getName() + "]: "
+            var message = "Unable to open [" + aDocument.getName() + "] for curation: "
                     + getRootCauseMessage(e);
             LOG.error(message, e);
             getSession().error(message);

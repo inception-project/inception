@@ -534,110 +534,8 @@ class CurationDocumentServiceImplTest
     }
 
     @Nested
-    class InitialMerge
+    class ResetCuration
     {
-        @Test
-        void isInitialMergeRequired_ShouldMergeDocumentWithoutCurationCas() throws Exception
-        {
-            // Whether the document may be curated at all is up to isDocumentCuratable, not this
-            for (var state : asList(NEW, ANNOTATION_IN_PROGRESS, ANNOTATION_FINISHED)) {
-                documentService.setSourceDocumentState(testDocument, state);
-
-                try (var session = openNested(true)) {
-                    assertThat(sut.isInitialMergeRequired(testDocument)) //
-                            .as("A document in state %s without a curation CAS needs a merge",
-                                    state) //
-                            .isTrue();
-                }
-            }
-        }
-
-        @Test
-        void isInitialMergeRequired_ShouldRetryMergeInCurationWithoutCurationCas() throws Exception
-        {
-            documentService.setSourceDocumentState(testDocument, CURATION_IN_PROGRESS);
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isInitialMergeRequired(testDocument)) //
-                        .as("Curation in progress without a curation CAS is a failed merge") //
-                        .isTrue();
-            }
-        }
-
-        @Test
-        void isInitialMergeRequired_ShouldNotMergeIntoCurationInProgress() throws Exception
-        {
-            documentService.setSourceDocumentState(testDocument, CURATION_IN_PROGRESS);
-            writeCurationCasFor(testDocument);
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isInitialMergeRequired(testDocument)) //
-                        .as("The curation CAS of a document in curation holds the results") //
-                        .isFalse();
-            }
-        }
-
-        @Test
-        void isInitialMergeRequired_ShouldNotMergeFinishedCuration() throws Exception
-        {
-            documentService.setSourceDocumentState(testDocument, CURATION_FINISHED);
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isInitialMergeRequired(testDocument)) //
-                        .as("The curation results of a finished curation without a curation "
-                                + "CAS are missing, not to be merged anew") //
-                        .isFalse();
-            }
-
-            writeCurationCasFor(testDocument);
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isInitialMergeRequired(testDocument)) //
-                        .as("Finished curation is never merged into") //
-                        .isFalse();
-            }
-        }
-
-        @Test
-        void isInitialMergeRequired_ShouldNotMergeOverCurationCasOfDocumentNotInCuration()
-            throws Exception
-        {
-            // E.g. a workload update moved the document out of curation while it was being
-            // curated. A curation CAS is only created when curation starts, so it holds the
-            // curation results.
-            for (var state : asList(NEW, ANNOTATION_IN_PROGRESS, ANNOTATION_FINISHED)) {
-                var document = new SourceDocument("doc-" + state, testProject, "text");
-                testEntityManager.persist(document);
-                documentService.setSourceDocumentState(document, state);
-                writeCurationCasFor(document);
-
-                try (var session = openNested(true)) {
-                    assertThat(sut.isInitialMergeRequired(document)) //
-                            .as("The curation CAS of a document in state %s holds curation "
-                                    + "results", state) //
-                            .isFalse();
-                }
-            }
-        }
-
-        @Test
-        void isInitialMergeRequired_ShouldDecideBasedOnTheStoredState() throws Exception
-        {
-            // The caller's entity is stale: it claims annotation is finished, which without a
-            // curation CAS would call for a merge - but curation has been finished meanwhile
-            setStoredStateBypassingEntity(testDocument, CURATION_FINISHED);
-
-            var staleDocument = new SourceDocument("doc", testProject, "text");
-            staleDocument.setId(testDocument.getId());
-            staleDocument.updateState(ANNOTATION_FINISHED);
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isInitialMergeRequired(staleDocument)) //
-                        .as("The stored CURATION_FINISHED wins over the stale entity") //
-                        .isFalse();
-            }
-        }
-
         @Test
         void resetCuration_ShouldWorkWithoutCurationAnnotationDocument() throws Exception
         {
@@ -678,12 +576,6 @@ class CurationDocumentServiceImplTest
                     .getState()) //
                             .as("The curation annotation document is back to NEW") //
                             .isEqualTo(AnnotationDocumentState.NEW);
-
-            try (var session = openNested(true)) {
-                assertThat(sut.isInitialMergeRequired(testDocument)) //
-                        .as("Curating the document again starts with the initial merge") //
-                        .isTrue();
-            }
         }
 
         @Test

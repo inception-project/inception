@@ -21,19 +21,14 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXC
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.FORCE_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnchoringMode.CHARACTERS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static java.util.Collections.emptyList;
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static org.apache.uima.fit.factory.TypeSystemDescriptionFactory.createTypeSystemDescription;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,13 +36,11 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.text.AnnotationFS;
 import org.apache.uima.util.CasCreationUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -56,10 +49,8 @@ import org.springframework.boot.persistence.autoconfigure.EntityScan;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
-import org.springframework.context.event.EventListener;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,19 +78,14 @@ import de.tudarmstadt.ukp.inception.annotation.storage.config.CasStorageServiceA
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.config.CurationDocumentServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeIncompleteStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
-import de.tudarmstadt.ukp.inception.curation.service.DocumentNotCuratableException;
-import de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.documents.api.RepositoryAutoConfiguration;
 import de.tudarmstadt.ukp.inception.documents.config.DocumentServiceAutoConfiguration;
-import de.tudarmstadt.ukp.inception.documents.event.DocumentStateChangedEvent;
 import de.tudarmstadt.ukp.inception.editor.state.AnnotatorStateImpl;
 import de.tudarmstadt.ukp.inception.log.config.EventLoggingAutoConfiguration;
-import de.tudarmstadt.ukp.inception.preferences.PreferencesService;
 import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoConfig;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
@@ -109,10 +95,10 @@ import de.tudarmstadt.ukp.inception.annotation.layer.behaviors.LayerBehaviorRegi
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
 
 /**
- * Starting curation with real CAS storage, a real database and a real merge: whether the curation
- * CAS exists afterwards, what it contains and which state the document is stored in. Runs without a
+ * Merging in the curation sidebar with real CAS storage and a real database. Runs without a
  * test-managed transaction, so that the transaction of the service under test commits or rolls back
- * as it does in the application.
+ * as it does in the application. Starting curation is tested in
+ * {@code CurationEditingServiceImplIntegrationTest}.
  */
 @EnableAutoConfiguration
 @DataJpaTest(showSql = false, //
@@ -155,13 +141,8 @@ class CurationSidebarServiceImplIntegrationTest
     private @Autowired AnnotationSchemaService schemaService;
     private @Autowired UserDao userService;
     private @Autowired CurationService curationService;
-    private @Autowired CurationSessionService curationSessionService;
-    private @Autowired PreferencesService preferencesService;
     private @Autowired CurationSidebarService sut;
-    private @Autowired FailingStateChange failingStateChange;
-
-    // Only stubbed to let another curator start curation at a given point
-    private @MockitoSpyBean CurationDocumentService curationDocumentService;
+    private @Autowired CurationDocumentService curationDocumentService;
 
     private Project project;
     private SourceDocument document;
@@ -192,7 +173,6 @@ class CurationSidebarServiceImplIntegrationTest
     @AfterEach
     void tearDown()
     {
-        failingStateChange.enabled = false;
         endRequest();
     }
 
@@ -220,160 +200,6 @@ class CurationSidebarServiceImplIntegrationTest
         assertThat(storedState()).isEqualTo(CURATION_FINISHED);
     }
 
-    @Test
-    void thatNoInitialMergeIsPerformedForAnotherDataOwner() throws Exception
-    {
-        givenAutoMerge(true);
-        givenAnnotatorFinished("ann1", "This");
-        var state = curationOf(document);
-        state.setUser(new User("anna"));
-
-        assertThat(sut.performInitialMergeIfRequired(state)).isEmpty();
-
-        endRequest();
-        assertThat(curationCasExists()).isFalse();
-        assertThat(storedState()).isEqualTo(ANNOTATION_FINISHED);
-    }
-
-    @Test
-    void thatNoInitialMergeIsPerformedWhenNotRequired() throws Exception
-    {
-        // A finished curation whose curation CAS is missing must not get an empty or a merged
-        // one, which would also rotate out the backups of the lost one
-        givenAutoMerge(true);
-        givenAnnotatorFinished("ann1", "This");
-        documentService.setSourceDocumentState(document, CURATION_FINISHED);
-
-        assertThat(sut.performInitialMergeIfRequired(curationOf(document))).isEmpty();
-
-        endRequest();
-        assertThat(curationCasExists()).isFalse();
-        assertThat(storedState()).isEqualTo(CURATION_FINISHED);
-    }
-
-    @Test
-    void thatStartingCurationWithoutAutoMergeCreatesTheCurationCasAndStartsCuration()
-        throws Exception
-    {
-        givenAutoMerge(false);
-        givenAnnotatorFinished("ann1", "This");
-
-        assertThat(sut.performInitialMergeIfRequired(curationOf(document))).isEmpty();
-
-        endRequest();
-        assertThat(curationCasExists()).isTrue();
-        assertThat(curatedSpans()).isEmpty();
-        assertThat(storedState()).isEqualTo(CURATION_IN_PROGRESS);
-    }
-
-    @Test
-    void thatNoCurationCasIsLeftBehindWhenStartingCurationWithoutAutoMergeFails() throws Exception
-    {
-        givenAutoMerge(false);
-        failingStateChange.enabled = true;
-
-        assertThatExceptionOfType(IllegalStateException.class) //
-                .isThrownBy(() -> sut.performInitialMergeIfRequired(curationOf(document))) //
-                .withMessage(FailingStateChange.MESSAGE);
-
-        endRequest();
-        // An existing curation CAS is never merged into, so one left behind here would make the
-        // next opening skip the initial merge once auto-merge is enabled
-        assertThat(curationCasExists()).isFalse();
-        assertThat(storedState()).isEqualTo(ANNOTATION_FINISHED);
-        assertThat(initialMergeRequired()) //
-                .as("The next opening performs the initial merge") //
-                .isTrue();
-    }
-
-    @Test
-    void thatACurationCasCreatedByAnotherCuratorIsLeftAloneWithAutoMergeDisabled() throws Exception
-    {
-        givenAutoMerge(false);
-        givenAnnotatorFinished("ann1", "This");
-        givenAnotherCuratorStartsCurationAfterTheCheck("is");
-
-        assertThat(sut.performInitialMergeIfRequired(curationOf(document))).isEmpty();
-
-        endRequest();
-        assertThat(curatedSpans()).containsExactly("is");
-        assertThat(storedState()).isEqualTo(CURATION_IN_PROGRESS);
-    }
-
-    @Test
-    void thatInitialMergeIsPerformedWhenRequired() throws Exception
-    {
-        givenAutoMerge(true);
-        givenMergeStrategy(MergeIncompleteStrategyFactory.BEAN_NAME);
-        givenAnnotatorFinished("ann1", "This");
-        givenAnnotatorFinished("ann2", "test");
-        // The first merge always uses all curatable annotators, not the curator's selection in
-        // the curation sidebar
-        curationSessionService.setSelectedDataOwners("curator", project.getId(),
-                List.of(AnnotationSet.forUser("ann1"), AnnotationSet.forUser("ann2")),
-                List.of(AnnotationSet.forUser("ann1")));
-
-        var factory = sut.performInitialMergeIfRequired(curationOf(document));
-
-        assertThat(factory).hasValueSatisfying(
-                f -> assertThat(f.getId()).isEqualTo(MergeIncompleteStrategyFactory.BEAN_NAME));
-        endRequest();
-        // The curation CAS is created from the initial CAS, which does not know the project's
-        // layers - merging into it only works because it is upgraded first
-        assertThat(curatedSpans()).containsExactlyInAnyOrder("This", "test");
-        assertThat(storedState()).isEqualTo(CURATION_IN_PROGRESS);
-    }
-
-    @Test
-    void thatNoInitialMergeIsPerformedWhenAnotherCuratorCreatedTheCurationCas() throws Exception
-    {
-        givenAutoMerge(true);
-        givenAnnotatorFinished("ann1", "This");
-        givenAnotherCuratorStartsCurationAfterTheCheck("is");
-
-        assertThat(sut.performInitialMergeIfRequired(curationOf(document))).isEmpty();
-
-        endRequest();
-        // Neither merged over nor deleted
-        assertThat(curatedSpans()).containsExactly("is");
-        assertThat(storedState()).isEqualTo(CURATION_IN_PROGRESS);
-    }
-
-    @Test
-    void thatTheCurationCasIsDeletedWhenTheInitialMergeFails() throws Exception
-    {
-        givenAutoMerge(true);
-        givenAnnotatorFinished("ann1", "This");
-        // Fails after the merged curation CAS has been written
-        failingStateChange.enabled = true;
-
-        assertThatExceptionOfType(IllegalStateException.class) //
-                .isThrownBy(() -> sut.performInitialMergeIfRequired(curationOf(document))) //
-                .withMessage(FailingStateChange.MESSAGE);
-
-        endRequest();
-        assertThat(curationCasExists()).isFalse();
-        assertThat(storedState()).isEqualTo(ANNOTATION_FINISHED);
-        assertThat(initialMergeRequired()) //
-                .as("The next opening performs the initial merge") //
-                .isTrue();
-    }
-
-    @Test
-    void thatTheCurationCasIsDeletedWhenThereIsNobodyToMergeFrom() throws Exception
-    {
-        // E.g. all annotators were removed from the project after the document became curatable
-        givenAutoMerge(true);
-
-        assertThatExceptionOfType(DocumentNotCuratableException.class) //
-                .isThrownBy(() -> sut.performInitialMergeIfRequired(curationOf(document)));
-
-        endRequest();
-        // A curation CAS merged from nobody would look curated and never be merged again
-        assertThat(curationCasExists()).isFalse();
-        assertThat(storedState()).isEqualTo(ANNOTATION_FINISHED);
-    }
-
     private AnnotatorState curationOf(SourceDocument aDocument)
     {
         var state = new AnnotatorStateImpl(Mode.CURATION);
@@ -382,21 +208,6 @@ class CurationSidebarServiceImplIntegrationTest
         state.setUser(new User(CURATION_USER));
         state.setAnnotationLayers(schemaService.listAnnotationLayer(project));
         return state;
-    }
-
-    private void givenAutoMerge(boolean aAutoMerge)
-    {
-        var prefs = new CurationSidebarManagerPrefs();
-        prefs.setAutoMergeCurationSidebar(aAutoMerge);
-        preferencesService.saveDefaultTraitsForProject(KEY_CURATION_SIDEBAR_MANAGER_PREFS, project,
-                prefs);
-    }
-
-    private void givenMergeStrategy(String aMergeStrategy)
-    {
-        var workflow = curationService.readOrCreateCurationWorkflow(project);
-        workflow.setMergeStrategy(aMergeStrategy);
-        curationService.createOrUpdateCurationWorkflow(workflow);
     }
 
     private void givenAnnotatorFinished(String aUsername, String aCoveredText) throws Exception
@@ -414,37 +225,6 @@ class CurationSidebarServiceImplIntegrationTest
         documentService.setAnnotationDocumentState(annDoc, FINISHED);
     }
 
-    /**
-     * Another curator starts curation between the check whether an initial merge is required and
-     * taking the lock on the curation CAS - in their own request.
-     */
-    private void givenAnotherCuratorStartsCurationAfterTheCheck(String aCuratedText)
-    {
-        doAnswer(call -> {
-            var required = call.callRealMethod();
-            // The repository path is passed on in the MDC, like to any request
-            var mdc = MDC.getCopyOfContextMap();
-            runAsync(() -> {
-                MDC.setContextMap(mdc);
-                try (var session = CasStorageSession.open()) {
-                    var cas = documentService.readOrCreateAnnotationCas(document, CURATION_SET,
-                            FORCE_CAS_UPGRADE, EXCLUSIVE_WRITE_ACCESS);
-                    addSpan(cas, aCuratedText);
-                    documentService.writeAnnotationCas(cas,
-                            documentService.createOrGetAnnotationDocument(document, CURATION_SET));
-                    curationDocumentService.markCurationInProgress(document);
-                }
-                catch (Exception e) {
-                    throw new IllegalStateException(e);
-                }
-                finally {
-                    MDC.clear();
-                }
-            }).get();
-            return required;
-        }).when(curationDocumentService).isInitialMergeRequired(any());
-    }
-
     private static void addSpan(CAS aCas, String aCoveredText)
     {
         var begin = TEXT.indexOf(aCoveredText);
@@ -460,47 +240,9 @@ class CurationSidebarServiceImplIntegrationTest
         }
     }
 
-    private boolean initialMergeRequired() throws Exception
-    {
-        try (var session = CasStorageSession.open()) {
-            return curationDocumentService.isInitialMergeRequired(document);
-        }
-    }
-
-    private List<String> curatedSpans() throws Exception
-    {
-        try (var session = CasStorageSession.open()) {
-            assertThat(curationDocumentService.existsCurationCas(document)).isTrue();
-            var cas = documentService.readAnnotationCas(document, CURATION_SET);
-            return cas.<AnnotationFS> getAnnotationIndex(cas.getTypeSystem().getType(SPAN_LAYER))
-                    .stream() //
-                    .map(AnnotationFS::getCoveredText) //
-                    .toList();
-        }
-    }
-
     private SourceDocumentState storedState()
     {
         return documentService.getSourceDocument(project.getId(), document.getId()).getState();
-    }
-
-    /**
-     * Makes moving a document into curation fail - state changes publish their event within the
-     * transaction that makes them.
-     */
-    static class FailingStateChange
-    {
-        static final String MESSAGE = "State change failed";
-
-        volatile boolean enabled;
-
-        @EventListener
-        void onDocumentStateChanged(DocumentStateChangedEvent aEvent)
-        {
-            if (enabled && aEvent.getNewState() == CURATION_IN_PROGRESS) {
-                throw new IllegalStateException(MESSAGE);
-            }
-        }
     }
 
     @SpringBootConfiguration
@@ -537,22 +279,15 @@ class CurationSidebarServiceImplIntegrationTest
         }
 
         @Bean
-        FailingStateChange failingStateChange()
-        {
-            return new FailingStateChange();
-        }
-
-        @Bean
         CurationSidebarService curationSidebarService(DocumentService aDocumentService,
                 CasStorageService aCasStorageService, CurationService aCurationService,
                 CurationMergeService aCurationMergeService,
                 CurationSessionService aCurationSessionService,
-                CurationDocumentService aCurationDocumentService,
-                PreferencesService aPreferencesService)
+                CurationDocumentService aCurationDocumentService)
         {
             return new CurationSidebarServiceImpl(aDocumentService, aCasStorageService,
                     aCurationService, aCurationMergeService, aCurationSessionService,
-                    aCurationDocumentService, aPreferencesService);
+                    aCurationDocumentService);
         }
     }
 }
