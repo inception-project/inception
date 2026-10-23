@@ -39,6 +39,27 @@
             </div>
           </div>
         </div>
+        <div class="row form-row" wicket:id="dataOwnersContainer">
+          <div class="col-sm-12">
+            <div class="d-flex align-items-center mb-1">
+              <span class="me-auto"><wicket:message key="dataOwners" /></span>
+              <a wicket:id="selectAllDataOwners" href="#" class="btn btn-sm btn-outline-secondary ms-1">
+                <wicket:message key="selectAllDataOwners" />
+              </a>
+              <a wicket:id="selectSidebarDataOwners" href="#" class="btn btn-sm btn-outline-secondary ms-1">
+                <wicket:message key="selectSidebarDataOwners" />
+              </a>
+            </div>
+            <div wicket:id="dataOwners">
+              <div class="form-check" wicket:id="dataOwnerChoices">
+                <label class="form-check-label">
+                  <input wicket:id="dataOwner" class="form-check-input" type="checkbox" />
+                  <span wicket:id="name"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="row form-row" wicket:id="challengeContainer">
           <div class="col-sm-12">
             <p>

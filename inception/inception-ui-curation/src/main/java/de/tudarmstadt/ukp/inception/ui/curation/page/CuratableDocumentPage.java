@@ -22,6 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase.set
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.uima.UIMAException;
@@ -80,7 +81,8 @@ public interface CuratableDocumentPage
     /**
      * @return the data owners whose annotations the annotator views show. By default all curatable
      *         annotators; a page that lets the curator select the annotators overrides this. Merges
-     *         do not use this.
+     *         do not use this: the initial merge uses all curatable annotators, a re-merge the ones
+     *         chosen in the merge dialog.
      * @param aDocument
      *            the document being curated.
      */
@@ -113,10 +115,44 @@ public interface CuratableDocumentPage
             MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode)
         throws IOException, UIMAException, AnnotationException
     {
+        // E.g. the initial merge: it considers all curatable annotators, because the curator
+        // cannot have chosen any for this document yet
+        return readOrCreateCurationCas(aDocument, aState, aMergeStrategy, aMergeMode, null);
+    }
+
+    /**
+     * Like
+     * {@link #readOrCreateCurationCas(SourceDocument, AnnotatorState, MergeStrategy, CurationMergeMode)},
+     * but merge only from the given annotators.
+     *
+     * @param aDocument
+     *            the document to merge into.
+     * @param aState
+     *            the state of the merge target editor - it identifies the data owner to merge into
+     *            and the layers to consider.
+     * @param aMergeStrategy
+     *            how to reconcile disagreeing annotators.
+     * @param aMergeMode
+     *            whether to rebuild the curation document or only fill its gaps.
+     * @param aDataOwners
+     *            the annotators to merge from, or {@code null} for all curatable annotators.
+     * @return the curation CAS.
+     */
+    default CAS readOrCreateCurationCas(SourceDocument aDocument, AnnotatorState aState,
+            MergeStrategy aMergeStrategy, CurationMergeMode aMergeMode,
+            Collection<AnnotationSet> aDataOwners)
+        throws IOException, UIMAException, AnnotationException
+    {
         try {
-            return getCurationEditingService().readOrCreateCurationCas(aDocument,
-                    aState.getUser().getUsername(), aState.getAnnotationLayers(), aMergeStrategy,
-                    aMergeMode);
+            var curationUser = aState.getUser().getUsername();
+            var layers = aState.getAnnotationLayers();
+            if (aDataOwners == null) {
+                return getCurationEditingService().readOrCreateCurationCas(aDocument, curationUser,
+                        layers, aMergeStrategy, aMergeMode);
+            }
+
+            return getCurationEditingService().readOrCreateCurationCas(aDocument, curationUser,
+                    layers, aMergeStrategy, aMergeMode, aDataOwners);
         }
         catch (DocumentNotCuratableException e) {
             getSession().error(e.getMessage());

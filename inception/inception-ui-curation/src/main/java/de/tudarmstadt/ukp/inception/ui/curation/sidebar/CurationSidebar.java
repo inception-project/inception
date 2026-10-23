@@ -141,6 +141,8 @@ public class CurationSidebar
         queue(mergeConfirm = new MergeDialog("mergeConfirmDialog",
                 new ResourceModel("mergeConfirmTitle"), new ResourceModel("mergeConfirmText"),
                 documentNameModel, curationWorkflowModel));
+        mergeConfirm.setDataOwnerSource(this::listCuratableDataOwners);
+        mergeConfirm.setSidebarSelectionSource(() -> selectedUsers.getModelObject());
     }
 
     @Override
@@ -183,16 +185,28 @@ public class CurationSidebar
         var dataOwner = state.getUser();
         var curationWorkflow = curationWorkflowModel.getObject();
 
+        aTarget.addChildren(getPage(), IFeedback.class);
+
+        // The dialog offers the annotators that were curatable when it was opened. Some may have
+        // stopped being curatable since, e.g. because they were reset on the monitoring page.
+        var curatableDataOwners = listCuratableDataOwners();
+        var dataOwners = aForm.getModelObject().getDataOwners().stream() //
+                .filter(curatableDataOwners::contains) //
+                .toList();
+        if (dataOwners.isEmpty()) {
+            error("Unable to merge: none of the selected annotators has annotations that can be "
+                    + "curated.");
+            return;
+        }
+
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
             curationService.createOrUpdateCurationWorkflow(curationWorkflow);
             success("Updated project merge strategy settings");
         }
 
-        aTarget.addChildren(getPage(), IFeedback.class);
-
         try {
             var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
-                    selectedUsers.getModelObject(), aForm.getModelObject().isClearTargetCas());
+                    dataOwners, aForm.getModelObject().isClearTargetCas());
             success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
             refreshPage(aTarget, getPage());
         }
