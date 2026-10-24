@@ -25,7 +25,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import org.apache.uima.cas.CAS;
@@ -61,7 +60,6 @@ import de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptFeatureSupport;
 import de.tudarmstadt.ukp.inception.ui.kb.feature.ConceptLabelCache;
 import mtas.analysis.token.MtasToken;
-import mtas.analysis.token.MtasTokenCollection;
 
 @ExtendWith(MockitoExtension.class)
 public class ConceptFeatureIndexingSupportTest
@@ -105,44 +103,44 @@ public class ConceptFeatureIndexingSupportTest
     @Test
     public void testConceptFeature() throws Exception
     {
-        JCasBuilder builder = new JCasBuilder(jcas);
+        var builder = new JCasBuilder(jcas);
         builder.add("I", Token.class);
         builder.add(" ");
         builder.add("am", Token.class);
         builder.add(" ");
-        int begin = builder.getPosition();
+        var begin = builder.getPosition();
         builder.add("John", Token.class);
         builder.add(" ");
         builder.add("Smith", Token.class);
-        NamedEntity ne = new NamedEntity(jcas, begin, builder.getPosition());
+        var ne = new NamedEntity(jcas, begin, builder.getPosition());
         ne.setIdentifier("urn:dummy-concept");
         ne.addToIndexes();
         builder.add(" ");
         builder.add(".", Token.class);
 
-        AnnotationLayer layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+        var layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
                 SpanLayerSupport.TYPE, project, true, TOKENS, NO_OVERLAP);
 
-        KBHandle kbHandle = new KBHandle("urn:dummy-concept", "Dummy concept");
+        var kbHandle = new KBHandle("urn:dummy-concept", "Dummy concept");
         kbHandle.setKB(kb);
         when(kbService.readHandle(any(Project.class), any(String.class)))
                 .thenReturn(Optional.of(kbHandle));
 
-        List<KBHandle> dummyValue = new ArrayList<KBHandle>();
+        var dummyValue = new ArrayList<KBHandle>();
         dummyValue.add(new KBHandle("urn:dummy-parent-concept", "Dummy Parent Concept"));
 
         when(kbService.getParentConceptList(any(KnowledgeBase.class), any(String.class),
                 any(Boolean.class))).thenReturn(dummyValue);
 
-        AnnotationSearchState prefs = new AnnotationSearchState();
-        MtasUimaParser sut = new MtasUimaParser(
+        var prefs = new AnnotationSearchState();
+        var sut = new MtasUimaParser(
                 asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
                         new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")),
                 annotationSchemaService, featureIndexingSupportRegistry, prefs);
-        MtasTokenCollection tc = sut.createTokenCollection(jcas.getCas());
+        var tc = sut.createTokenCollection(jcas.getCas());
         MtasUtils.print(tc);
 
-        List<MtasToken> tokens = new ArrayList<>();
+        var tokens = new ArrayList<MtasToken>();
         tc.iterator().forEachRemaining(tokens::add);
 
         assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
@@ -153,5 +151,46 @@ public class ConceptFeatureIndexingSupportTest
         assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
                 .extracting(MtasToken::getPostfix)
                 .contains("", "urn:dummy-concept", "Dummy concept");
+    }
+
+    @Test
+    public void testConceptFeatureWithFailingKnowledgeBase() throws Exception
+    {
+        var builder = new JCasBuilder(jcas);
+        builder.add("I", Token.class);
+        builder.add(" ");
+        builder.add("am", Token.class);
+        builder.add(" ");
+        var begin = builder.getPosition();
+        builder.add("John", Token.class);
+        builder.add(" ");
+        builder.add("Smith", Token.class);
+        var ne = new NamedEntity(jcas, begin, builder.getPosition());
+        ne.setValue("PER");
+        ne.setIdentifier("urn:dummy-concept");
+        ne.addToIndexes();
+        builder.add(" ");
+        builder.add(".", Token.class);
+
+        var layer = new AnnotationLayer(NamedEntity.class.getName(), "Named Entity",
+                SpanLayerSupport.TYPE, project, true, TOKENS, NO_OVERLAP);
+
+        when(kbService.readHandle(any(Project.class), any(String.class)))
+                .thenThrow(new IllegalStateException("Too many requests"));
+
+        var prefs = new AnnotationSearchState();
+        var sut = new MtasUimaParser(
+                asList(new AnnotationFeature(1l, layer, "value", CAS.TYPE_NAME_STRING),
+                        new AnnotationFeature(2l, layer, "identifier", "kb:<ANY>")),
+                annotationSchemaService, featureIndexingSupportRegistry, prefs);
+        var tc = sut.createTokenCollection(jcas.getCas());
+
+        var tokens = new ArrayList<MtasToken>();
+        tc.iterator().forEachRemaining(tokens::add);
+
+        assertThat(tokens).filteredOn(t -> t.getPrefix().startsWith("Named_Entity"))
+                .extracting(MtasToken::getPrefix) //
+                .contains("Named_Entity", "Named_Entity.value") //
+                .doesNotContain("Named_Entity.identifier", "Named_Entity.identifier-exact");
     }
 }
