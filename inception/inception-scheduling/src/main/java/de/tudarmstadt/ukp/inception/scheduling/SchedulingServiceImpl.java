@@ -488,11 +488,15 @@ public class SchedulingServiceImpl
         // activeUsers);
 
         stopAllTasksMatching(t -> {
+            // A task without an owner is a system task and does not depend on any user session
+            if (t.getUser().isEmpty()) {
+                return false;
+            }
+
             var requiresActiveUser = t.getScope().isRemoveWhenUserSessionEnds()
                     || t.getScope().isRemoveWhenLastUserSessionEnds();
 
-            var ownedByActiveUser = t.getUser().map(u -> activeUsers.contains(u.getUsername()))
-                    .orElse(false);
+            var ownedByActiveUser = activeUsers.contains(t.getUser().get().getUsername());
 
             if (requiresActiveUser && !ownedByActiveUser) {
                 LOG.debug("Task {} requires active user but user is not logged in - cleaning up",
