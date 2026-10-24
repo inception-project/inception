@@ -18,8 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.event;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.inception.workload.matrix.MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID;
 import static java.time.Duration.ofSeconds;
 
@@ -90,7 +89,7 @@ public class MatrixWorkloadUpdateDocumentStateTask
         SourceDocument doc = documentService.getSourceDocument(project.getId(), document.getId());
 
         // If the source document is already in curation, we do not touch the state anymore
-        if (doc.getState() == CURATION_FINISHED || doc.getState() == CURATION_IN_PROGRESS) {
+        if (CURATION_DOCUMENT_STATES.contains(doc.getState())) {
             return;
         }
 

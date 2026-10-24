@@ -22,8 +22,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 
 import java.util.Map;
 import java.util.Optional;
@@ -277,8 +276,7 @@ public class MatrixWorkloadExtensionImpl
      */
     private boolean isInCuration(SourceDocument aDocument)
     {
-        return aDocument.getState() == CURATION_FINISHED
-                || aDocument.getState() == CURATION_IN_PROGRESS;
+        return CURATION_DOCUMENT_STATES.contains(aDocument.getState());
     }
 
     private void setSourceDocumentStateBasedOnStats(SourceDocument aDocument, int aAnnotatorCount,

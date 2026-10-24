@@ -30,6 +30,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.CURATION_FINISHED_TO_CURATION_IN_PROGRESS;
@@ -42,7 +43,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visible
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMillis;
-import static java.util.Arrays.asList;
 import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
@@ -222,8 +222,7 @@ public class MatrixWorkloadManagementPage
             AnnotationDocumentState.NEW, AnnotationDocumentState.IN_PROGRESS,
             AnnotationDocumentState.FINISHED);
 
-    private static final Set<SourceDocumentState> EXPORTABLE_DOCUMENT_STATES = Set
-            .of(SourceDocumentState.CURATION_FINISHED, SourceDocumentState.CURATION_IN_PROGRESS);
+    private static final Set<SourceDocumentState> EXPORTABLE_DOCUMENT_STATES = CURATION_DOCUMENT_STATES;
 
     private LoadableDetachableModel<Boolean> curationSelectedModel;
 
@@ -606,9 +605,8 @@ public class MatrixWorkloadManagementPage
             return;
         }
 
-        var statesToReset = asList(CURATION_IN_PROGRESS, CURATION_FINISHED);
         var documentsToReset = selectedDocuments.stream() //
-                .filter(d -> statesToReset.contains(d.getState())) //
+                .filter(d -> CURATION_DOCUMENT_STATES.contains(d.getState())) //
                 .collect(toCollection(ArrayList::new));
 
         if (documentsToReset.isEmpty()) {
@@ -1302,7 +1300,7 @@ public class MatrixWorkloadManagementPage
     {
         var state = aEvent.getSourceDocument().getState();
 
-        if (state != CURATION_IN_PROGRESS && state != CURATION_FINISHED) {
+        if (!CURATION_DOCUMENT_STATES.contains(state)) {
             info("Documents on which curation has not yet been started cannot be reset.");
             aEvent.getTarget().addChildren(getPage(), IFeedback.class);
             return;

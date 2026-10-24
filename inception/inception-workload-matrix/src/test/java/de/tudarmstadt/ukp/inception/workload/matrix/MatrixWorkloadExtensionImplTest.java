@@ -149,21 +149,49 @@ class MatrixWorkloadExtensionImplTest
         workloadManager.setType(MatrixWorkloadExtension.MATRIX_WORKLOAD_MANAGER_EXTENSION_ID);
     }
 
-    @Test
-    void thatRecalculatingStateDoesNotFallBackBehindCuration() throws Exception
+    /**
+     * Every way of updating the document state must leave a document in curation alone - in either
+     * curation state. Both annotators have finished, so without that check the document would fall
+     * back to {@link SourceDocumentState#ANNOTATION_FINISHED}.
+     */
+    @ParameterizedTest(name = "state={0}, action={1}")
+    @CsvSource({ //
+            "CURATION_IN_PROGRESS, RECALCULATE_PROJECT", //
+            "CURATION_IN_PROGRESS, RECALCULATE_DOCUMENT", //
+            "CURATION_IN_PROGRESS, UPDATE_DOCUMENT_STATE", //
+            "CURATION_FINISHED, RECALCULATE_PROJECT", //
+            "CURATION_FINISHED, RECALCULATE_DOCUMENT", //
+            "CURATION_FINISHED, UPDATE_DOCUMENT_STATE" })
+    void thatRecalculatingStateDoesNotFallBackBehindCuration(SourceDocumentState aState,
+            StateUpdate aAction)
+        throws Exception
     {
-        documentService.setSourceDocumentState(sourceDocument,
-                SourceDocumentState.CURATION_IN_PROGRESS);
+        documentService.setSourceDocumentState(sourceDocument, aState);
         documentService.setAnnotationDocumentState(annotationDocument1,
-                AnnotationDocumentState.NEW);
+                AnnotationDocumentState.FINISHED);
         documentService.setAnnotationDocumentState(annotationDocument2,
-                AnnotationDocumentState.IN_PROGRESS);
+                AnnotationDocumentState.FINISHED);
 
-        matrixWorkloadExtension.recalculate(project);
+        switch (aAction) {
+        case RECALCULATE_PROJECT:
+            matrixWorkloadExtension.recalculate(project);
+            break;
+        case RECALCULATE_DOCUMENT:
+            matrixWorkloadExtension.recalculate(sourceDocument);
+            break;
+        case UPDATE_DOCUMENT_STATE:
+            matrixWorkloadExtension.updateDocumentState(sourceDocument, 2);
+            break;
+        }
 
         sourceDocument = documentService.getSourceDocument(project.getId(), sourceDocument.getId());
 
-        assertThat(sourceDocument.getState()).isEqualTo(SourceDocumentState.CURATION_IN_PROGRESS);
+        assertThat(sourceDocument.getState()).isEqualTo(aState);
+    }
+
+    enum StateUpdate
+    {
+        RECALCULATE_PROJECT, RECALCULATE_DOCUMENT, UPDATE_DOCUMENT_STATE
     }
 
     @Test

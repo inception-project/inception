@@ -18,6 +18,7 @@
 package de.tudarmstadt.ukp.inception.workload.matrix.management.support;
 
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 
@@ -93,7 +94,7 @@ public class DocumentMatrixRow
 
         SourceDocumentState state = sourceDocument.getState();
 
-        if (!(CURATION_IN_PROGRESS == state || CURATION_FINISHED == state)) {
+        if (!CURATION_DOCUMENT_STATES.contains(state)) {
             if (MatrixCurationReadiness.isReadyForCuration(finishedCount, ignoredCount,
                     annotators.size())) {
                 state = ANNOTATION_FINISHED;

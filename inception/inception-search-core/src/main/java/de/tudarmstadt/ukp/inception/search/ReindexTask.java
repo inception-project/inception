@@ -25,15 +25,13 @@ import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNM
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.UNMANAGED_NON_INITIALIZING_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.DISCARD_OR_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.NO_MATCH;
 import static de.tudarmstadt.ukp.inception.scheduling.MatchResult.UNQUEUE_EXISTING_AND_QUEUE_THIS;
 import static de.tudarmstadt.ukp.inception.scheduling.TaskScope.PROJECT;
 import static de.tudarmstadt.ukp.inception.search.model.AnnotationSearchState.KEY_SEARCH_STATE;
 import static de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil.casToByteArray;
-import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
 import java.io.FileNotFoundException;
@@ -180,8 +178,7 @@ public class ReindexTask
 
                             // Index curation document (if available)
                             if (documentService.existsCas(doc, CURATION_SET)
-                                    && asList(CURATION_IN_PROGRESS, CURATION_FINISHED)
-                                            .contains(doc.getState())) {
+                                    && CURATION_DOCUMENT_STATES.contains(doc.getState())) {
                                 try {
                                     var aDoc = documentService.getAnnotationDocument(doc,
                                             CURATION_SET);

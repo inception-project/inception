@@ -22,13 +22,11 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState.IN
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
 import java.io.IOException;
-import java.util.Set;
 
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -194,7 +192,7 @@ public class MatrixWorkflowActionBarItemGroup
 
         // Check latest state of the document
         srcDoc = documentService.getSourceDocument(srcDoc.getProject().getId(), srcDoc.getId());
-        if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(srcDoc.getState())) {
+        if (CURATION_DOCUMENT_STATES.contains(srcDoc.getState())) {
             // Annotators may not re-open documents once curation has started
             return false;
         }
