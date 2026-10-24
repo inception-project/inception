@@ -29,8 +29,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.actionbar.ActionBarExten
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
-import de.tudarmstadt.ukp.inception.ui.curation.page.CurationPage;
-import de.tudarmstadt.ukp.inception.ui.curation.page.SplitCurationPage;
 
 @Order(ActionBarExtension.ORDER_DOCUMENT_NAVIGATOR)
 public class CurationDocumentNavigatorActionBarExtension
@@ -51,8 +49,7 @@ public class CurationDocumentNavigatorActionBarExtension
     @Override
     public boolean accepts(ActionBarContext aContext)
     {
-        return (aContext.page() instanceof CurationPage
-                || aContext.page() instanceof SplitCurationPage);
+        return aContext.page() instanceof CuratableDocumentPage;
     }
 
     @Override
@@ -65,10 +62,6 @@ public class CurationDocumentNavigatorActionBarExtension
     private static IModel<List<SourceDocument>> listCuratableDocuments(AnnotationPageBase aPage)
     {
         if (aPage instanceof CuratableDocumentPage page) {
-            return LoadableDetachableModel.of(page::listCuratableDocuments);
-        }
-
-        if (aPage instanceof CurationPage page) {
             return LoadableDetachableModel.of(page::listCuratableDocuments);
         }
 

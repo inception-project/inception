@@ -70,7 +70,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         + PAGE_PARAM_DOCUMENT + "}")
 public class CurationPage
     extends AnnotationPageBase2
-    implements CurationPageWithDataOwnerSelection
+    implements CuratableDocumentPage, CurationPageWithDataOwnerSelection
 {
     public static final String PAGE_PATH = "/curate";
 
@@ -104,6 +104,13 @@ public class CurationPage
         var state = super.createAnnotatorState();
         state.enableExtension(CurationEditorExtension.EXTENSION_ID);
         return state;
+    }
+
+    @Override
+    public List<AnnotationSet> listDataOwnersToShow(SourceDocument aDocument)
+    {
+        return curationSessionService.listDataOwnersToCurate(userRepository.getSessionOwnerName(),
+                aDocument, true);
     }
 
     private void actionOpenCuratedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)
@@ -191,14 +198,22 @@ public class CurationPage
         requireProjectRole(aSessionOwner, CURATOR);
     }
 
-    /**
-     * @see CuratableDocumentPage#listCuratableDocuments()
-     */
-    public List<SourceDocument> listCuratableDocuments()
+    @Override
+    public CurationEditingService getCurationEditingService()
     {
-        var project = getProject();
-        workloadManagementService.getWorkloadManagerExtension(project).freshenStatus(project);
-        return curationDocumentService.listCuratableSourceDocuments(project);
+        return curationEditingService;
+    }
+
+    @Override
+    public CurationDocumentService getCurationDocumentService()
+    {
+        return curationDocumentService;
+    }
+
+    @Override
+    public WorkloadManagementService getWorkloadManagementService()
+    {
+        return workloadManagementService;
     }
 
     @Override

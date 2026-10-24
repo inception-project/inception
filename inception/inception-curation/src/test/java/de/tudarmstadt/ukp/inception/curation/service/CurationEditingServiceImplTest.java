@@ -539,7 +539,7 @@ class CurationEditingServiceImplTest
 
             assertThatExceptionOfType(CurationNotPossibleException.class) //
                     .isThrownBy(() -> readOrCreate(RECREATE)) //
-                    .withMessageContaining("no annotators are selected");
+                    .withMessageContaining("none of the annotators to merge from");
 
             verify(curationDocumentService, never()).deleteCurationCas(any());
             verifyNoInteractions(curationMergeService);
