@@ -46,6 +46,7 @@ import static org.mockito.Mockito.when;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.uima.cas.CAS;
 import org.junit.jupiter.api.BeforeEach;
@@ -491,6 +492,91 @@ class CurationEditingServiceImplTest
             verify(curationDocumentService).deleteCurationCas(document);
             verify(curationDocumentService, never()).markCurationInProgress(any());
             verifyNoInteractions(curationMergeService);
+        }
+    }
+
+    @Nested
+    @DisplayName("readOrCreateCurationCas with a data owner selection")
+    class DataOwnerSelection
+    {
+        private CAS readOrCreate(CurationMergeMode aMergeMode, AnnotationSet... aDataOwners)
+            throws Exception
+        {
+            return sut.readOrCreateCurationCas(document, CURATION_USER, layers, mergeStrategy,
+                    aMergeMode, asList(aDataOwners));
+        }
+
+        @Test
+        void thatOnlySelectedDataOwnersAreMerged() throws Exception
+        {
+            var ann1 = user("ann1");
+            var ann2 = user("ann2");
+            when(curationDocumentService.isDocumentCuratable(document)).thenReturn(true);
+            when(curationDocumentService.listCuratableUsers(document))
+                    .thenReturn(asList(ann1, ann2));
+            when(curationDocumentService.existsCurationCas(document)).thenReturn(true);
+            var curationCas = curationCasWithToken();
+            Map<String, CAS> ann2Casses = Map.of("ann2", createCas());
+            when(documentService.readAllCasesSharedNoUpgrade(document, asList(ann2)))
+                    .thenReturn(ann2Casses);
+
+            assertThat(readOrCreate(RECREATE, AnnotationSet.forUser("ann2"))).isSameAs(curationCas);
+
+            verify(documentService, never()).readAllCasesSharedNoUpgrade(document,
+                    asList(ann1, ann2));
+            verify(curationMergeService).mergeCasses(eq(document), eq(CURATION_USER), any(),
+                    eq(ann2Casses), eq(mergeStrategy), eq(layers), eq(true));
+        }
+
+        @Test
+        @DisplayName("RECREATE with nobody selected must not discard the curator's work")
+        void thatRecreateWithEmptySelectionIsRefused() throws Exception
+        {
+            when(curationDocumentService.isDocumentCuratable(document)).thenReturn(true);
+            when(curationDocumentService.listCuratableUsers(document))
+                    .thenReturn(asList(user("ann1")));
+            when(curationDocumentService.existsCurationCas(document)).thenReturn(true);
+
+            assertThatExceptionOfType(CurationNotPossibleException.class) //
+                    .isThrownBy(() -> readOrCreate(RECREATE)) //
+                    .withMessageContaining("no annotators are selected");
+
+            verify(curationDocumentService, never()).deleteCurationCas(any());
+            verifyNoInteractions(curationMergeService);
+        }
+
+        @Test
+        @DisplayName("FILL_ONLY with nobody to merge from must not report a merge")
+        void thatFillOnlyWithEmptySelectionIsRefused() throws Exception
+        {
+            when(curationDocumentService.isDocumentCuratable(document)).thenReturn(true);
+            when(curationDocumentService.listCuratableUsers(document))
+                    .thenReturn(asList(user("ann1")));
+            when(curationDocumentService.existsCurationCas(document)).thenReturn(true);
+
+            // ann2 was selected in the dialog but is no longer curatable
+            assertThatExceptionOfType(CurationNotPossibleException.class) //
+                    .isThrownBy(() -> readOrCreate(FILL_ONLY, AnnotationSet.forUser("ann2"))) //
+                    .withMessageContaining("none of the annotators to merge from");
+
+            verify(curationDocumentService, never()).markCurationInProgress(any());
+            verifyNoInteractions(curationMergeService);
+        }
+
+        @Test
+        @DisplayName("An empty selection does not make the document uncuratable")
+        void thatLoadOnlyWithEmptySelectionOpensTheCurationCas() throws Exception
+        {
+            when(curationDocumentService.isDocumentCuratable(document)).thenReturn(true);
+            when(curationDocumentService.listCuratableUsers(document))
+                    .thenReturn(asList(user("ann1")));
+            when(curationDocumentService.existsCurationCas(document)).thenReturn(true);
+            var curationCas = mock(CAS.class);
+            when(curationDocumentService.readCurationCas(document)).thenReturn(curationCas);
+
+            assertThat(readOrCreate(LOAD_ONLY)).isSameAs(curationCas);
+
+            verify(curationDocumentService).markCurationInProgress(document);
         }
     }
 

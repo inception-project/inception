@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.EXCLUSIVE_WRITE_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.NO_CAS_UPGRADE;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
+import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.FILL_ONLY;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.LOAD_ONLY;
 import static de.tudarmstadt.ukp.inception.curation.service.CurationMergeMode.RECREATE;
 import static de.tudarmstadt.ukp.inception.curation.sidebar.CurationSidebarManagerPrefs.KEY_CURATION_SIDEBAR_MANAGER_PREFS;
@@ -32,10 +33,12 @@ import static org.apache.uima.cas.impl.Serialization.serializeCASComplete;
 import static org.slf4j.LoggerFactory.getLogger;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Predicate;
 
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
@@ -44,7 +47,9 @@ import org.slf4j.Logger;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.curation.config.CurationServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -94,6 +99,28 @@ public class CurationEditingServiceImpl
             CurationMergeMode aMergeMode, Runnable aInitialMergeListener)
         throws CurationNotPossibleException, UIMAException, IOException
     {
+        return readOrCreateCurationCas(aDocument, aCurationUser, aLayers, aMergeStrategy,
+                aMergeMode, user -> true, aInitialMergeListener);
+    }
+
+    @Override
+    public CAS readOrCreateCurationCas(SourceDocument aDocument, String aCurationUser,
+            List<AnnotationLayer> aLayers, MergeStrategy aMergeStrategy,
+            CurationMergeMode aMergeMode, Collection<AnnotationSet> aDataOwners)
+        throws CurationNotPossibleException, UIMAException, IOException
+    {
+        return readOrCreateCurationCas(aDocument, aCurationUser, aLayers, aMergeStrategy,
+                aMergeMode, user -> aDataOwners.contains(AnnotationSet.forUser(user)), () -> {
+                    // Nothing to report
+                });
+    }
+
+    private CAS readOrCreateCurationCas(SourceDocument aDocument, String aCurationUser,
+            List<AnnotationLayer> aLayers, MergeStrategy aMergeStrategy,
+            CurationMergeMode aMergeMode, Predicate<User> aMergeSourceFilter,
+            Runnable aInitialMergeListener)
+        throws CurationNotPossibleException, UIMAException, IOException
+    {
         if (!curationDocumentService.isDocumentCuratable(aDocument)) {
             throw notCuratable(aDocument);
         }
@@ -123,6 +150,26 @@ public class CurationEditingServiceImpl
                             + AnnotationDocumentState.FINISHED + " first.");
         }
 
+        var mergeSourceUsers = curatableUsers.stream().filter(aMergeSourceFilter).toList();
+
+        // The same holds when the curator has deselected all curatable users
+        if (aMergeMode == RECREATE && mergeSourceUsers.isEmpty()) {
+            throw new CurationNotPossibleException(aDocument,
+                    "Cannot re-create the curation document for [" + aDocument.getName()
+                            + "]: no annotators are selected to merge from. Re-creating it would "
+                            + "irrevocably discard the existing curation results. Select at "
+                            + "least one annotator first.");
+        }
+
+        // Filling in without anybody to merge from would report a merge that did nothing. A
+        // selection may be stale, e.g. when the selected annotators were reset in the meantime.
+        if (aMergeMode == FILL_ONLY && mergeSourceUsers.isEmpty()) {
+            throw new CurationNotPossibleException(aDocument,
+                    "Cannot merge into the curation document for [" + aDocument.getName()
+                            + "]: none of the annotators to merge from has annotations that can be "
+                            + "curated.");
+        }
+
         // Another curator may have started curation since the checks above, so whether the curation
         // CAS exists is decided here, under the lock on it. The lock is kept until the request
         // ends, so only the request that creates the curation CAS merges into it - everybody else
@@ -136,7 +183,7 @@ public class CurationEditingServiceImpl
         try {
             // A curation CAS deleted since the checks above has been re-created without anybody
             // to merge from - or for a curation that has been finished in the meantime
-            if (created.get() && curatableUsers.isEmpty()) {
+            if (created.get() && mergeSourceUsers.isEmpty()) {
                 throw notCuratable(aDocument);
             }
 
@@ -156,7 +203,7 @@ public class CurationEditingServiceImpl
             // The annotators' CASes are only needed for a merge - and whether there is one is only
             // known now that it is decided whether this request created the curation CAS
             Map<String, CAS> casses = mergeMode == LOAD_ONLY ? emptyMap()
-                    : documentService.readAllCasesSharedNoUpgrade(aDocument, curatableUsers);
+                    : documentService.readAllCasesSharedNoUpgrade(aDocument, mergeSourceUsers);
 
             // The curation CAS is now held by the request, so the page reads it from there and
             // cannot upgrade it itself - it has to be upgraded here. Only a finished curation that

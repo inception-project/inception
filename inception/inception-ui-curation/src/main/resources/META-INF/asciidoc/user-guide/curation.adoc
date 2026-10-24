@@ -154,13 +154,18 @@ The **Re-merge** button on the curation page allows you to run this automatic me
 
 The **Re-merge** dialog offers the following options:
 
+* **Merge from:** the annotators whose annotations are merged.
+  Only annotators whose annotations can be curated are offered, e.g. those who marked the document as finished.
+  All of them are selected initially.
+  **All annotators** selects all of them again, and **Sidebar selection** selects the annotators currently chosen in the **Curation sidebar**.
+  The choice only applies to this re-merge: it does not change which annotators the **Curation sidebar** shows.
 * **Discard already curated annotations:** controls what happens to annotations that are already present in the curation document when the re-merge is run.
 +
 --
 ** When *disabled* (the default), the existing curated annotations are kept.
    The auto-merge only fills in positions that have not been curated yet and leaves your existing decisions untouched.
    This is useful when you have already curated part of the document and only want to pull in newly agreed-upon annotations without losing your work.
-** When *enabled*, the curation document is cleared first and then fully recreated from the annotators' data.
+** When *enabled*, the curation document is re-created from the annotations of the selected annotators.
    Any annotations you have already curated are discarded.
    Because this is a destructive operation, you are asked to confirm it by typing the document name into a challenge field before it can be performed.
 --

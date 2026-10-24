@@ -48,6 +48,8 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.ValidationExce
 import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
+import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
+import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategy;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
@@ -69,6 +71,7 @@ public class CuratorWorkflowActionBarItemGroup
     private @SpringBean CurationService curationService;
     private @SpringBean CurationDocumentService curationDocumentService;
     private @SpringBean UserDao userRepository;
+    private @SpringBean CurationSessionService curationSessionService;
 
     private final AnnotationPageBase page;
     private final DocumentEditor editorContext;
@@ -105,6 +108,16 @@ public class CuratorWorkflowActionBarItemGroup
                 new ResourceModel("reMergeDialog.title"), new ResourceModel("reMergeDialog.text"),
                 documentNameModel, curationWorkflowModel));
         resetDocumentDialog.setConfirmAction(this::actionResetDocument);
+        resetDocumentDialog.setDataOwnerSource(() -> curationSessionService
+                .listCuratableDataOwners(editorContext.getAnnotatorState().getDocument()));
+        if (page instanceof CurationPageWithDataOwnerSelection) {
+            resetDocumentDialog.setSidebarSelectionSource(() -> {
+                var state = editorContext.getAnnotatorState();
+                return curationSessionService.listDataOwnersReadyForCuration(
+                        userRepository.getCurrentUsername(), state.getProject(),
+                        state.getDocument());
+            });
+        }
 
         add(resetDocumentLink = new LambdaAjaxLink("showResetDocumentDialog",
                 resetDocumentDialog::show));
@@ -239,7 +252,7 @@ public class CuratorWorkflowActionBarItemGroup
         var state = editorContext.getAnnotatorState();
 
         ((CuratableDocumentPage) page).readOrCreateCurationCas(state.getDocument(), state,
-                mergeStrategy, mergeMode);
+                mergeStrategy, mergeMode, aForm.getModelObject().getDataOwners());
 
         // ... and load it
         editorContext.actionLoadDocument(aTarget);

@@ -17,10 +17,16 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.ui.curation.page;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toCollection;
 import static org.apache.commons.lang3.exception.ExceptionUtils.getRootCauseMessage;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
@@ -28,19 +34,29 @@ import org.apache.wicket.ajax.markup.html.form.AjaxCheckBox;
 import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.WebMarkupContainer;
 import org.apache.wicket.markup.html.basic.Label;
+import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
+import org.apache.wicket.markup.html.form.CheckGroup;
 import org.apache.wicket.markup.html.form.Form;
 import org.apache.wicket.markup.html.form.TextField;
+import org.apache.wicket.markup.html.list.ListItem;
+import org.apache.wicket.markup.html.list.ListView;
 import org.apache.wicket.markup.html.panel.Panel;
 import org.apache.wicket.model.CompoundPropertyModel;
 import org.apache.wicket.model.IModel;
+import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.request.RequestHandlerExecutor.ReplaceHandlerException;
+import org.apache.wicket.spring.injection.annot.SpringBean;
+import org.danekja.java.util.function.serializable.SerializableSupplier;
 import org.slf4j.LoggerFactory;
 
+import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
+import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
 import de.tudarmstadt.ukp.inception.curation.settings.MergeStrategyPanel;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.support.lambda.AjaxCallback;
 import de.tudarmstadt.ukp.inception.support.lambda.AjaxFormCallback;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
@@ -56,9 +72,16 @@ public class MergeDialog
     private final IModel<String> expectedResponseModel;
     private final IModel<CurationWorkflow> curationWorkflowModel;
 
+    private @SpringBean ProjectService projectService;
+    private @SpringBean UserDao userService;
+
     private AjaxFormCallback<State> confirmAction;
     private AjaxCallback cancelAction;
     private ContentPanel conentPanel;
+
+    private SerializableSupplier<List<AnnotationSet>> dataOwnerSource;
+    private SerializableSupplier<Collection<AnnotationSet>> sidebarSelectionSource;
+    private List<AnnotationSet> candidateDataOwners = emptyList();
 
     public MergeDialog(String aId, ResourceModel aTitle, ResourceModel aChallenge,
             IModel<String> aExpectedResponse, IModel<CurationWorkflow> aCurationWorkflow)
@@ -98,12 +121,50 @@ public class MergeDialog
         return (State) getDefaultModelObject();
     }
 
+    /**
+     * @param aDataOwnerSource
+     *            provides the annotators the curator can choose to merge from. Without it, the
+     *            dialog offers no annotator choice and cannot be confirmed, since there is nobody
+     *            to merge from.
+     * @return the dialog itself for chaining.
+     */
+    public MergeDialog setDataOwnerSource(
+            SerializableSupplier<List<AnnotationSet>> aDataOwnerSource)
+    {
+        dataOwnerSource = aDataOwnerSource;
+        return this;
+    }
+
+    /**
+     * @param aSidebarSelectionSource
+     *            provides the annotators selected in the curation sidebar. Without it, the dialog
+     *            offers no quick selection for them - e.g. on a page without such a selection.
+     * @return the dialog itself for chaining.
+     */
+    public MergeDialog setSidebarSelectionSource(
+            SerializableSupplier<Collection<AnnotationSet>> aSidebarSelectionSource)
+    {
+        sidebarSelectionSource = aSidebarSelectionSource;
+        return this;
+    }
+
     public void show(AjaxRequestTarget aTarget)
     {
         challengeModel.detach();
         expectedResponseModel.detach();
 
+        candidateDataOwners = dataOwnerSource != null ? dataOwnerSource.get() : emptyList();
+
+        // The content panel is reused across openings. Input left over from a submit that failed
+        // validation would otherwise win over the fresh state - for the annotator checkboxes, it
+        // would not even match the newly created list items, so they would all show as unticked.
+        // Form.clearInput() would skip everything here, since it only clears visible components
+        // and the dialog is still closed.
+        conentPanel.form.visitFormComponents((formComponent, visit) -> formComponent.clearInput());
+
         var state = new State();
+        // Like the initial merge, consider all annotators unless the curator decides otherwise
+        state.dataOwners = new ArrayList<>(candidateDataOwners);
         setModelObject(state);
 
         // The response field lives inside the challenge container, which is only rendered when
@@ -148,6 +209,16 @@ public class MergeDialog
             return;
         }
 
+        // A merge without any annotator to merge from does nothing - or, when discarding, destroys
+        // the curation results
+        if (state.dataOwners.isEmpty()) {
+            error(candidateDataOwners.isEmpty()
+                    ? "There are no annotators whose annotations could be merged."
+                    : "Select at least one annotator to merge from.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         var closeOk = true;
 
         // Invoke callback if one is defined
@@ -188,6 +259,20 @@ public class MergeDialog
         close(aTarget);
     }
 
+    /**
+     * Anonymizes the annotator names in the same way as the curation sidebar does.
+     */
+    private String dataOwnerLabel(ListItem<AnnotationSet> aItem)
+    {
+        var project = curationWorkflowModel.getObject().getProject();
+        if (project.isAnonymousCuration()
+                && !projectService.hasRole(userService.getCurrentUser(), project, MANAGER)) {
+            return "Anonymized annotator " + (aItem.getIndex() + 1);
+        }
+
+        return aItem.getModelObject().displayName();
+    }
+
     public static class State
         implements Serializable
     {
@@ -196,10 +281,19 @@ public class MergeDialog
         String response;
         boolean saveSettingsAsDefault;
         boolean clearTargetCas = false;
+        Collection<AnnotationSet> dataOwners = new ArrayList<>();
 
         public boolean isSaveSettingsAsDefault()
         {
             return saveSettingsAsDefault;
+        }
+
+        /**
+         * @return the annotators to merge from.
+         */
+        public Collection<AnnotationSet> getDataOwners()
+        {
+            return dataOwners;
         }
 
         public boolean isClearTargetCas()
@@ -215,13 +309,18 @@ public class MergeDialog
 
         private final LambdaAjaxLink cancelButton;
 
+        private final Form<State> form;
+
+        private CheckGroup<AnnotationSet> dataOwnersGroup;
+
         private TextField<Object> responseField;
 
         public ContentPanel(String aId, IModel<State> aModel)
         {
             super(aId, aModel);
 
-            queue(new Form<>("form", aModel));
+            form = new Form<>("form", aModel);
+            queue(form);
             queue(new Label("title", titleModel));
 
             // The challenge only needs to be met when already curated annotations are discarded.
@@ -238,6 +337,39 @@ public class MergeDialog
             responseField = new TextField<>("response");
             responseField.setOutputMarkupId(true);
             queue(responseField);
+            var dataOwnersContainer = new WebMarkupContainer("dataOwnersContainer");
+            dataOwnersContainer.setOutputMarkupPlaceholderTag(true);
+            dataOwnersContainer.add(visibleWhen(() -> !candidateDataOwners.isEmpty()));
+            queue(dataOwnersContainer);
+            // The quick selections set the model, so input left over from a submit that failed
+            // validation must not override it
+            queue(new LambdaAjaxLink("selectAllDataOwners", $ -> {
+                aModel.getObject().dataOwners = new ArrayList<>(candidateDataOwners);
+                dataOwnersGroup.clearInput();
+                $.add(dataOwnersContainer);
+            }));
+            queue(new LambdaAjaxLink("selectSidebarDataOwners", $ -> {
+                var selected = sidebarSelectionSource.get();
+                aModel.getObject().dataOwners = candidateDataOwners.stream() //
+                        .filter(selected::contains) //
+                        .collect(toCollection(ArrayList::new));
+                dataOwnersGroup.clearInput();
+                $.add(dataOwnersContainer);
+            }).add(visibleWhen(() -> sidebarSelectionSource != null)));
+            dataOwnersGroup = new CheckGroup<>("dataOwners");
+            queue(dataOwnersGroup);
+            queue(new ListView<AnnotationSet>("dataOwnerChoices",
+                    LambdaModel.of(() -> candidateDataOwners))
+            {
+                private static final long serialVersionUID = 1L;
+
+                @Override
+                protected void populateItem(ListItem<AnnotationSet> aItem)
+                {
+                    aItem.add(new Check<>("dataOwner", aItem.getModel()));
+                    aItem.add(new Label("name", dataOwnerLabel(aItem)));
+                }
+            });
             queue(new MergeStrategyPanel("mergeStrategySettings", curationWorkflowModel));
             queue(new CheckBox("saveSettingsAsDefault").setOutputMarkupId(true));
             queue(new AjaxCheckBox("clearTargetCas")
