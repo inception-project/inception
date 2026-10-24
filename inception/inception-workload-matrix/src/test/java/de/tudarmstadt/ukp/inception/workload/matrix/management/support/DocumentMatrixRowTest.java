@@ -28,6 +28,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
@@ -81,6 +83,38 @@ class DocumentMatrixRowTest
         row.add(annDoc2);
 
         assertThat(row.getState()).isEqualTo(ANNOTATION_FINISHED);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SourceDocumentState.class, names = { "CURATION_IN_PROGRESS",
+            "CURATION_FINISHED" })
+    void thatCurationStateIsKeptWhenAllAnnotatorsFinished(SourceDocumentState aState)
+    {
+        var project = new Project("test-project");
+        var sourceDoc = SourceDocument.builder() //
+                .withName("test-doc.txt") //
+                .withProject(project) //
+                .withFormat("text") //
+                .withState(aState) //
+                .build();
+
+        var annotators = Set.of(AnnotationSet.forTest("user1"), AnnotationSet.forTest("user2"));
+
+        var row = new DocumentMatrixRow(sourceDoc, annotators);
+
+        row.add(AnnotationDocument.builder() //
+                .withUser("user1") //
+                .forDocument(sourceDoc) //
+                .withState(FINISHED) //
+                .build());
+        row.add(AnnotationDocument.builder() //
+                .withUser("user2") //
+                .forDocument(sourceDoc) //
+                .withState(FINISHED) //
+                .build());
+
+        // Without the curation check, this would be ANNOTATION_FINISHED
+        assertThat(row.getState()).isEqualTo(aState);
     }
 
     @Test

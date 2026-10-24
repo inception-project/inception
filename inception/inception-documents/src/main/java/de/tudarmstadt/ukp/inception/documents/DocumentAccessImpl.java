@@ -21,6 +21,7 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.ANNOTATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
@@ -236,8 +237,7 @@ public class DocumentAccessImpl
             // e.g. happen when a curator deliberately reopens the document for them to fix
             // something.
             if (annDoc == null || annDoc.getState() == AnnotationDocumentState.NEW) {
-                if (Set.of(CURATION_IN_PROGRESS, CURATION_FINISHED)
-                        .contains(aDocument.getState())) {
+                if (CURATION_DOCUMENT_STATES.contains(aDocument.getState())) {
                     throw new AccessDeniedException(
                             "This document is currently in curation and cannot be opened for "
                                     + "annotation. Please ask your project manager or curator to "

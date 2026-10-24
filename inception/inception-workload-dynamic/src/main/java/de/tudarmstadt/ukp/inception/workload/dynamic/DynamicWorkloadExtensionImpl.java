@@ -23,8 +23,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.INITIAL_SET;
 import static de.tudarmstadt.ukp.inception.support.json.JSONUtil.fromJsonString;
@@ -276,8 +274,7 @@ public class DynamicWorkloadExtensionImpl
         var abandonationTimeout = traits.getAbandonationTimeout();
         for (var doc : inProgressDocuments) {
             // If the SOURCE document is already in curation, we do not touch the state anymore
-            if (doc.getDocument().getState() == CURATION_FINISHED
-                    || doc.getDocument().getState() == CURATION_IN_PROGRESS) {
+            if (CURATION_DOCUMENT_STATES.contains(doc.getDocument().getState())) {
                 continue;
             }
 
@@ -336,8 +333,7 @@ public class DynamicWorkloadExtensionImpl
     public void updateDocumentState(SourceDocument aDocument, int aRequiredAnnotatorCount)
     {
         // If the SOURCE document is already in curation, we do not touch the state anymore
-        if (aDocument.getState() == CURATION_FINISHED
-                || aDocument.getState() == CURATION_IN_PROGRESS) {
+        if (CURATION_DOCUMENT_STATES.contains(aDocument.getState())) {
             return;
         }
 
