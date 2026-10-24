@@ -41,6 +41,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -201,6 +203,37 @@ class DynamicWorkloadExtensionImpl2Test
         assertThat(annAfterRefresh.getAnnotatorState()) //
                 .as("After the abandonation timeout has passed, the annotator state has been cleared")
                 .isNull();
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SourceDocumentState.class, names = { "CURATION_IN_PROGRESS",
+            "CURATION_FINISHED" })
+    void thatDocumentsInCurationAreExemptFromAbandonation(SourceDocumentState aState)
+        throws Exception
+    {
+        traits = new DynamicWorkloadTraits();
+        traits.setAbandonationTimeout(Duration.of(1, SECONDS));
+        traits.setAbandonationState(AnnotationDocumentState.NEW);
+        dynamicWorkloadExtension.writeTraits(traits, project);
+
+        documentService.setSourceDocumentState(sourceDocument, aState);
+
+        sleep(traits.getAbandonationTimeout().multipliedBy(2).toMillis());
+
+        dynamicWorkloadExtension.freshenStatus(project);
+
+        var annAfterRefresh = documentService.getAnnotationDocument(
+                annotationDocument.getDocument(),
+                AnnotationSet.forUser(annotationDocument.getUser()));
+        assertThat(annAfterRefresh.getState())
+                .as("Even after the abandonation timeout has passed, a document in curation keeps "
+                        + "its annotation state")
+                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        assertThat(annAfterRefresh.getAnnotatorState()) //
+                .isEqualTo(AnnotationDocumentState.IN_PROGRESS);
+        assertThat(documentService.getSourceDocument(project.getId(), sourceDocument.getId())
+                .getState()) //
+                        .isEqualTo(aState);
     }
 
     @Test

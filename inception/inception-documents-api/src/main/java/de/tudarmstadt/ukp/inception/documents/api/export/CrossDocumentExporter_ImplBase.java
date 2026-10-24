@@ -19,10 +19,8 @@ package de.tudarmstadt.ukp.inception.documents.api.export;
 
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasAccessMode.SHARED_READ_ONLY_ACCESS;
 import static de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasUpgradeMode.AUTO_CAS_UPGRADE;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
-import static java.util.Arrays.asList;
 
 import java.io.IOException;
 import java.util.List;
@@ -72,7 +70,7 @@ public abstract class CrossDocumentExporter_ImplBase
         // If the annotation document belongs to the curation user but the curation has not
         // even started yet, then we load the initial CAS.
         if (CURATION_USER.equals(aDataOwner)) {
-            if (!asList(CURATION_IN_PROGRESS, CURATION_FINISHED).contains(aDocument.getState())) {
+            if (!CURATION_DOCUMENT_STATES.contains(aDocument.getState())) {
                 return loadInitialCas(aDocument);
             }
 

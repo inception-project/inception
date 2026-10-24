@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -333,6 +334,23 @@ public class DynamicWorkloadExtensionImplTest
                 .as("A locked document is not annotation-finished") //
                 .isNotEqualTo(SourceDocumentState.ANNOTATION_FINISHED);
         assertStateAlignedWithReadiness(doc, 1);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = SourceDocumentState.class, names = { "CURATION_IN_PROGRESS",
+            "CURATION_FINISHED" })
+    public void thatUpdatingDocumentStateLeavesDocumentInCurationAlone(SourceDocumentState aState)
+        throws Exception
+    {
+        // The annotator has finished, so without the curation check the document would be set to
+        // ANNOTATION_FINISHED
+        var doc = createAnnotationDocument("1.txt", AnnotationDocumentState.FINISHED).getDocument();
+        documentService.setSourceDocumentState(doc, aState);
+
+        dynamicWorkloadExtension.updateDocumentState(doc, 1);
+
+        assertThat(documentService.getSourceDocument(project.getId(), doc.getId()).getState()) //
+                .isEqualTo(aState);
     }
 
     /**

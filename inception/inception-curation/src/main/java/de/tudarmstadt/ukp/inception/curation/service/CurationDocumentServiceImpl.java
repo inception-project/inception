@@ -20,6 +20,7 @@ package de.tudarmstadt.ukp.inception.curation.service;
 import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.ANNOTATION_IN_PROGRESS;
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentStateTransition.ANNOTATION_IN_PROGRESS_TO_CURATION_IN_PROGRESS;
@@ -140,7 +141,7 @@ public class CurationDocumentServiceImpl
         return documentService.updateSourceDocument(aDocument.getProject().getId(),
                 aDocument.getId(), lockedDoc -> {
                     var state = lockedDoc.getState();
-                    if (!CURATION_IN_PROGRESS.equals(state) && !CURATION_FINISHED.equals(state)) {
+                    if (!CURATION_DOCUMENT_STATES.contains(state)) {
                         return false;
                     }
 
@@ -261,7 +262,7 @@ public class CurationDocumentServiceImpl
         // Curation that has already been started may always be continued, so a document in a
         // curation state bypasses the entry rules below. Like listCuratableSourceDocuments, this
         // decides on the database alone and ignores the curation CAS.
-        if (CURATION_IN_PROGRESS.equals(state) || CURATION_FINISHED.equals(state)) {
+        if (CURATION_DOCUMENT_STATES.contains(state)) {
             return true;
         }
 
@@ -339,7 +340,7 @@ public class CurationDocumentServiceImpl
 
         // Avoid transition overhead when the documentis already in a curation state
         var state = getCurrentState(aDocument);
-        if (CURATION_FINISHED.equals(state) || CURATION_IN_PROGRESS.equals(state)) {
+        if (CURATION_DOCUMENT_STATES.contains(state)) {
             return;
         }
 

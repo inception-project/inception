@@ -17,8 +17,8 @@
  */
 package de.tudarmstadt.ukp.clarin.webanno.agreement;
 
+import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_DOCUMENT_STATES;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
-import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
 
 import java.io.OutputStream;
 import java.util.List;
@@ -55,8 +55,7 @@ public interface AgreementService
             return aDocument.getState() == CURATION_FINISHED;
         }
 
-        return aDocument.getState() == CURATION_IN_PROGRESS
-                || aDocument.getState() == CURATION_FINISHED;
+        return CURATION_DOCUMENT_STATES.contains(aDocument.getState());
     }
 
     /**
