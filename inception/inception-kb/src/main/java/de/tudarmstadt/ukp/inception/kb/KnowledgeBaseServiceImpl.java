@@ -39,6 +39,7 @@ import static java.util.Locale.ROOT;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.apache.commons.lang3.StringUtils.isNotEmpty;
+import static org.apache.commons.lang3.StringUtils.normalizeSpace;
 import static org.apache.commons.lang3.StringUtils.substringAfter;
 import static org.apache.commons.lang3.StringUtils.substringBefore;
 import static org.apache.commons.lang3.Strings.CS;
@@ -165,6 +166,8 @@ import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthClientCreden
 import de.tudarmstadt.ukp.inception.security.client.auth.oauth.OAuthSessionImpl;
 import de.tudarmstadt.ukp.inception.support.SettingsUtil;
 import de.tudarmstadt.ukp.inception.support.StopWatch;
+import de.tudarmstadt.ukp.inception.support.config.InstanceMetadataProperties;
+import de.tudarmstadt.ukp.inception.support.config.InstanceMetadataPropertiesImpl;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
 import de.tudarmstadt.ukp.inception.support.wicket.PipedStreamResource;
 import jakarta.persistence.EntityManager;
@@ -202,7 +205,9 @@ public class KnowledgeBaseServiceImpl
 
     private final MemoryOAuthSessionRepository<KnowledgeBase> oAuthSessionRepository;
 
-    @Value("spring.application.name")
+    private InstanceMetadataProperties instanceMetadataProperties = new InstanceMetadataPropertiesImpl();
+
+    @Value("${spring.application.name:INCEpTION}")
     private String applicationName;
 
     @Autowired
@@ -272,6 +277,14 @@ public class KnowledgeBaseServiceImpl
     {
         this(aRepoProperties, aKBProperties);
         entityManager = aEntityManager;
+    }
+
+    public KnowledgeBaseServiceImpl(RepositoryProperties aRepoProperties,
+            KnowledgeBaseProperties aKBProperties,
+            InstanceMetadataProperties aInstanceMetadataProperties, EntityManager aEntityManager)
+    {
+        this(aRepoProperties, aKBProperties, aEntityManager);
+        instanceMetadataProperties = aInstanceMetadataProperties;
     }
 
     @EventListener({ ContextRefreshedEvent.class })
@@ -752,8 +765,7 @@ public class KnowledgeBaseServiceImpl
         if (repo instanceof SPARQLRepository sparqlRepo) {
             var sparqlRepoConfig = (SPARQLRepositoryConfig) getKnowledgeBaseConfig(kb);
 
-            addAdditionalHeaders(sparqlRepo, Map.of("User-Agent", applicationName + "/"
-                    + getVersionProperties().getProperty(PROP_VERSION, "unknown")));
+            addAdditionalHeaders(sparqlRepo, Map.of("User-Agent", getUserAgent()));
 
             applyBasicHttpAuthenticationConfigurationFromUrl(sparqlRepoConfig, sparqlRepo);
             var traits = readTraits(kb);
@@ -843,6 +855,25 @@ public class KnowledgeBaseServiceImpl
 
         addAdditionalHeaders(sparqlRepo,
                 Map.of(HttpHeaders.AUTHORIZATION, "Bearer " + session.getAccessToken()));
+    }
+
+    /**
+     * Builds the user agent following the Wikimedia User-Agent policy:
+     * {@code <client>/<version> (<contact>)}.
+     */
+    private String getUserAgent()
+    {
+        var userAgent = new StringBuilder();
+        userAgent.append(applicationName);
+        userAgent.append('/');
+        userAgent.append(getVersionProperties().getProperty(PROP_VERSION, "unknown"));
+
+        var contact = normalizeSpace(instanceMetadataProperties.getOperatorContact());
+        if (isNotBlank(contact)) {
+            userAgent.append(" (").append(contact).append(')');
+        }
+
+        return userAgent.toString();
     }
 
     private void addAdditionalHeaders(SPARQLRepository aSparqlRepo, Map<String, String> aHeaders)

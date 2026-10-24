@@ -107,6 +107,7 @@ import de.tudarmstadt.ukp.inception.preferences.config.PreferencesServiceAutoCon
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.config.SchedulingServiceAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.config.AnnotationSchemaServiceAutoConfiguration;
+import de.tudarmstadt.ukp.inception.search.DocumentStatistics;
 import de.tudarmstadt.ukp.inception.search.ExecutionException;
 import de.tudarmstadt.ukp.inception.search.LayerStatistics;
 import de.tudarmstadt.ukp.inception.search.SearchResult;
@@ -785,6 +786,50 @@ class MtasDocumentIndexTest
                 Map.entry(secondDoc.getId(), 6L));
     }
 
+    /**
+     * A row without any tokens (e.g. because its token collection could not be created) ends up
+     * alone in its own segment when it is written after the other rows. That segment has no
+     * postings for the content field. Prefix queries ask every segment for the document frequency
+     * of the terms found in the other segments, which must not trip Lucene's sanity checks.
+     */
+    @Test
+    void thatSegmentWithoutContentTokensDoesNotBreakCounts() throws Exception
+    {
+        var project = new Project("token-counts-empty-segment");
+        createProject(project);
+
+        var firstDocument = new SourceDocument("First document", project, "text");
+        uploadAndIndexDocument(Pair.of(firstDocument, "Goodbye moon. Hello World."));
+
+        var secondDocument = new SourceDocument("Second document", project, "text");
+        uploadAndIndexDocument(Pair.of(secondDocument, "Hello again."));
+
+        // Each (delayed) commit writes a segment - wait for one between the rows with tokens and
+        // the row without, so that the latter ends up in a segment of its own
+        awaitCommittedRows(project, 2);
+        writeCurationCas(secondDocument, buildTokenCas(0));
+        awaitCommittedRows(project, 3);
+
+        assertThat(countLeavesWithoutContentTerms(project)) //
+                .as("Precondition: one segment has no postings for the content field") //
+                .isPositive();
+
+        var firstDoc = documentService.getSourceDocument(project, firstDocument.getName());
+        var secondDoc = documentService.getSourceDocument(project, secondDocument.getName());
+
+        var counts = searchService.getAnnotationCountsPerDocument(CURATION_SET, project,
+                asList(firstDoc, secondDoc));
+
+        assertThat(counts).containsOnly( //
+                Map.entry(firstDoc.getId(), new DocumentStatistics(6, 2)), //
+                Map.entry(secondDoc.getId(), new DocumentStatistics(0, 0)));
+
+        // Match-all yields (empty) spans also for the segment without tokens
+        assertThat(searchService.query(user, project, "[]")) //
+                .extracting(SearchResult::getDocumentId) //
+                .contains(firstDoc.getId());
+    }
+
     private static CAS buildTokenCas(int aTokenCount) throws Exception
     {
         var tsd = mergeTypeSystems(asList(createTypeSystemDescription(), getInternalTypeSystem()));
@@ -1239,6 +1284,36 @@ class MtasDocumentIndexTest
                     if (aFieldId.equals(storedFields.document(i).get("id"))) {
                         count++;
                     }
+                }
+            }
+            return count;
+        }
+    }
+
+    private void awaitCommittedRows(Project aProject, int aRows)
+    {
+        var indexDir = indexFactory.getIndexDir(aProject);
+        await("Waiting for " + aRows + " rows to be committed") //
+                .atMost(60, SECONDS) //
+                .pollInterval(200, MILLISECONDS) //
+                .until(() -> {
+                    try (var dir = FSDirectory.open(indexDir.toPath());
+                            var reader = DirectoryReader.open(dir)) {
+                        return reader.numDocs() == aRows;
+                    }
+                });
+    }
+
+    private int countLeavesWithoutContentTerms(Project aProject) throws Exception
+    {
+        var indexDir = indexFactory.getIndexDir(aProject);
+        try (var dir = FSDirectory.open(indexDir.toPath());
+                var reader = DirectoryReader.open(dir)) {
+            var count = 0;
+            for (var leafCtx : reader.leaves()) {
+                var terms = leafCtx.reader().terms("content");
+                if (terms == null || terms.iterator().next() == null) {
+                    count++;
                 }
             }
             return count;

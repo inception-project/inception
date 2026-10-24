@@ -1481,6 +1481,11 @@ public class MtasDocumentIndex
                 var segmentReader = (SegmentReader) leafReaderContext.reader();
                 var storedFields = segmentReader.storedFields();
                 var terms = segmentReader.terms(FIELD_CONTENT);
+                if (terms == null) {
+                    // Segment without any tokens - nothing can match here
+                    continue;
+                }
+
                 var mtasCodecInfo = CodecInfo.getCodecInfoFromTerms(terms);
                 while (spans.nextDoc() != NO_MORE_DOCS) {
                     if (segmentReader.numDocs() == segmentReader.maxDoc()

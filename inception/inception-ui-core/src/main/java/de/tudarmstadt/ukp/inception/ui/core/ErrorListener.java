@@ -17,10 +17,17 @@
  */
 package de.tudarmstadt.ukp.inception.ui.core;
 
+import static jakarta.servlet.http.HttpServletResponse.SC_OK;
+import static org.apache.wicket.settings.ExceptionSettings.AjaxErrorStrategy.REDIRECT_TO_ERROR_PAGE;
+
+import org.apache.wicket.Application;
 import org.apache.wicket.MetaDataKey;
+import org.apache.wicket.protocol.http.servlet.ErrorAttributes;
+import org.apache.wicket.protocol.http.servlet.ServletWebRequest;
 import org.apache.wicket.request.IRequestHandler;
 import org.apache.wicket.request.cycle.IRequestCycleListener;
 import org.apache.wicket.request.cycle.RequestCycle;
+import org.apache.wicket.request.http.WebResponse;
 
 public class ErrorListener
     implements IRequestCycleListener
@@ -29,6 +36,26 @@ public class ErrorListener
     {
         private static final long serialVersionUID = 1L;
     };
+
+    @Override
+    public void onBeginRequest(RequestCycle aCycle)
+    {
+        // Apply the application's AJAX error strategy also to failures Wicket does not handle
+        // itself (an Error escaping the request cycle, or a container-level error such as a 403).
+        // These reach the error page through the container's error dispatch, which keeps the error
+        // status. With REDIRECT_TO_ERROR_PAGE, Wicket answers the AJAX request with a redirect to
+        // the error page, but the Wicket AJAX client ignores redirects in error responses, leaving
+        // the user with a page that silently stopped working. Use the status Wicket itself uses
+        // for AJAX redirects so the client follows the redirect, as it does for exceptions.
+        if (aCycle.getRequest() instanceof ServletWebRequest request && request.isAjax()
+                && ErrorAttributes.of(request.getContainerRequest(),
+                        request.getFilterPrefix()) != null
+                && Application.get().getExceptionSettings()
+                        .getAjaxErrorHandlingStrategy() == REDIRECT_TO_ERROR_PAGE
+                && aCycle.getResponse() instanceof WebResponse response) {
+            response.setStatus(SC_OK);
+        }
+    }
 
     @Override
     public IRequestHandler onException(RequestCycle aCycle, Exception aEx)

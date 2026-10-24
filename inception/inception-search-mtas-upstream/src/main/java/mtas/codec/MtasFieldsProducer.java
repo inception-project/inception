@@ -166,8 +166,14 @@ public class MtasFieldsProducer
     @Override
     public Terms terms(String field) throws IOException
     {
-        return new MtasTerms(delegateFieldsProducer.terms(field), indexInputList,
-                indexInputOffsetList, version);
+        // Lucene expects null if the segment has no postings for the field. Wrapping null would
+        // report statistics of -1 (e.g. a doc count of -1) which contradict the other statistics.
+        var delegateTerms = delegateFieldsProducer.terms(field);
+        if (delegateTerms == null) {
+            return null;
+        }
+
+        return new MtasTerms(delegateTerms, indexInputList, indexInputOffsetList, version);
     }
 
     /*
