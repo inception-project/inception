@@ -28,12 +28,15 @@ import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseServiceImpl;
 import de.tudarmstadt.ukp.inception.kb.exporter.KnowledgeBaseExporter;
 import de.tudarmstadt.ukp.inception.kb.footprint.KnowledgeBaseFootprintProvider;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
+import de.tudarmstadt.ukp.inception.support.config.InstanceMetadataProperties;
+import de.tudarmstadt.ukp.inception.support.config.InstanceMetadataPropertiesImpl;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
 @Configuration
 @ConditionalOnProperty(prefix = "knowledge-base", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(KnowledgeBasePropertiesImpl.class)
+@EnableConfigurationProperties({ KnowledgeBasePropertiesImpl.class,
+        InstanceMetadataPropertiesImpl.class })
 public class KnowledgeBaseServiceAutoConfiguration
 {
     private @PersistenceContext EntityManager entityManager;
@@ -47,9 +50,11 @@ public class KnowledgeBaseServiceAutoConfiguration
 
     @Bean
     public KnowledgeBaseService knowledgeBaseService(RepositoryProperties aRepoProperties,
-            KnowledgeBaseProperties aKbProperties)
+            KnowledgeBaseProperties aKbProperties,
+            InstanceMetadataProperties aInstanceMetadataProperties)
     {
-        return new KnowledgeBaseServiceImpl(aRepoProperties, aKbProperties, entityManager);
+        return new KnowledgeBaseServiceImpl(aRepoProperties, aKbProperties,
+                aInstanceMetadataProperties, entityManager);
     }
 
     @Bean

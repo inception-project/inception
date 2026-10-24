@@ -59,3 +59,29 @@
 | `false`
 | `true`
 |===
+
+[[sect_settings_operator_contact]]
+== Operator contact
+
+{product-name} sends the operator contact along with requests to remote services, so that the people running those services can get in touch with you if your instance causes problems.
+Currently, it is included in the `User-Agent` header of requests to remote knowledge bases, e.g. `INCEpTION/42.2.0 (https://annotation.example.org/contact)`.
+Without an operator contact, only the application name and version are sent.
+
+If your instance uses Wikidata or another Wikimedia service, you should set an operator contact.
+The link:https://foundation.wikimedia.org/wiki/Policy:Wikimedia_Foundation_User-Agent_Policy[Wikimedia User-Agent policy] asks clients to provide contact information, and clients that do not may be rate-limited more strictly or blocked.
+
+The contact is visible to the operators of the remote services, so prefer a role address or a contact page over a personal address.
+
+.General settings
+[cols="4*", options="header"]
+|===
+| Setting
+| Description
+| Default
+| Example
+
+| `instance.operator-contact`
+| Public contact information of whoever operates this {product-name} instance, e.g. a URL or an e-mail address. See <<sect_settings_operator_contact>>.
+| _unset_
+| `https://annotation.example.org/contact`
+|===
