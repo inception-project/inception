@@ -19,9 +19,6 @@ package de.tudarmstadt.ukp.inception.ui.kb.search;
 
 import static de.tudarmstadt.ukp.inception.kb.IriConstants.hasImplicitNamespace;
 
-import java.util.List;
-import java.util.Optional;
-
 import org.apache.commons.collections4.MultiValuedMap;
 import org.apache.commons.collections4.multimap.HashSetValuedHashMap;
 import org.apache.uima.cas.text.AnnotationFS;
@@ -30,11 +27,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.kb.graph.KBHandle;
-import de.tudarmstadt.ukp.inception.kb.graph.KBObject;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupport;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
 import de.tudarmstadt.ukp.inception.search.FeatureIndexingSupport;
-import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 import de.tudarmstadt.ukp.inception.ui.kb.config.KnowledgeBaseServiceUIAutoConfiguration;
 
 /**
@@ -96,22 +91,21 @@ public class ConceptFeatureIndexingSupport
         // feature type is associated with KB and feature value is not null
         FeatureSupport<?> featSup = featureSupportRegistry.findExtension(aFeature).orElseThrow();
         KBHandle featureObject = featSup.getFeatureValue(aFeature, aAnnotation);
-        MultiValuedMap<String, String> values = new HashSetValuedHashMap<String, String>();
+        var values = new HashSetValuedHashMap<String, String>();
 
         // Feature value is not set
         if (featureObject == null) {
             return values;
         }
 
-        // Get object from the KB
-        Optional<KBHandle> kbObject = kbService.readHandle(aFeature.getProject(),
-                WebAnnoCasUtil.getFeature(aAnnotation, aFeature.getName()));
-
-        if (!kbObject.isPresent()) {
+        // The feature support resolves the value through the concept label cache. If the concept
+        // could not be found in any KB or the lookup failed, the handle has no KB.
+        var kb = featureObject.getKB();
+        if (kb == null) {
             return values;
         }
 
-        String field = aFieldPrefix;
+        var field = aFieldPrefix;
 
         // Indexing <layer>.<feature>-exact=<UI label>
         values.put(featureIndexName(field, aFeaturePrefix, aFeature), featureObject.getUiLabel());
@@ -131,11 +125,10 @@ public class ConceptFeatureIndexingSupport
         values.put(KB_ENTITY, featureObject.getIdentifier());
 
         // Indexing super concepts with type super.concept
-        KBObject kbObj = kbObject.get();
-        List<KBHandle> listParentConcepts = kbService.getParentConceptList(kbObj.getKB(),
-                kbObj.getIdentifier(), false);
+        var listParentConcepts = kbService.getParentConceptList(kb, featureObject.getIdentifier(),
+                false);
         for (KBHandle parentConcept : listParentConcepts) {
-            if (hasImplicitNamespace(kbObj.getKB(), parentConcept.getIdentifier())) {
+            if (hasImplicitNamespace(kb, parentConcept.getIdentifier())) {
                 continue;
             }
             values.put(field + aFeaturePrefix + ATTRIBUTE_SEP + aFeature.getUiName(),
