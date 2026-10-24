@@ -20,17 +20,14 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CHANGE_EVENT;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
-import static de.tudarmstadt.ukp.inception.support.wicket.WicketUtil.refreshPage;
 import static java.util.Collections.emptyList;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 import org.apache.wicket.ajax.AjaxRequestTarget;
 import org.apache.wicket.event.IEvent;
-import org.apache.wicket.feedback.IFeedback;
 import org.apache.wicket.markup.html.basic.Label;
 import org.apache.wicket.markup.html.form.Check;
 import org.apache.wicket.markup.html.form.CheckBox;
@@ -42,30 +39,18 @@ import org.apache.wicket.model.IModel;
 import org.apache.wicket.model.LambdaModel;
 import org.apache.wicket.model.LoadableDetachableModel;
 import org.apache.wicket.model.Model;
-import org.apache.wicket.model.PropertyModel;
 import org.apache.wicket.model.ResourceModel;
 import org.apache.wicket.spring.injection.annot.SpringBean;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.AnnotationSidebar_ImplBase;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog;
-import de.tudarmstadt.ukp.clarin.webanno.ui.curation.page.MergeDialog.State;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
-import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
-import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
-import de.tudarmstadt.ukp.inception.curation.service.CurationService;
-import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.selection.DocumentStateChangedInEditorEvent;
-import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxButton;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormChoiceComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxFormComponentUpdatingBehavior;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxLink;
-import de.tudarmstadt.ukp.inception.ui.curation.page.CuratableDocumentPage;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.sidebar.SidebarContext;
 
 public class CurationSidebar
@@ -73,28 +58,19 @@ public class CurationSidebar
 {
     private static final long serialVersionUID = -4195790451286055737L;
 
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     private @SpringBean UserDao userRepository;
     private @SpringBean ProjectService projectService;
-    private @SpringBean AnnotationEditorExtensionRegistry extensionRegistry;
     private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean CurationSidebarService curationSidebarService;
-    private @SpringBean CurationService curationService;
-    private @SpringBean CurationMergeService curationMergeService;
-    private @SpringBean AnnotationSchemaService annotationService;
 
     private CheckGroup<AnnotationSet> selectedUsers;
     private ListView<AnnotationSet> users;
     private final Form<Void> usersForm;
     private CheckBox showMerged;
     private CheckBox showScore;
-    private final IModel<CurationWorkflow> curationWorkflowModel;
     private final IModel<Boolean> isTargetFinished;
 
     private final Label noDocsLabel;
-
-    private final MergeDialog mergeConfirm;
 
     public CurationSidebar(String aId, SidebarContext aContext)
     {
@@ -133,16 +109,6 @@ public class CurationSidebar
             showScore.setModelObject(
                     curationSidebarService.isShowScore(sessionOwner, project.getId()));
         }
-
-        curationWorkflowModel = Model.of(curationService.readOrCreateCurationWorkflow(project));
-
-        // confirmation dialog when using automatic merging (might change user's annos)
-        IModel<String> documentNameModel = PropertyModel.of(getModel(), "document.name");
-        queue(mergeConfirm = new MergeDialog("mergeConfirmDialog",
-                new ResourceModel("mergeConfirmTitle"), new ResourceModel("mergeConfirmText"),
-                documentNameModel, curationWorkflowModel));
-        mergeConfirm.setDataOwnerSource(this::listCuratableDataOwners);
-        mergeConfirm.setSidebarSelectionSource(() -> selectedUsers.getModelObject());
     }
 
     @Override
@@ -173,49 +139,6 @@ public class CurationSidebar
         getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
     }
 
-    private void actionOpenMergeDialog(AjaxRequestTarget aTarget, Form<Void> aForm)
-    {
-        mergeConfirm.setConfirmAction(this::actionMerge);
-        mergeConfirm.show(aTarget);
-    }
-
-    private void actionMerge(AjaxRequestTarget aTarget, Form<State> aForm)
-    {
-        var state = getModelObject();
-        var dataOwner = state.getUser();
-        var curationWorkflow = curationWorkflowModel.getObject();
-
-        aTarget.addChildren(getPage(), IFeedback.class);
-
-        // The dialog offers the annotators that were curatable when it was opened. Some may have
-        // stopped being curatable since, e.g. because they were reset on the monitoring page.
-        var curatableDataOwners = listCuratableDataOwners();
-        var dataOwners = aForm.getModelObject().getDataOwners().stream() //
-                .filter(curatableDataOwners::contains) //
-                .toList();
-        if (dataOwners.isEmpty()) {
-            error("Unable to merge: none of the selected annotators has annotations that can be "
-                    + "curated.");
-            return;
-        }
-
-        if (aForm.getModelObject().isSaveSettingsAsDefault()) {
-            curationService.createOrUpdateCurationWorkflow(curationWorkflow);
-            success("Updated project merge strategy settings");
-        }
-
-        try {
-            var mergeStrategyFactory = curationSidebarService.merge(state, curationWorkflow,
-                    dataOwners, aForm.getModelObject().isClearTargetCas());
-            success("Re-merge using [" + mergeStrategyFactory.getLabel() + "] finished!");
-            refreshPage(aTarget, getPage());
-        }
-        catch (Exception e) {
-            error("Unable to merge: " + e.getMessage());
-            LOG.error("Unable to merge document {} to user {}", dataOwner, state.getDocument(), e);
-        }
-    }
-
     private boolean isSessionActive()
     {
         return curationSessionService.existsSession(userRepository.getSessionOwnerName(),
@@ -244,11 +167,6 @@ public class CurationSidebar
         form.add(new LambdaAjaxLink("selectAll", this::actionSelectAll));
         form.add(new LambdaAjaxLink("selectNone", this::actionSelectNone));
         form.add(new LambdaAjaxLink("invertSelection", this::actionInvertSelection));
-
-        // Pages that curate a document offer the re-merge in the action bar
-        form.add(new LambdaAjaxButton<>("merge", this::actionOpenMergeDialog)
-                .add(visibleWhen(() -> !(getPage() instanceof CuratableDocumentPage)
-                        && !isTargetFinished.getObject())));
 
         users = new ListView<AnnotationSet>("users",
                 LoadableDetachableModel.of(this::listCuratableDataOwners))

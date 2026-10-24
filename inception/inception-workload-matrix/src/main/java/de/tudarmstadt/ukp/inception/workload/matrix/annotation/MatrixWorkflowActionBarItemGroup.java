@@ -24,7 +24,6 @@ import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.MANAGER;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_IN_PROGRESS;
-import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 
@@ -56,7 +55,6 @@ import de.tudarmstadt.ukp.clarin.webanno.api.annotation.page.AnnotationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.bootstrap.BootstrapModalDialog;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -213,16 +211,6 @@ public class MatrixWorkflowActionBarItemGroup
     {
         var state = editorContext.getViewState();
 
-        // Curation sidebar: when writing to the curation document, we need to update the document
-        if (CURATION_USER.equals(state.getUser().getUsername())) {
-            if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
-                return new ResourceModel("stateToggle.curationFinished");
-            }
-            else {
-                return new ResourceModel("stateToggle.curationInProgress");
-            }
-        }
-
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
             return new ResourceModel("stateToggle.annotationFinished");
         }
@@ -239,18 +227,6 @@ public class MatrixWorkflowActionBarItemGroup
     public String getStateClass()
     {
         var state = editorContext.getViewState();
-
-        // Curation sidebar: when writing to the curation document, we need to update the document
-        if (state.getUser().getUsername().equals(CURATION_USER)) {
-            if (state.getDocument().getState() == SourceDocumentState.CURATION_FINISHED) {
-                // Re-open: SourceDocumentState.CURATION_IN_PROGRESS.symbol()
-                return FontAwesome7IconType.clipboard_s.cssClassName();
-            }
-            else {
-                // Finish: SourceDocumentState.CURATION_FINISHED.symbol()
-                return FontAwesome7IconType.clipboard_check_s.cssClassName();
-            }
-        }
 
         if (documentService.isAnnotationFinished(state.getDocument(), state.getUser())) {
             // Re-open: AnnotationDocumentState.IN_PROGRESS.symbol()
@@ -329,32 +305,6 @@ public class MatrixWorkflowActionBarItemGroup
     {
         var state = editorContext.getAnnotatorState();
         var document = state.getDocument();
-
-        // Curation sidebar: when writing to the curation document, we need to update the docuement
-        if (CURATION_USER.equals(state.getUser().getUsername())) {
-            switch (document.getState()) {
-            case CURATION_FINISHED:
-                documentService.setSourceDocumentState(document, CURATION_IN_PROGRESS);
-                editorContext.refreshAfterDocumentStateChange(aTarget);
-                break;
-            default:
-                // Curation must not be finished with invalid annotations - same as on the
-                // other curation pages
-                try {
-                    page.actionValidateDocument(aTarget, editorContext);
-                }
-                catch (ValidationException e) {
-                    page.error("Document cannot be marked as finished: " + e.getMessage());
-                    aTarget.addChildren(page, IFeedback.class);
-                    return;
-                }
-
-                documentService.setSourceDocumentState(document, CURATION_FINISHED);
-                editorContext.refreshAfterDocumentStateChange(aTarget);
-                break;
-            }
-            return;
-        }
 
         var sessionOwner = userRepository.getCurrentUser();
         var isOwnDocument = sessionOwner.equals(state.getUser());

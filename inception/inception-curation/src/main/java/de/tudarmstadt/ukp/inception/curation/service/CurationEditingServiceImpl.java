@@ -152,13 +152,14 @@ public class CurationEditingServiceImpl
 
         var mergeSourceUsers = curatableUsers.stream().filter(aMergeSourceFilter).toList();
 
-        // The same holds when the curator has deselected all curatable users
+        // The same holds when none of the annotators to merge from is curatable - because none
+        // were selected, or because the selected ones stopped being curatable in the meantime
         if (aMergeMode == RECREATE && mergeSourceUsers.isEmpty()) {
             throw new CurationNotPossibleException(aDocument,
                     "Cannot re-create the curation document for [" + aDocument.getName()
-                            + "]: no annotators are selected to merge from. Re-creating it would "
-                            + "irrevocably discard the existing curation results. Select at "
-                            + "least one annotator first.");
+                            + "]: none of the annotators to merge from has annotations that can "
+                            + "be curated. Re-creating it would irrevocably discard the existing "
+                            + "curation results.");
         }
 
         // Filling in without anybody to merge from would report a merge that did nothing. A

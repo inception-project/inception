@@ -142,7 +142,7 @@ In this mode, you can find a **Curation sidebar** on the left side of the page.
 In this sidebar, you can configure which annotators you want to see in the document view.
 If document metadata layers are configured in the project, you can curate document-level
 annotations in the **Document Metadata sidebar** in this mode.
-You can also restart the curation process for a document using the **Re-merge** button (see <<re-merging>>).
+You can also restart the curation process for a document using the **Re-merge** button in the action bar above the document (see <<re-merging>>).
 
 [#re-merging]
 == Re-merging
@@ -150,7 +150,7 @@ You can also restart the curation process for a document using the **Re-merge** 
 When a document is first opened for curation, {product-name} performs an automatic pre-merge of the annotators' data into the curation document (see <<merging-strategies>>).
 This only happens if the project setting **Auto-merge when starting to curate a document** is enabled (the default).
 Otherwise, the curation document starts out as the original document, without any of the annotators' annotations.
-The **Re-merge** button on the curation page allows you to run this automatic merge again at any time, for example after the annotators have changed their annotations or after you have changed the merge strategy.
+The **Re-merge** button in the action bar of the curation page allows you to run this automatic merge again at any time, for example after the annotators have changed their annotations or after you have changed the merge strategy.
 
 The **Re-merge** dialog offers the following options:
 

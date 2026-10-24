@@ -21,32 +21,12 @@
  */
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationDocumentStateChangeFlag.EXPLICIT_ANNOTATOR_USER_ACTION;
-import static de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet.CURATION_SET;
 import static de.tudarmstadt.ukp.clarin.webanno.model.SourceDocumentState.CURATION_FINISHED;
 import static de.tudarmstadt.ukp.inception.support.WebAnnoConst.CURATION_USER;
 
-import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.util.Collection;
-
-import org.apache.uima.UIMAException;
-import org.apache.uima.cas.CAS;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tudarmstadt.ukp.clarin.webanno.api.annotation.exception.NotEditableException;
-import de.tudarmstadt.ukp.clarin.webanno.api.casstorage.CasStorageService;
-import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
-import de.tudarmstadt.ukp.inception.curation.merge.strategy.MergeStrategyFactory;
-import de.tudarmstadt.ukp.inception.curation.model.CurationWorkflow;
-import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
-import de.tudarmstadt.ukp.inception.curation.service.CurationMergeService;
-import de.tudarmstadt.ukp.inception.curation.service.CurationService;
-import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorState;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
@@ -59,49 +39,11 @@ import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAu
 public class CurationSidebarServiceImpl
     implements CurationSidebarService
 {
-    private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
-    private final DocumentService documentService;
-    private final CasStorageService casStorageService;
-    private final CurationService curationService;
-    private final CurationMergeService curationMergeService;
     private final CurationSessionService curationSessionService;
-    private final CurationDocumentService curationDocumentService;
 
-    public CurationSidebarServiceImpl(DocumentService aDocumentService,
-            CasStorageService aCasStorageService, CurationService aCurationService,
-            CurationMergeService aCurationMergeService,
-            CurationSessionService aCurationSessionService,
-            CurationDocumentService aCurationDocumentService)
+    public CurationSidebarServiceImpl(CurationSessionService aCurationSessionService)
     {
-        documentService = aDocumentService;
-        casStorageService = aCasStorageService;
-        curationService = aCurationService;
-        curationMergeService = aCurationMergeService;
         curationSessionService = aCurationSessionService;
-        curationDocumentService = aCurationDocumentService;
-    }
-
-    /**
-     * @return CAS associated with curation doc for the given user
-     */
-    @Transactional
-    private CAS retrieveCurationCAS(SourceDocument aDoc) throws IOException
-    {
-        return documentService.readAnnotationCas(aDoc, CURATION_SET);
-    }
-
-    /**
-     * Write to CAS associated with curation doc for the given user and update timestamp
-     */
-    @Transactional
-    private void writeCurationCas(CAS aTargetCas, AnnotatorState aState) throws IOException
-    {
-        var doc = aState.getDocument();
-        var annoDoc = documentService.createOrGetAnnotationDocument(doc, CURATION_SET);
-        documentService.writeAnnotationCas(aTargetCas, annoDoc, EXPLICIT_ANNOTATOR_USER_ACTION);
-        casStorageService.getCasTimestamp(doc, CURATION_SET)
-                .ifPresent(aState::setAnnotationDocumentTimestamp);
     }
 
     @Transactional
@@ -138,42 +80,5 @@ public class CurationSidebarServiceImpl
         var username = aState.getUser().getUsername();
         var sourceDoc = aState.getDocument();
         return username.equals(CURATION_USER) && sourceDoc.getState().equals(CURATION_FINISHED);
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    @Override
-    @Transactional
-    public MergeStrategyFactory<?> merge(AnnotatorState aState, CurationWorkflow aWorkflow,
-            Collection<AnnotationSet> aDataOwners, boolean aClearTargetCas)
-        throws IOException, UIMAException, NotEditableException
-    {
-        var doc = aState.getDocument();
-
-        if (curationDocumentService.isCurationFinished(doc)) {
-            throw new NotEditableException("Curation is already finished. You can put it back "
-                    + "into progress via the monitoring page.");
-        }
-
-        MergeStrategyFactory factory = curationService.getMergeStrategyFactory(aWorkflow);
-        var traits = factory.readTraits(aWorkflow);
-        var mergeStrategy = factory.makeStrategy(traits);
-        var aTargetCas = retrieveCurationCAS(doc);
-
-        var userCases = documentService.readAllCasesSharedNoUpgrade(doc,
-                aDataOwners.stream().map(AnnotationSet::id).toArray(String[]::new));
-
-        // FIXME: should merging not overwrite the current users annos? (can result in
-        // deleting the users annotations!!!), currently fixed by warn message to user
-        // prepare merged CAS
-        curationMergeService.mergeCasses(doc, aState.getUser().getUsername(), aTargetCas, userCases,
-                mergeStrategy, aState.getAnnotationLayers(), aClearTargetCas);
-
-        // write back and update timestamp
-        writeCurationCas(aTargetCas, aState);
-
-        curationDocumentService.markCurationInProgress(doc);
-
-        LOG.debug("Merge done");
-        return factory;
     }
 }

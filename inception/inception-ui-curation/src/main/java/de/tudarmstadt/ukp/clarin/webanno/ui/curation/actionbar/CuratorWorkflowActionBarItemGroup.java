@@ -242,6 +242,24 @@ public class CuratorWorkflowActionBarItemGroup
         MergeStrategy mergeStrategy = curationService
                 .getMergeStrategy(curationWorkflowModel.getObject());
 
+        var state = editorContext.getAnnotatorState();
+
+        // The dialog offers the annotators that were curatable when it was opened. Some may have
+        // stopped being curatable since, e.g. because they were reset on the monitoring page.
+        // Check this before saving anything, and close the dialog so that reopening it offers the
+        // current annotators.
+        var curatableDataOwners = curationSessionService
+                .listCuratableDataOwners(state.getDocument());
+        var dataOwners = aForm.getModelObject().getDataOwners().stream() //
+                .filter(curatableDataOwners::contains) //
+                .toList();
+        if (dataOwners.isEmpty()) {
+            getPage().error("Unable to merge: none of the selected annotators has annotations "
+                    + "that can be curated any more.");
+            aTarget.addChildren(getPage(), IFeedback.class);
+            return;
+        }
+
         if (aForm.getModelObject().isSaveSettingsAsDefault()) {
             curationService.createOrUpdateCurationWorkflow(curationWorkflowModel.getObject());
             getPage().success("Updated project merge strategy settings");
@@ -249,10 +267,9 @@ public class CuratorWorkflowActionBarItemGroup
         }
 
         var mergeMode = aForm.getModelObject().isClearTargetCas() ? RECREATE : FILL_ONLY;
-        var state = editorContext.getAnnotatorState();
 
         ((CuratableDocumentPage) page).readOrCreateCurationCas(state.getDocument(), state,
-                mergeStrategy, mergeMode, aForm.getModelObject().getDataOwners());
+                mergeStrategy, mergeMode, dataOwners);
 
         // ... and load it
         editorContext.actionLoadDocument(aTarget);
