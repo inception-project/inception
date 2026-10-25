@@ -65,6 +65,7 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
+import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.detail.ShowAnnotationReadOnlyEvent;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotationState;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.component.model.AnnotatorSegmentState;
@@ -158,7 +159,7 @@ public class AnnotatorsPanel
             {
                 final var annotatorSegment = aItem.getModelObject();
                 var curationVisualizer = new BratSuggestionVisualizer("annotationViewer", manager,
-                        new Model<>(annotatorSegment), aItem.getIndex())
+                        new Model<>(annotatorSegment))
                 {
                     private static final long serialVersionUID = -1205541428144070566L;
 
@@ -509,6 +510,14 @@ public class AnnotatorsPanel
         Map<String, Map<VID, AnnotationState>> annoStates = calculateAnnotationStates(aState,
                 casses);
 
+        // Number the annotators by their position among all curatable annotators, not among the
+        // shown ones, so they get the same anonymized names as in the curation sidebar and the
+        // merge dialog
+        var curatableUserNames = curationDocumentService.listCuratableUsers(aState.getDocument())
+                .stream() //
+                .map(User::getUsername) //
+                .toList();
+
         var segments = new ArrayList<AnnotatorSegmentState>();
         for (String username : casses.keySet().stream().sorted().collect(toList())) {
             if (username.equals(CURATION_USER)) {
@@ -525,6 +534,7 @@ public class AnnotatorsPanel
             // Create curation view for the current user
             var seg = new AnnotatorSegmentState();
             seg.setUser(userService.get(username));
+            seg.setPosition(curatableUserNames.indexOf(username));
             seg.setAnnotatorState(aState);
             renderSegment(aTarget, seg, cas, annotationStates);
             segments.add(seg);
