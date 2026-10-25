@@ -20,7 +20,6 @@ package de.tudarmstadt.ukp.inception.export.exporters;
 import static org.apache.commons.io.FilenameUtils.normalize;
 import static org.apache.commons.lang3.StringUtils.prependIfMissing;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.nio.file.FileVisitResult;
@@ -32,7 +31,6 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -115,23 +113,35 @@ public class ProjectMetaInfExporter
             ExportedProject aExProject, ZipFile aZip)
         throws Exception
     {
+        var metaInf = projectService.getMetaInfFolder(aProject).toPath().toAbsolutePath()
+                .normalize();
+
         for (var zipEnumerate = aZip.entries(); zipEnumerate.hasMoreElements();) {
             var entry = zipEnumerate.nextElement();
 
             // Strip leading "/" that we had in ZIP files prior to 2.0.8 (bug #985)
             var entryName = ZipUtils.normalizeEntryName(entry);
 
-            if (entryName.startsWith(META_INF_FOLDER + "/")) {
-                var metaInfDir = new File(projectService.getMetaInfFolder(aProject),
-                        FilenameUtils.getPath(entry.getName().replace(META_INF_FOLDER + "/", "")));
-                // where the file reside in the META-INF/... directory
-                FileUtils.forceMkdir(metaInfDir);
-                FileUtils.copyInputStreamToFile(aZip.getInputStream(entry),
-                        new File(metaInfDir, FilenameUtils.getName(entry.getName())));
-
-                LOG.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
-                        + aProject.getId() + "]");
+            if (entry.isDirectory() || !entryName.startsWith(META_INF_FOLDER + "/")) {
+                continue;
             }
+
+            var target = metaInf.resolve(entryName.substring(META_INF_FOLDER.length() + 1))
+                    .normalize();
+
+            // Refuse entries such as "META-INF/../../x" that would be written outside the
+            // project's META-INF folder
+            if (!target.startsWith(metaInf) || target.equals(metaInf)) {
+                throw new IOException(
+                        "Illegal META-INF entry in project archive: [" + entryName + "]");
+            }
+
+            try (var is = aZip.getInputStream(entry)) {
+                FileUtils.copyInputStreamToFile(is, target.toFile());
+            }
+
+            LOG.info("Imported META-INF for project [" + aProject.getName() + "] with id ["
+                    + aProject.getId() + "]");
         }
     }
 }
