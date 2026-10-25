@@ -24,11 +24,12 @@ import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.session.SessionRegistryImpl;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
@@ -51,15 +53,18 @@ public class SchedulingServiceTest
     private @Mock ApplicationContext mockContext;
     private @Mock ProjectService projectService;
 
+    private SessionRegistryImpl sessionRegistry;
     private SchedulingServiceImpl sut;
 
     @BeforeEach
     public void setUp()
     {
-        when(mockContext.getAutowireCapableBeanFactory())
+        lenient().when(mockContext.getAutowireCapableBeanFactory())
                 .thenReturn(mock(AutowireCapableBeanFactory.class));
 
-        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties(), null,
+        sessionRegistry = new SessionRegistryImpl();
+
+        sut = new SchedulingServiceImpl(mockContext, new SchedulingProperties(), sessionRegistry,
                 projectService);
 
         // Simulate the application having fully started so that tasks are actually dispatched
@@ -163,6 +168,62 @@ public class SchedulingServiceTest
         assertThat(sut.getScheduledAndRunningTasks()) //
                 .as("Queued task must not have been dispatched") //
                 .doesNotContain(second);
+    }
+
+    @Test
+    public void thatWaitingTaskWithoutOwnerSurvivesCleanUp() throws Exception
+    {
+        sessionRegistry.registerNewSession("session1", "user1");
+
+        var task = RecordingDebouncingTask.builder() //
+                .withProject(buildProject("project1")) //
+                .withDebounceDelay(ofSeconds(1)) //
+                .build();
+        task.afterPropertiesSet();
+
+        sut.enqueue(task);
+
+        assertThat(sut.getEnqueuedTasks()) //
+                .as("Debouncing task must wait in the queue until its delay has passed") //
+                .contains(task);
+
+        invokeCleanUpTasks();
+
+        assertThat(sut.getEnqueuedTasks()) //
+                .as("Task without owner must not be removed for lack of a logged-in owner") //
+                .contains(task);
+
+        await().atMost(15, SECONDS).untilTrue(task.executed);
+    }
+
+    @Test
+    public void thatWaitingTaskOfLoggedOutOwnerIsRemovedOnCleanUp() throws Exception
+    {
+        sessionRegistry.registerNewSession("session1", "user1");
+
+        var task = RecordingDebouncingTask.builder() //
+                .withSessionOwner(buildUser("user2")) //
+                .withProject(buildProject("project1")) //
+                .withDebounceDelay(ofSeconds(1)) //
+                .build();
+        task.afterPropertiesSet();
+
+        sut.enqueue(task);
+
+        invokeCleanUpTasks();
+
+        assertThat(sut.getAllTasks()) //
+                .as("Task of an owner without a session must be removed") //
+                .doesNotContain(task);
+        assertThat(task.executed).isFalse();
+    }
+
+    private void invokeCleanUpTasks() throws Exception
+    {
+        // In production this is fired by the 10s watchdog
+        var method = SchedulingServiceImpl.class.getDeclaredMethod("cleanUpTasks");
+        method.setAccessible(true);
+        method.invoke(sut);
     }
 
     private MatchableDummyTask buildMatchableDummyTask(User aUser, Project aProject)
@@ -310,6 +371,42 @@ public class SchedulingServiceTest
             public MatchableDummyTask build()
             {
                 return new MatchableDummyTask(this);
+            }
+        }
+    }
+
+    /**
+     * Debouncing task that records that it has been executed and then ends.
+     */
+    private static class RecordingDebouncingTask
+        extends DebouncingTask
+    {
+        private static final String TYPE = "RecordingDebouncingTask";
+
+        private final AtomicBoolean executed = new AtomicBoolean();
+
+        RecordingDebouncingTask(Builder<? extends Builder<?>> aBuilder)
+        {
+            super(aBuilder.withType(TYPE).withTrigger("test"));
+        }
+
+        @Override
+        public void execute()
+        {
+            executed.set(true);
+        }
+
+        public static Builder<Builder<?>> builder()
+        {
+            return new Builder<>();
+        }
+
+        public static class Builder<T extends Builder<?>>
+            extends DebouncingTask.Builder<T>
+        {
+            public RecordingDebouncingTask build()
+            {
+                return new RecordingDebouncingTask(this);
             }
         }
     }
