@@ -866,6 +866,7 @@ public class SearchServiceImpl
     private void enqueueReindexTask(Project aProject, String aTrigger)
     {
         enqueue(ReindexTask.builder() //
+                .asSystemTask() //
                 .withProject(aProject) //
                 .withTrigger(aTrigger) //
                 .build());
@@ -900,6 +901,7 @@ public class SearchServiceImpl
     private void enqueueIndexDocument(SourceDocument aSourceDocument, String aTrigger)
     {
         enqueue(IndexSourceDocumentTask.builder() //
+                .asSystemTask() //
                 .withSourceDocument(aSourceDocument) //
                 .withTrigger(aTrigger) //
                 .build());
@@ -908,6 +910,7 @@ public class SearchServiceImpl
     private void enqueueIndexDocument(AnnotationDocument aAnnotationDocument, String aTrigger)
     {
         enqueue(IndexAnnotationDocumentTask.builder() //
+                .asSystemTask() //
                 .withAnnotationDocument(aAnnotationDocument) //
                 .withTrigger(aTrigger) //
                 .build());

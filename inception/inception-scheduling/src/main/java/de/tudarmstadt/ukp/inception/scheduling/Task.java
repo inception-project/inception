@@ -24,6 +24,7 @@ import static de.tudarmstadt.ukp.inception.scheduling.TaskState.RUNNING;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_PROJECT_ID;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_REPOSITORY_PATH;
 import static de.tudarmstadt.ukp.inception.support.logging.Logging.KEY_USERNAME;
+import static org.apache.commons.lang3.Validate.isTrue;
 import static org.apache.commons.lang3.Validate.notNull;
 
 import java.lang.invoke.MethodHandles;
@@ -74,6 +75,10 @@ public abstract class Task
         notNull(builder.trigger, "Trigger must be specified");
         notNull(builder.scope, "Scope must be specified");
         notNull(builder.type, "Type must be specified");
+        isTrue(builder.sessionOwner != null || builder.systemTask,
+                "Session owner must be specified unless the task is a system task");
+        isTrue(builder.sessionOwner == null || !builder.systemTask,
+                "System task must not have a session owner");
 
         id = nextId.getAndIncrement();
         handle = new TaskHandle(id);
@@ -154,6 +159,15 @@ public abstract class Task
     public Optional<User> getSessionOwner()
     {
         return Optional.ofNullable(sessionOwner);
+    }
+
+    /**
+     * @return whether the task is a system task, i.e. a task that does not belong to any user and
+     *         therefore has no session owner.
+     */
+    public boolean isSystemTask()
+    {
+        return sessionOwner == null;
     }
 
     public Project getProject()
@@ -307,12 +321,16 @@ public abstract class Task
         protected boolean cancellable;
         protected Task parentTask;
         protected TaskScope scope = TaskScope.EPHEMERAL;
+        protected boolean systemTask;
 
         protected Builder()
         {
         }
 
         /**
+         * Every task must either have a session owner or be marked as a system task using
+         * {@link #asSystemTask()}.
+         *
          * @param aSessionOwner
          *            the user owning the task.
          */
@@ -320,6 +338,17 @@ public abstract class Task
         public T withSessionOwner(User aSessionOwner)
         {
             sessionOwner = aSessionOwner;
+            return (T) this;
+        }
+
+        /**
+         * Marks the task as a system task. A system task does not belong to any user and is not
+         * affected by user sessions ending. It must not have a session owner.
+         */
+        @SuppressWarnings("unchecked")
+        public T asSystemTask()
+        {
+            systemTask = true;
             return (T) this;
         }
 

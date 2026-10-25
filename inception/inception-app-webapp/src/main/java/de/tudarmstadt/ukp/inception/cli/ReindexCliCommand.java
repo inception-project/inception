@@ -29,7 +29,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnNotWebAppli
 import org.springframework.stereotype.Component;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.kb.KnowledgeBaseService;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.LoggingTaskMonitor;
@@ -58,15 +57,13 @@ public class ReindexCliCommand
 
     private final ProjectService projectService;
     private final SchedulingService schedulingService;
-    private final UserDao userService;
     private final KnowledgeBaseService kbService;
 
     public ReindexCliCommand(ProjectService aProjectService, SchedulingService aSchedulingService,
-            UserDao aUserService, KnowledgeBaseService aKbService)
+            KnowledgeBaseService aKbService)
     {
         projectService = aProjectService;
         schedulingService = aSchedulingService;
-        userService = aUserService;
         kbService = aKbService;
     }
 
@@ -80,7 +77,7 @@ public class ReindexCliCommand
             LOG.info("Re-indexing documents in project [{}]...", project.getSlug());
             schedulingService.executeSync(ReindexTask.builder() //
                     .withProject(project) //
-                    .withSessionOwner(userService.getCurationUser()) //
+                    .asSystemTask() //
                     .withTrigger("CLI") //
                     .withMonitor(LoggingTaskMonitor::new) //
                     .build());

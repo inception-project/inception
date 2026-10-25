@@ -102,6 +102,7 @@ public class UserGuideQueryServiceImpl
                 LOG.debug("Building user manual index in the background...");
                 deleteIndex();
                 schedulingService.enqueue(UserGuideIndexingTask.builder() //
+                        .asSystemTask() //
                         .withTrigger("User manual index is missing or not up-to-date") //
                         .withHtml(htmlUrl) //
                         .build());

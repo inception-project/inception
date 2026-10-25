@@ -1044,6 +1044,7 @@ public class MatrixWorkloadManagementPage
         selectedUsers.getObject().clear();
 
         schedulingService.executeSync(RecalculateProjectStateTask.builder() //
+                .asSystemTask() //
                 .withProject(getProject()) //
                 .withTrigger("Workload configuration changed") //
                 .build());
