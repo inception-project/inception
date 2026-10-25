@@ -410,6 +410,7 @@ public class DocumentQueryServiceImpl
     private void triggerIndexing(Project aProject)
     {
         schedulingService.enqueue(UpdateDocumentIndexTask.builder() //
+                .asSystemTask() //
                 .withTrigger("Query on empty index") //
                 .withProject(aProject) //
                 .build());
@@ -434,6 +435,7 @@ public class DocumentQueryServiceImpl
             indexPool.clearIndex(aProject);
 
             schedulingService.enqueue(UpdateDocumentIndexTask.builder() //
+                    .asSystemTask() //
                     .withTrigger("rebuildIndexAsync") //
                     .withProject(aProject) //
                     .build());
@@ -457,6 +459,7 @@ public class DocumentQueryServiceImpl
         }
 
         schedulingService.enqueue(UpdateDocumentIndexTask.builder() //
+                .asSystemTask() //
                 .withTrigger("AfterDocumentCreatedEvent") //
                 .withProject(aEvent.getDocument().getProject()) //
                 .build());
@@ -470,6 +473,7 @@ public class DocumentQueryServiceImpl
         }
 
         schedulingService.enqueue(UpdateDocumentIndexTask.builder() //
+                .asSystemTask() //
                 .withTrigger("BeforeDocumentRemovedEvent") //
                 .withProject(aEvent.getDocument().getProject()) //
                 .build());

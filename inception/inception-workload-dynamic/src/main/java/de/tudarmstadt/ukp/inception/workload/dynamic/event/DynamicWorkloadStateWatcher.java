@@ -43,6 +43,7 @@ public class DynamicWorkloadStateWatcher
     public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
     {
         schedulingService.enqueue(DynamicWorkloadUpdateDocumentStateTask.builder() //
+                .asSystemTask() //
                 .withDocument(aEvent.getDocument()) //
                 .withTrigger(getClass().getSimpleName()) //
                 .build());

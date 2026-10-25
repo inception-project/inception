@@ -31,7 +31,7 @@ class DynamicWorkloadUpdateDocumentStateTaskTest
     {
         var project = Project.builder().withName("My Project").build();
         var doc = SourceDocument.builder().withProject(project).withName("My Document").build();
-        var task = DynamicWorkloadUpdateDocumentStateTask.builder().withDocument(doc)
+        var task = DynamicWorkloadUpdateDocumentStateTask.builder().asSystemTask().withDocument(doc)
                 .withTrigger("Test").build();
 
         assertThat(task.getProject()).isEqualTo(project);

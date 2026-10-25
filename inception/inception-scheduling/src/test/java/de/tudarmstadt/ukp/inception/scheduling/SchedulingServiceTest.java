@@ -171,11 +171,12 @@ public class SchedulingServiceTest
     }
 
     @Test
-    public void thatWaitingTaskWithoutOwnerSurvivesCleanUp() throws Exception
+    public void thatWaitingSystemTaskSurvivesCleanUp() throws Exception
     {
         sessionRegistry.registerNewSession("session1", "user1");
 
         var task = RecordingDebouncingTask.builder() //
+                .asSystemTask() //
                 .withProject(buildProject("project1")) //
                 .withDebounceDelay(ofSeconds(1)) //
                 .build();
@@ -190,7 +191,7 @@ public class SchedulingServiceTest
         invokeCleanUpTasks();
 
         assertThat(sut.getEnqueuedTasks()) //
-                .as("Task without owner must not be removed for lack of a logged-in owner") //
+                .as("System task must not be removed for lack of a logged-in owner") //
                 .contains(task);
 
         await().atMost(15, SECONDS).untilTrue(task.executed);

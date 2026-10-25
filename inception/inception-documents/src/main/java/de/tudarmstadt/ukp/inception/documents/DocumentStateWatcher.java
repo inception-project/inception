@@ -61,6 +61,7 @@ public class DocumentStateWatcher
     private void recalculateProjectState(Project aProject)
     {
         schedulingService.enqueue(UpdateProjectStateTask.builder() //
+                .asSystemTask() //
                 .withProject(aProject) //
                 .withTrigger(getClass().getSimpleName()) //
                 .build());

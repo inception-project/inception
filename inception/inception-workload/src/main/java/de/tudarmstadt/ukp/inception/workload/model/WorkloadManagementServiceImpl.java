@@ -134,6 +134,7 @@ public class WorkloadManagementServiceImpl
                 .executeUpdate();
 
         schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .asSystemTask() //
                 .withProject(aManager.getProject()) //
                 .withTrigger("Workload configuration changed") //
                 .build());
@@ -182,6 +183,7 @@ public class WorkloadManagementServiceImpl
     public void onProjectPermissionsChangedEvent(ProjectPermissionsChangedEvent aEvent)
     {
         schedulingService.enqueue(RecalculateProjectStateTask.builder() //
+                .asSystemTask() //
                 .withProject(aEvent.getProject()) //
                 .withTrigger("onProjectPermissionsChangedEvent") //
                 .build());
@@ -191,6 +193,7 @@ public class WorkloadManagementServiceImpl
     public void onPrepareProjectExportEvent(PrepareProjectExportEvent aEvent)
     {
         schedulingService.executeSync(RecalculateProjectStateTask.builder() //
+                .asSystemTask() //
                 .withProject(aEvent.getProject()) //
                 .withTrigger("onPrepareProjectExportEvent") //
                 .build());

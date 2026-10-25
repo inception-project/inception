@@ -17,16 +17,22 @@
  */
 package de.tudarmstadt.ukp.inception.scheduling;
 
+/**
+ * Defines how long a task is kept by the scheduler. The rules that refer to the sessions of the
+ * user only apply to tasks that have a session owner. System tasks (see
+ * {@link Task#isSystemTask()}) are never cleared because a session has ended.
+ */
 public enum TaskScope
 {
     /**
-     * Task can be cleared as soon as it has ended.
+     * Task can be cleared as soon as it has ended. If the task has a session owner, it is also
+     * cleared when a session of that user ends.
      */
     EPHEMERAL,
 
     /**
-     * Task can be cleared when the last session of the user is cleared or when the system is
-     * restarted.
+     * Task can be cleared when the last session of the session owner is cleared or when the system
+     * is restarted. A system task with this scope is only cleared when the system is restarted.
      */
     LAST_USER_SESSION,
 

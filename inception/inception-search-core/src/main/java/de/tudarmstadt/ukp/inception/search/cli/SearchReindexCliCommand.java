@@ -26,7 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.scheduling.LoggingTaskMonitor;
 import de.tudarmstadt.ukp.inception.scheduling.SchedulingService;
@@ -52,15 +51,13 @@ public class SearchReindexCliCommand
     private final ProjectService projectService;
     private final SearchService searchService;
     private final SchedulingService schedulingService;
-    private final UserDao userService;
 
     public SearchReindexCliCommand(ProjectService aProjectService, SearchService aSearchService,
-            SchedulingService aSchedulingService, UserDao aUserService)
+            SchedulingService aSchedulingService)
     {
         projectService = aProjectService;
         searchService = aSearchService;
         schedulingService = aSchedulingService;
-        userService = aUserService;
     }
 
     @Override
@@ -72,7 +69,7 @@ public class SearchReindexCliCommand
 
             schedulingService.executeSync(ReindexTask.builder() //
                     .withProject(project) //
-                    .withSessionOwner(userService.getCurationUser()) //
+                    .asSystemTask() //
                     .withTrigger("CLI") //
                     .withMonitor(LoggingTaskMonitor::new) //
                     .build());

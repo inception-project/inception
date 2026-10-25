@@ -43,6 +43,7 @@ public class MatrixWorkloadStateWatcher
     public void onAnnotationStateChangeEvent(AnnotationStateChangeEvent aEvent)
     {
         schedulingService.enqueue(MatrixWorkloadUpdateDocumentStateTask.builder() //
+                .asSystemTask() //
                 .withDocument(aEvent.getDocument()) //
                 .withTrigger(getClass().getSimpleName()) //
                 .build());

@@ -488,8 +488,8 @@ public class SchedulingServiceImpl
         // activeUsers);
 
         stopAllTasksMatching(t -> {
-            // A task without an owner is a system task and does not depend on any user session
-            if (t.getUser().isEmpty()) {
+            // A system task does not depend on any user session
+            if (t.isSystemTask()) {
                 return false;
             }
 

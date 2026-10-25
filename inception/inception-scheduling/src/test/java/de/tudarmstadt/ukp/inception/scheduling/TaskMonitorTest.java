@@ -37,7 +37,8 @@ public class TaskMonitorTest
     @Test
     public void duplicateMessagesAreConflated()
     {
-        var task = DummyTask.builder().withProject(buildProject("dummy-project")).build();
+        var task = DummyTask.builder().asSystemTask().withProject(buildProject("dummy-project"))
+                .build();
         task.afterPropertiesSet();
         var monitor = task.getMonitor();
 
