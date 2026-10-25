@@ -33,6 +33,7 @@ import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocume
 import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.InceptionDocumentLabelingProjectInitializersAutoConfiguration;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
+import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationAnonymousScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationDocumentMetadataScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationMixedEditabilityScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationScenarioInitializer;
@@ -90,6 +91,15 @@ public class InceptionTestScenariosAutoConfiguration
             ScenarioAccountService aScenarioAccountService)
     {
         return new CurationMixedEditabilityScenarioInitializer(aDocumentService, aProjectService,
+                aUserService, aScenarioAccountService);
+    }
+
+    @Bean
+    public CurationAnonymousScenarioInitializer curationAnonymousScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new CurationAnonymousScenarioInitializer(aDocumentService, aProjectService,
                 aUserService, aScenarioAccountService);
     }
 
