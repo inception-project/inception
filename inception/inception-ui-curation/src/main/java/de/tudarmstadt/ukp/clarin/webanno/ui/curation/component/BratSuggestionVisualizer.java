@@ -438,7 +438,7 @@ public abstract class BratSuggestionVisualizer
 
                 var context = aRequest.getContext();
                 var state = context.getViewState();
-                var result = lazyDetailsLookupService.lookupLazyDetails(request, paramId,
+                var result = lazyDetailsLookupService.lookupLazyDetails(context, request, paramId,
                         context::getEditorCas, state.getDocument(), getModelObject().getUser(),
                         state.getWindowBeginOffset(), state.getWindowEndOffset());
                 attachResponse(aTarget, aRequest, toInterpretableJsonString(result));

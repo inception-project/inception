@@ -290,9 +290,14 @@ class CurationEditingServiceImplIntegrationTest
         givenAnnotatorFinished("ann2", "test");
         // The first merge always uses all curatable annotators, not the curator's selection in
         // the curation sidebar
-        curationSessionService.setSelectedDataOwners("curator", project.getId(),
-                List.of(AnnotationSet.forUser("ann1"), AnnotationSet.forUser("ann2")),
+        if (!userService.exists("curator")) {
+            userService.create(new User("curator"));
+        }
+        var annotators = List.of(AnnotationSet.forUser("ann1"), AnnotationSet.forUser("ann2"));
+        curationSessionService.setSelectedDataOwners("curator", project.getId(), annotators,
                 List.of(AnnotationSet.forUser("ann1")));
+        assertThat(curationSessionService.getSelectedDataOwners("curator", project.getId(),
+                annotators)).containsExactly(AnnotationSet.forUser("ann1"));
 
         startCuration();
 

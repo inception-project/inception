@@ -18,55 +18,22 @@
 package de.tudarmstadt.ukp.inception.ui.curation.sidebar;
 
 import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.clipboard_s;
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.play_circle_s;
-import static de.agilecoders.wicket.extensions.markup.html.bootstrap.icon.FontAwesome7IconType.stop_circle_s;
 
-import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.markup.html.panel.GenericPanel;
 import org.apache.wicket.model.IModel;
-import org.apache.wicket.spring.injection.annot.SpringBean;
 
 import de.agilecoders.wicket.core.markup.html.bootstrap.image.Icon;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
-import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.AnnotationPage;
-import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
-import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ProjectPageBase;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotatorViewState;
-import de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior;
 
 public class CurationSidebarIcon
     extends GenericPanel<AnnotatorViewState>
 {
     private static final long serialVersionUID = -1870047500327624860L;
 
-    private @SpringBean CurationSessionService curationSessionService;
-    private @SpringBean UserDao userService;
-
     public CurationSidebarIcon(String aId, IModel<AnnotatorViewState> aState)
     {
         super(aId, aState);
 
         queue(new Icon("icon", clipboard_s));
-        queue(new Icon("badge", () -> isSessionActive() ? play_circle_s : stop_circle_s) //
-                .add(LambdaBehavior.visibleWhen(this::isSidebarCurationMode)) //
-                .add(AttributeModifier.append("class",
-                        () -> isSessionActive() ? "text-primary" : "text-muted")));
-    }
-
-    private boolean isSessionActive()
-    {
-        var project = getPage() instanceof ProjectPageBase page ? page.getProject() : null;
-
-        if (project != null && curationSessionService
-                .existsSession(userService.getCurrentUsername(), project.getId())) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean isSidebarCurationMode()
-    {
-        return getPage() instanceof AnnotationPage;
     }
 }

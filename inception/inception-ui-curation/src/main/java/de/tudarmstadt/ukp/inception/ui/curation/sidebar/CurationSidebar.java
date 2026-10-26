@@ -82,33 +82,30 @@ public class CurationSidebar
         });
 
         noDocsLabel = new Label("noDocumentsLabel", new ResourceModel("noDocuments"));
-        noDocsLabel.add(visibleWhen(() -> isSessionActive() && !isTargetFinished.getObject()
-                && users.getModelObject().isEmpty()));
+        noDocsLabel.add(visibleWhen(
+                () -> !isTargetFinished.getObject() && users.getModelObject().isEmpty()));
         queue(noDocsLabel);
 
         queue(usersForm = createUserSelection("usersForm"));
 
-        showMerged = new CheckBox("showMerged", Model.of(false));
-        showMerged.add(visibleWhen(() -> isSessionActive() && isCurationEditorExtensionEnabled()));
+        var projectId = aContext.getProject().getId();
+        var sessionOwner = userRepository.getSessionOwnerName();
+
+        showMerged = new CheckBox("showMerged", LambdaModel.of( //
+                () -> curationSidebarService.isShowAll(sessionOwner, projectId), //
+                value -> curationSidebarService.setShowAll(sessionOwner, projectId, value)));
+        showMerged.add(visibleWhen(this::isCurationEditorExtensionEnabled));
         showMerged.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                this::actionToggleShowMerged));
+                this::actionRefreshDocument));
         queue(showMerged);
 
-        showScore = new CheckBox("showScore", Model.of(true));
-        showScore.add(visibleWhen(() -> isSessionActive() && isCurationEditorExtensionEnabled()));
+        showScore = new CheckBox("showScore", LambdaModel.of( //
+                () -> curationSidebarService.isShowScore(sessionOwner, projectId), //
+                value -> curationSidebarService.setShowScore(sessionOwner, projectId, value)));
+        showScore.add(visibleWhen(this::isCurationEditorExtensionEnabled));
         showScore.add(new LambdaAjaxFormComponentUpdatingBehavior(CHANGE_EVENT,
-                this::actionToggleShowScore));
+                this::actionRefreshDocument));
         queue(showScore);
-
-        var project = aContext.getProject();
-
-        if (isSessionActive()) {
-            var sessionOwner = userRepository.getSessionOwnerName();
-            showMerged.setModelObject(
-                    curationSidebarService.isShowAll(sessionOwner, project.getId()));
-            showScore.setModelObject(
-                    curationSidebarService.isShowScore(sessionOwner, project.getId()));
-        }
     }
 
     @Override
@@ -123,26 +120,9 @@ public class CurationSidebar
         }
     }
 
-    private void actionToggleShowMerged(AjaxRequestTarget aTarget)
+    private void actionRefreshDocument(AjaxRequestTarget aTarget)
     {
-        var sessionOwner = userRepository.getSessionOwnerName();
-        curationSidebarService.setShowAll(sessionOwner, getProject().getId(),
-                showMerged.getModelObject());
         getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
-    }
-
-    private void actionToggleShowScore(AjaxRequestTarget aTarget)
-    {
-        var sessionOwner = userRepository.getSessionOwnerName();
-        curationSidebarService.setShowScore(sessionOwner, getProject().getId(),
-                showScore.getModelObject());
-        getActiveEditor().orElseThrow().actionRefreshDocument(aTarget);
-    }
-
-    private boolean isSessionActive()
-    {
-        return curationSessionService.existsSession(userRepository.getSessionOwnerName(),
-                getProject().getId());
     }
 
     /**
@@ -162,7 +142,7 @@ public class CurationSidebar
 
         var form = new Form<Void>(aId);
         form.setOutputMarkupPlaceholderTag(true);
-        form.add(visibleWhen(() -> isSessionActive() && !users.getModelObject().isEmpty()));
+        form.add(visibleWhen(() -> !users.getModelObject().isEmpty()));
 
         form.add(new LambdaAjaxLink("selectAll", this::actionSelectAll));
         form.add(new LambdaAjaxLink("selectNone", this::actionSelectNone));
@@ -182,10 +162,6 @@ public class CurationSidebar
         };
 
         selectedUsers = new CheckGroup<AnnotationSet>("selectedUsers");
-        // Wicket reads the CheckGroup model once per rendered Check (i.e. once per annotator
-        // row). A LoadableDetachableModel resolves the selected set a single time per request
-        // and caches it, instead of re-entering the curation session service - and its lock -
-        // for every row and rebuilding the set each time.
         selectedUsers.setModel(new LoadableDetachableModel<Collection<AnnotationSet>>()
         {
             private static final long serialVersionUID = 1L;

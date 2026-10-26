@@ -52,7 +52,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.curation.event.CurationUnitClickedEv
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnit;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.overview.CurationUnitOverview;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
-import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
@@ -217,8 +216,8 @@ public class CurationUnitOverviewSidebar
 
     private List<AnnotationSet> listDataOwners(SourceDocument aDocument)
     {
-        return curationSessionService.listDataOwnersToCurate(userRepository.getSessionOwnerName(),
-                aDocument, getPage() instanceof CurationPageWithDataOwnerSelection);
+        return curationSessionService.listDataOwnersReadyForCuration(
+                userRepository.getSessionOwnerName(), aDocument.getProject(), aDocument);
     }
 
     private CurationUnits getUnits()

@@ -71,7 +71,7 @@ public class LazyDetailsHandler
             // Parse annotation ID if present in request
             var paramId = getVid(aRequest);
             var state = context.getAnnotatorState();
-            var details = lazyDetailsLookupService.lookupLazyDetails(
+            var details = lazyDetailsLookupService.lookupLazyDetails(context,
                     aRequest.getRequestParameters(), paramId, casProvider, state.getDocument(),
                     state.getUser(), state.getWindowBeginOffset(), state.getWindowEndOffset());
             attachResponse(aTarget, aRequest, toInterpretableJsonString(details));

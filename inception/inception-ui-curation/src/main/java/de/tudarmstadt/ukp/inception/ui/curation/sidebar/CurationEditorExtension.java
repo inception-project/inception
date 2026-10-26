@@ -142,6 +142,14 @@ public class CurationEditorExtension
         }
 
         var state = aContext.getAnnotatorState();
+
+        // The VID comes from the client, which could aim a curation action at another annotator's
+        // CAS on a page that is not a curation page. The curation extension is only enabled in the
+        // server-side editor state on the curation page, so refuse the action otherwise.
+        if (!state.isExtensionEnabled(EXTENSION_ID)) {
+            return;
+        }
+
         var doc = state.getDocument();
         var srcUser = curationVid.getUsername();
 
@@ -312,9 +320,16 @@ public class CurationEditorExtension
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner,
-            CAS aCas, VID aVid, AnnotationLayer aLayer)
+    public List<VLazyDetailGroup> lookupLazyDetails(DiamContext aContext, SourceDocument aDocument,
+            User aDataOwner, CAS aCas, VID aVid, AnnotationLayer aLayer)
     {
+        // The VID comes from the client and names the annotator whose annotations are looked up.
+        // Only the curation page enables the curation extension in the server-side editor state, so
+        // refuse the lookup elsewhere.
+        if (!aContext.getAnnotatorState().isExtensionEnabled(EXTENSION_ID)) {
+            return emptyList();
+        }
+
         var detailGroups = new ArrayList<VLazyDetailGroup>();
 
         try {

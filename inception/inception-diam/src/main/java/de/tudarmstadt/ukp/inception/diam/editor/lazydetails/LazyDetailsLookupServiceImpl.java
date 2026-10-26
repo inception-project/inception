@@ -44,6 +44,7 @@ import de.tudarmstadt.ukp.dkpro.core.api.segmentation.type.Sentence;
 import de.tudarmstadt.ukp.inception.diam.editor.config.DiamAutoConfig;
 import de.tudarmstadt.ukp.inception.editor.AnnotationEditorExtensionRegistry;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetail;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
@@ -76,9 +77,9 @@ public class LazyDetailsLookupServiceImpl
     }
 
     @Override
-    public List<LazyDetailGroup> lookupLazyDetails(IRequestParameters request, VID aVid,
-            CasProvider aCas, SourceDocument aDocument, User aDataOwner, int windowBeginOffset,
-            int windowEndOffset)
+    public List<LazyDetailGroup> lookupLazyDetails(DiamContext aContext, IRequestParameters request,
+            VID aVid, CasProvider aCas, SourceDocument aDocument, User aDataOwner,
+            int windowBeginOffset, int windowEndOffset)
         throws AnnotationException, IOException
     {
         var layerParam = request.getParameterValue(PARAM_LAYER_ID);
@@ -89,15 +90,15 @@ public class LazyDetailsLookupServiceImpl
 
         var cas = aCas.get();
 
-        var detailGroups = lookLazyDetails(aVid, aDocument, aDataOwner, layerParam, cas);
+        var detailGroups = lookLazyDetails(aContext, aVid, aDocument, aDataOwner, layerParam, cas);
 
         return detailGroups.stream() //
                 .map(this::toExternalForm) //
                 .collect(toList());
     }
 
-    private List<VLazyDetailGroup> lookLazyDetails(VID aVid, SourceDocument aDocument,
-            User aDataOwner, StringValue aLayerParam, CAS aCas)
+    private List<VLazyDetailGroup> lookLazyDetails(DiamContext aContext, VID aVid,
+            SourceDocument aDocument, User aDataOwner, StringValue aLayerParam, CAS aCas)
         throws AnnotationException, IOException
     {
         if (isSentence(aCas, aVid)) {
@@ -105,12 +106,12 @@ public class LazyDetailsLookupServiceImpl
         }
 
         var layer = findLayer(aVid, aCas, aLayerParam, aDocument.getProject());
-        return lookupAnnotationLevelDetails(aVid, aDocument, aDataOwner, layer, aCas);
+        return lookupAnnotationLevelDetails(aContext, aVid, aDocument, aDataOwner, layer, aCas);
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupAnnotationLevelDetails(VID aVid, SourceDocument aDocument,
-            User aDataOwner, AnnotationLayer aLayer, CAS aCas)
+    public List<VLazyDetailGroup> lookupAnnotationLevelDetails(DiamContext aContext, VID aVid,
+            SourceDocument aDocument, User aDataOwner, AnnotationLayer aLayer, CAS aCas)
         throws AnnotationException, IOException
     {
         var detailGroups = new ArrayList<VLazyDetailGroup>();
@@ -119,7 +120,7 @@ public class LazyDetailsLookupServiceImpl
         lookupLayerLevelDetails(aVid, aCas, aLayer, () -> features).forEach(detailGroups::add);
 
         if (aVid.isSynthetic()) {
-            lookupExtensionLevelDetails(aVid, aDocument, aCas, aDataOwner, aLayer)
+            lookupExtensionLevelDetails(aContext, aVid, aDocument, aCas, aDataOwner, aLayer)
                     .forEach(detailGroups::add);
         }
         else {
@@ -209,8 +210,8 @@ public class LazyDetailsLookupServiceImpl
 
     }
 
-    private List<VLazyDetailGroup> lookupExtensionLevelDetails(VID aVid, SourceDocument aDocument,
-            CAS aCas, User aDataOwner, AnnotationLayer aLayer)
+    private List<VLazyDetailGroup> lookupExtensionLevelDetails(DiamContext aContext, VID aVid,
+            SourceDocument aDocument, CAS aCas, User aDataOwner, AnnotationLayer aLayer)
         throws IOException
     {
         if (!aVid.isSynthetic()) {
@@ -222,6 +223,6 @@ public class LazyDetailsLookupServiceImpl
             return emptyList();
         }
 
-        return extension.lookupLazyDetails(aDocument, aDataOwner, aCas, aVid, aLayer);
+        return extension.lookupLazyDetails(aContext, aDocument, aDataOwner, aCas, aVid, aLayer);
     }
 }

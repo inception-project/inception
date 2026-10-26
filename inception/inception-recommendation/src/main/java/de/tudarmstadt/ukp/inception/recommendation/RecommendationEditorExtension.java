@@ -130,7 +130,7 @@ public class RecommendationEditorExtension
         }
 
         var state = aContext.getAnnotatorState();
-        var sessionOwner = userService.getCurrentUser();
+        var sessionOwner = userService.getSessionOwner();
         var document = state.getDocument();
 
         // Create annotation
@@ -193,7 +193,7 @@ public class RecommendationEditorExtension
         var state = aContext.getAnnotatorState();
         var cas = aContext.getEditorCas();
         var dataOwner = state.getUser().getUsername();
-        var sessionOwner = userService.getCurrentUsername();
+        var sessionOwner = userService.getSessionOwnerName();
         var layer = annotationService.getLayer(aSuggestion.getLayerId());
         var adapter = annotationService.getAdapter(layer);
 
@@ -224,7 +224,7 @@ public class RecommendationEditorExtension
         throws AnnotationException, IOException
     {
         var state = aContext.getAnnotatorState();
-        var sessionOwner = userService.getCurrentUser();
+        var sessionOwner = userService.getSessionOwner();
         var document = state.getDocument();
         var suggestionVid = VID.parse(aVid.getExtensionPayload());
         var maybeSuggestion = recommendationService
@@ -254,7 +254,7 @@ public class RecommendationEditorExtension
         LOG.trace("renderRequested()");
 
         // do not show predictions during curation or when viewing others' work
-        var sessionOwner = userService.getCurrentUsername();
+        var sessionOwner = userService.getSessionOwnerName();
         if (aState.getMode() != ANNOTATION) {
             return;
         }
@@ -284,7 +284,7 @@ public class RecommendationEditorExtension
     public <V> V getFeatureValue(SourceDocument aDocument, User aUser, CAS aCas, VID aVid,
             AnnotationFeature aFeature)
     {
-        var sessionOwner = userService.getCurrentUser();
+        var sessionOwner = userService.getSessionOwner();
 
         var suggestionVid = VID.parse(aVid.getExtensionPayload());
         var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner, aDocument,
@@ -301,10 +301,10 @@ public class RecommendationEditorExtension
     }
 
     @Override
-    public List<VLazyDetailGroup> lookupLazyDetails(SourceDocument aDocument, User aDataOwner,
-            CAS aCas, VID aVid, AnnotationLayer aLayer)
+    public List<VLazyDetailGroup> lookupLazyDetails(DiamContext aContext, SourceDocument aDocument,
+            User aDataOwner, CAS aCas, VID aVid, AnnotationLayer aLayer)
     {
-        var sessionOwner = userService.getCurrentUser();
+        var sessionOwner = userService.getSessionOwner();
 
         var suggestionVid = VID.parse(aVid.getExtensionPayload());
         var maybeSuggestion = recommendationService.getSuggestionByVID(sessionOwner, aDocument,

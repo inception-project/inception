@@ -19,6 +19,7 @@ package de.tudarmstadt.ukp.inception.ui.curation.sidebar.render;
 
 import static de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.CasDiff.doDiff;
 import static de.tudarmstadt.ukp.clarin.webanno.model.Mode.ANNOTATION;
+import static de.tudarmstadt.ukp.clarin.webanno.model.PermissionLevel.CURATOR;
 import static de.tudarmstadt.ukp.inception.rendering.Renderer.REL_EXTENSION_ID;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -43,12 +44,12 @@ import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.DiffResult;
 import de.tudarmstadt.ukp.clarin.webanno.curation.casdiff.internal.AID;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.layer.span.api.SpanPosition;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.pipeline.RenderStep;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VArc;
@@ -61,7 +62,6 @@ import de.tudarmstadt.ukp.inception.rendering.vmodel.VSpan;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationEditorExtension;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 import de.tudarmstadt.ukp.inception.ui.curation.sidebar.config.CurationSidebarAutoConfiguration;
 
 /**
@@ -81,25 +81,23 @@ public class CurationSidebarRenderer
     private final static Logger LOG = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final CurationSessionService curationSessionService;
-    private final CurationSidebarService curationService;
     private final LayerSupportRegistry layerSupportRegistry;
     private final DocumentService documentService;
-    private final UserDao userRepository;
     private final AnnotationSchemaService annotationService;
     private final DiffAdapterRegistry diffAdapterRegistry;
+    private final ProjectService projectService;
 
     public CurationSidebarRenderer(CurationSessionService aCurationSessionService,
-            CurationSidebarService aCurationService, LayerSupportRegistry aLayerSupportRegistry,
-            DocumentService aDocumentService, UserDao aUserRepository,
-            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry)
+            LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry,
+            ProjectService aProjectService)
     {
         curationSessionService = aCurationSessionService;
-        curationService = aCurationService;
         layerSupportRegistry = aLayerSupportRegistry;
         documentService = aDocumentService;
-        userRepository = aUserRepository;
         annotationService = aAnnotationService;
         diffAdapterRegistry = aDiffAdapterRegistry;
+        projectService = aProjectService;
     }
 
     @Override
@@ -111,7 +109,6 @@ public class CurationSidebarRenderer
     @Override
     public boolean accepts(RenderRequest aRequest)
     {
-        var project = aRequest.getProject();
         var state = aRequest.getState();
 
         if (state != null && state.getMode() != ANNOTATION) {
@@ -126,8 +123,9 @@ public class CurationSidebarRenderer
             return false;
         }
 
-        var sessionOwner = userRepository.getCurrentUsername();
-        if (!curationSessionService.existsSession(sessionOwner, project.getId())) {
+        var sessionOwner = aRequest.getSessionOwner();
+        if (sessionOwner == null
+                || !projectService.hasRole(sessionOwner, aRequest.getProject(), CURATOR)) {
             return false;
         }
 
@@ -137,7 +135,7 @@ public class CurationSidebarRenderer
     @Override
     public void render(VDocument aVdoc, RenderRequest aRequest)
     {
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = aRequest.getSessionOwner();
 
         var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(sessionOwner,
                 aRequest.getProject(), aRequest.getSourceDocument());
@@ -152,7 +150,7 @@ public class CurationSidebarRenderer
     private void renderDiff(VDocument aVdoc, RenderRequest aRequest, CasDiff aCasDiff)
     {
         var project = aRequest.getProject();
-        var sessionOwner = userRepository.getCurrentUsername();
+        var sessionOwner = aRequest.getSessionOwner();
         var targetUser = aRequest.getAnnotationUser().getUsername();
 
         var diff = aCasDiff.toResult();
@@ -171,8 +169,8 @@ public class CurationSidebarRenderer
                 .collect(toMap(AnnotationLayer::getName, identity()));
 
         var generatedCurationVids = new HashSet<VID>();
-        var showAll = curationService.isShowAll(sessionOwner, project.getId());
-        var showScore = curationService.isShowScore(sessionOwner, project.getId());
+        var showAll = curationSessionService.isShowAll(sessionOwner, project);
+        var showScore = curationSessionService.isShowScore(sessionOwner, project);
         var constraintsEvaluator = new ConstraintsEvaluator();
         var constraints = aRequest.getConstraints();
         for (var cfgSet : diff.getConfigurationSets()) {

@@ -28,11 +28,10 @@ import de.tudarmstadt.ukp.inception.preferences.PreferenceKey;
 import de.tudarmstadt.ukp.inception.preferences.PreferenceValue;
 
 /**
- * Persistent, per-user, per-project state of a curation session. Stored as JSON traits via the
- * preferences subsystem, which replaces the former {@code CurationSettings} entity (and its
- * {@code curation_settings} / {@code curationSettings_users} tables). A user with no stored
- * preferences therefore starts with an empty {@link #deselectedDataOwners} set, i.e. all annotators
- * selected by default.
+ * Per-user, per-project curation settings. Stored as JSON traits via the preferences subsystem,
+ * which replaces the former {@code CurationSettings} entity (and its {@code curation_settings} /
+ * {@code curationSettings_users} tables). A user with no stored preferences therefore starts with
+ * an empty {@link #deselectedDataOwners} set, i.e. all annotators selected by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CurationSessionPreferences
@@ -50,6 +49,18 @@ public class CurationSessionPreferences
      * counts as selected, so an empty set means "curate all annotators".
      */
     private final Set<String> deselectedDataOwners = new LinkedHashSet<>();
+
+    /**
+     * Whether the suggestions in the curator's editor include positions the curator has already
+     * curated ("Show all curatable annotations").
+     */
+    private boolean showAll;
+
+    /**
+     * Whether the suggestions in the curator's editor show the share of annotators who made them
+     * ("Show percentage of annotators").
+     */
+    private boolean showScore = true;
 
     /**
      * @deprecated See {@link #getCurationTarget}.
@@ -83,5 +94,25 @@ public class CurationSessionPreferences
         if (aDeselectedDataOwners != null) {
             deselectedDataOwners.addAll(aDeselectedDataOwners);
         }
+    }
+
+    public boolean isShowAll()
+    {
+        return showAll;
+    }
+
+    public void setShowAll(boolean aShowAll)
+    {
+        showAll = aShowAll;
+    }
+
+    public boolean isShowScore()
+    {
+        return showScore;
+    }
+
+    public void setShowScore(boolean aShowScore)
+    {
+        showScore = aShowScore;
     }
 }
