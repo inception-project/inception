@@ -93,7 +93,6 @@ import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetada
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataEvent;
-import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
@@ -772,9 +771,8 @@ public class DocumentMetadataAnnotationSelectionPanel
             return Map.of();
         }
 
-        var selectedDataOwners = curationSessionService.listDataOwnersToCurate(
-                userService.getSessionOwnerName(), state.getDocument(),
-                getPage() instanceof CurationPageWithDataOwnerSelection);
+        var selectedDataOwners = curationSessionService.listDataOwnersReadyForCuration(
+                userService.getSessionOwnerName(), state.getProject(), state.getDocument());
 
         if (selectedDataOwners.isEmpty()) {
             return Map.of();

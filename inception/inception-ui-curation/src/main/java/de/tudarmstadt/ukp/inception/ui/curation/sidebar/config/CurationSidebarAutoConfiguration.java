@@ -82,13 +82,12 @@ public class CurationSidebarAutoConfiguration
 
     @Bean
     public CurationSidebarRenderer curationSidebarRenderer(
-            CurationSessionService aCurationSessionService, CurationSidebarService aCurationService,
+            CurationSessionService aCurationSessionService,
             LayerSupportRegistry aLayerSupportRegistry, DocumentService aDocumentService,
-            UserDao aUserRepository, AnnotationSchemaService aAnnotationService,
-            DiffAdapterRegistry aDiffAdapterRegistry)
+            AnnotationSchemaService aAnnotationService, DiffAdapterRegistry aDiffAdapterRegistry,
+            ProjectService aProjectService)
     {
-        return new CurationSidebarRenderer(aCurationSessionService, aCurationService,
-                aLayerSupportRegistry, aDocumentService, aUserRepository, aAnnotationService,
-                aDiffAdapterRegistry);
+        return new CurationSidebarRenderer(aCurationSessionService, aLayerSupportRegistry,
+                aDocumentService, aAnnotationService, aDiffAdapterRegistry, aProjectService);
     }
 }

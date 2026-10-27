@@ -48,7 +48,6 @@ import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.DocumentEditorWorkspac
 import de.tudarmstadt.ukp.clarin.webanno.ui.annotation.ws.mono.SingleDocumentEditorWorkspace;
 import de.tudarmstadt.ukp.clarin.webanno.ui.core.page.ApplicationPageBase;
 import de.tudarmstadt.ukp.clarin.webanno.ui.curation.actionbar.CurationAutoOpenDialogBehavior;
-import de.tudarmstadt.ukp.inception.curation.api.CurationPageWithDataOwnerSelection;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationDocumentService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationEditingService;
@@ -68,7 +67,7 @@ import de.tudarmstadt.ukp.inception.workload.model.WorkloadManagementService;
         + PAGE_PARAM_DOCUMENT + "}")
 public class SplitCurationPage
     extends AnnotationPageBase2
-    implements CuratableDocumentPage, CurationPageWithDataOwnerSelection
+    implements CuratableDocumentPage
 {
     public static final String PAGE_PATH = "/curate-split";
 
@@ -92,17 +91,13 @@ public class SplitCurationPage
         addToFooter(new CurationOpenDocumentDialog(ApplicationPageBase.CID_FOOTER_ITEM,
                 getProjectModel(), LoadableDetachableModel.of(this::listCuratableDocuments),
                 this::actionOpenCuratedDocument));
-
-        // The page shares the curation session - and hence the annotator selection in the curation
-        // sidebar - with the CurationPage
-        curationSessionService.startSession(userRepository.getSessionOwnerName(), getProject());
     }
 
     @Override
     public List<AnnotationSet> listDataOwnersToShow(SourceDocument aDocument)
     {
-        return curationSessionService.listDataOwnersToCurate(userRepository.getSessionOwnerName(),
-                aDocument, true);
+        return curationSessionService.listDataOwnersReadyForCuration(
+                userRepository.getSessionOwnerName(), aDocument.getProject(), aDocument);
     }
 
     private void actionOpenCuratedDocument(AjaxRequestTarget aTarget, SourceDocument aDocument)

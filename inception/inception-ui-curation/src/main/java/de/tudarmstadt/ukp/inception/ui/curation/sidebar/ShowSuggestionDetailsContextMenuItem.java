@@ -53,7 +53,9 @@ public class ShowSuggestionDetailsContextMenuItem
         var vid = aCtx.vid();
         return vid.isSynthetic() //
                 && CurationEditorExtension.EXTENSION_ID.equals(vid.getExtensionId())
-                && CurationVID.parse(vid.getExtensionPayload()) != null;
+                && CurationVID.parse(vid.getExtensionPayload()) != null
+                && aCtx.context().getAnnotatorState()
+                        .isExtensionEnabled(CurationEditorExtension.EXTENSION_ID);
     }
 
     @Override

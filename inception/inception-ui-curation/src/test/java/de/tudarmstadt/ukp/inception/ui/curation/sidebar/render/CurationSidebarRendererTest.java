@@ -62,7 +62,6 @@ import de.tudarmstadt.ukp.clarin.webanno.model.OverlapMode;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.model.TagSet;
-import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.annotation.feature.bool.BooleanFeatureSupport;
 import de.tudarmstadt.ukp.inception.annotation.feature.link.LinkFeatureMultiplicityMode;
@@ -83,16 +82,17 @@ import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
+import de.tudarmstadt.ukp.inception.project.api.ProjectService;
 import de.tudarmstadt.ukp.inception.rendering.request.RenderRequest;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VCommentType;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VDocument;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
+import de.tudarmstadt.ukp.inception.rendering.vmodel.VObject;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.schema.api.feature.LinkWithRoleModel;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistryImpl;
 import de.tudarmstadt.ukp.inception.support.json.JSONUtil;
-import de.tudarmstadt.ukp.inception.ui.curation.sidebar.CurationSidebarService;
 
 @ExtendWith(MockitoExtension.class)
 class CurationSidebarRendererTest
@@ -101,10 +101,9 @@ class CurationSidebarRendererTest
 
     private @Mock ConstraintsService constraintsService;
     private @Mock CurationSessionService curationSessionService;
-    private @Mock CurationSidebarService curationService;
     private @Mock DocumentService documentService;
-    private @Mock UserDao userRepository;
     private @Mock AnnotationSchemaService schemaService;
+    private @Mock ProjectService projectService;
 
     private FeatureSupportRegistryImpl featureSupportRegistry;
     private LayerBehaviorRegistryImpl layerBehaviorRegistry;
@@ -116,6 +115,7 @@ class CurationSidebarRendererTest
     private SourceDocument doc;
     private VDocument vdoc;
 
+    private User sessionOwner;
     private User curator;
     private CAS curatorCas;
 
@@ -161,9 +161,15 @@ class CurationSidebarRendererTest
 
         diffAdapterRegistry = new DiffAdapterRegistryImpl(schemaService, diffSupportRegistry);
 
-        sut = new CurationSidebarRenderer(curationSessionService, curationService,
-                layerSupportRegistry, documentService, userRepository, schemaService,
-                diffAdapterRegistry);
+        sut = new CurationSidebarRenderer(curationSessionService, layerSupportRegistry,
+                documentService, schemaService, diffAdapterRegistry, projectService);
+
+        // The session owner is the curator looking at the page while the annotation user is the
+        // curation user whose CAS receives the merged annotations. Keeping them apart ensures the
+        // curation settings are looked up for the viewer, not for the curation user.
+        sessionOwner = User.builder() //
+                .withUsername("curator1") //
+                .build();
 
         curator = User.builder() //
                 .withUsername(CURATION_USER) //
@@ -230,11 +236,10 @@ class CurationSidebarRendererTest
                 .withType(RelationLayerSupport.TYPE) //
                 .build();
 
-        when(userRepository.getCurrentUsername()).thenReturn(curator.getUsername());
-
-        when(curationSessionService.listDataOwnersReadyForCuration(curator.getUsername(), project,
-                doc)).thenReturn(
-                        asList(AnnotationSet.forUser(anno1), AnnotationSet.forUser(anno2)));
+        when(curationSessionService.listDataOwnersReadyForCuration(sessionOwner, project, doc))
+                .thenReturn(asList(AnnotationSet.forUser(anno1), AnnotationSet.forUser(anno2)));
+        when(curationSessionService.isShowAll(sessionOwner, project)).thenReturn(false);
+        when(curationSessionService.isShowScore(sessionOwner, project)).thenReturn(true);
 
         var allFeaturesInProject = asList(spanLayerLinkFeature, spanLayerValueFeature);
 
@@ -685,6 +690,40 @@ class CurationSidebarRendererTest
                 .doesNotContain(VCommentType.ERROR);
     }
 
+    @Test
+    void thatAgreementScoreIsShownWhenTheSessionOwnerTurnedItOn() throws Exception
+    {
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        var request = renderRequest("anchor");
+
+        spanLayerAdapter.add(doc, anno1.getUsername(), anno1Cas, 0, 6);
+        spanLayerAdapter.add(doc, anno2.getUsername(), anno2Cas, 0, 6);
+
+        sut.render(vdoc, request);
+
+        assertThat(vdoc.spans()) //
+                .extracting(VObject::getScore) //
+                .containsExactly(1.0);
+    }
+
+    @Test
+    void thatAgreementScoreIsNotShownWhenTheSessionOwnerTurnedItOff() throws Exception
+    {
+        when(curationSessionService.isShowScore(sessionOwner, project)).thenReturn(false);
+
+        spanLayer.setOverlapMode(OverlapMode.ANY_OVERLAP);
+        var request = renderRequest("anchor");
+
+        spanLayerAdapter.add(doc, anno1.getUsername(), anno1Cas, 0, 6);
+        spanLayerAdapter.add(doc, anno2.getUsername(), anno2Cas, 0, 6);
+
+        sut.render(vdoc, request);
+
+        assertThat(vdoc.spans()) //
+                .extracting(VObject::getScore) //
+                .containsExactly(0.0);
+    }
+
     private CurationVID curationVid(User aUser, AnnotationFS anchorA)
     {
         return new CurationVID(aUser.getUsername(), VID.builder().forAnnotation(anchorA).build());
@@ -725,6 +764,7 @@ class CurationSidebarRendererTest
         when(documentService.readAllAnnotationCases(any(), any())).thenReturn(annotatorCasses);
 
         return RenderRequest.builder() //
+                .withSessionOwner(sessionOwner) //
                 .withDocument(doc, curator) //
                 .withCas(curatorCas) //
                 .withWindow(0, curatorCas.getDocumentText().length()) //

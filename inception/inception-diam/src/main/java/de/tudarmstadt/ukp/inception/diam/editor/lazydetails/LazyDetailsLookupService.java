@@ -31,18 +31,19 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.model.User;
 import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
+import de.tudarmstadt.ukp.inception.rendering.editorstate.DiamContext;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VLazyDetailGroup;
 
 public interface LazyDetailsLookupService
 {
-    List<LazyDetailGroup> lookupLazyDetails(IRequestParameters request, VID paramId,
-            CasProvider aCas, SourceDocument aSourceDocument, User aDataOwner,
+    List<LazyDetailGroup> lookupLazyDetails(DiamContext aContext, IRequestParameters request,
+            VID paramId, CasProvider aCas, SourceDocument aSourceDocument, User aDataOwner,
             int windowBeginOffset, int windowEndOffset)
         throws AnnotationException, IOException;
 
-    List<VLazyDetailGroup> lookupAnnotationLevelDetails(VID aVid, SourceDocument aDocument,
-            User aDataOwner, AnnotationLayer aLayer, CAS aCas)
+    List<VLazyDetailGroup> lookupAnnotationLevelDetails(DiamContext aContext, VID aVid,
+            SourceDocument aDocument, User aDataOwner, AnnotationLayer aLayer, CAS aCas)
         throws AnnotationException, IOException;
 
     List<VLazyDetailGroup> lookupFeatureLevelDetails(VID aVid, CAS aCas,
