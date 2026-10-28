@@ -220,7 +220,7 @@ public class MultiValueStringFeatureSupport
             return;
         }
 
-        for (String value : newValues) {
+        for (var value : newValues) {
             schemaService.createMissingTag(aFeature, value);
         }
 

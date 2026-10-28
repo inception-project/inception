@@ -17,23 +17,13 @@
  */
 package de.tudarmstadt.ukp.inception.testscenarios.curation;
 
-import static de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport.FEATURE_NAME_ORDER;
-import static de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelLayerInitializer.BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME;
-import static de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelLayerInitializer.BASIC_DOCUMENT_LABEL_LAYER_NAME;
-import static java.util.Arrays.asList;
-
-import java.util.List;
 import java.util.Optional;
 
-import org.apache.uima.cas.CAS;
 import org.springframework.core.annotation.Order;
 
-import de.tudarmstadt.ukp.clarin.webanno.project.initializers.NamedEntityLayerInitializer;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
-import de.tudarmstadt.ukp.inception.project.api.ProjectInitializer;
 import de.tudarmstadt.ukp.inception.project.api.ProjectService;
-import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.BasicDocumentLabelLayerInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
 import de.tudarmstadt.ukp.inception.testscenarios.config.InceptionTestScenariosAutoConfiguration;
 
@@ -52,7 +42,7 @@ import de.tudarmstadt.ukp.inception.testscenarios.config.InceptionTestScenariosA
  */
 @Order(9000)
 public class CurationDocumentMetadataScenarioInitializer
-    extends CurationScenarioInitializer_ImplBase
+    extends CurationDocumentMetadataScenarioInitializer_ImplBase
 {
     public CurationDocumentMetadataScenarioInitializer(DocumentService aDocumentService,
             ProjectService aProjectService, UserDao aUserService,
@@ -88,31 +78,9 @@ public class CurationDocumentMetadataScenarioInitializer
                 **scenario-annotator-1** chose `Label 1`, **scenario-annotator-2** `Label 2`.""");
     }
 
-    /**
-     * Two documents, so that a choice made while curating one document - such as the annotator
-     * selection in the curation sidebar - can be checked against the first opening of the other.
-     */
     @Override
-    protected List<String> listDocuments()
+    protected String getLabel(int aVariant)
     {
-        return asList("curation-sample.txt", "curation-sample-editable.txt");
-    }
-
-    @Override
-    public List<Class<? extends ProjectInitializer>> getDependencies()
-    {
-        return asList(NamedEntityLayerInitializer.class, BasicDocumentLabelLayerInitializer.class);
-    }
-
-    @Override
-    protected void annotateVariant(CAS aCas, int aVariant)
-    {
-        var type = aCas.getTypeSystem().getType(BASIC_DOCUMENT_LABEL_LAYER_NAME);
-        var label = aCas.createFS(type);
-        label.setStringValue(type.getFeatureByBaseName(BASIC_DOCUMENT_LABEL_LABEL_FEATURE_NAME),
-                "Label " + aVariant);
-        // The only label in the CAS - the editor numbers labels from 1 when it creates them
-        label.setIntValue(type.getFeatureByBaseName(FEATURE_NAME_ORDER), 1);
-        aCas.addFsToIndexes(label);
+        return "Label " + aVariant;
     }
 }
