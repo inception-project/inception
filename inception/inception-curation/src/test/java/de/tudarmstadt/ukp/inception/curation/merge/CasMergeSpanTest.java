@@ -98,6 +98,27 @@ class CasMergeSpanTest
     }
 
     @Test
+    void thatUncheckedFailureToCopyFeaturesLeavesNoPartialSpan() throws Exception
+    {
+        doThrow(new IllegalStateException("Unexpected failure")) //
+                .when(schemaService).createMissingTag(any(), eq("BADTAG"));
+
+        var sourceCas = createCas();
+        var sourceFS = createNEAnno(sourceCas, "BADTAG", 0, 0);
+
+        var targetCas = createCas();
+        createToken(targetCas, 0, 0);
+
+        assertThatExceptionOfType(IllegalStateException.class) //
+                .isThrownBy(() -> sut.mergeSpanAnnotation(document, DUMMY_USER, neLayer, targetCas,
+                        sourceFS));
+
+        assertThat(targetCas.select(NamedEntity.class).asList()) //
+                .as("No partial span annotation is left behind after a failed feature copy") //
+                .isEmpty();
+    }
+
+    @Test
     void simpleCopyToSameExistingAnnoTest() throws Exception
     {
         var sourceCas = createCas();
