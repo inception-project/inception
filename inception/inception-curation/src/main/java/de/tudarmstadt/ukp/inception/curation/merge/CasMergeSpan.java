@@ -73,7 +73,7 @@ class CasMergeSpan
                 copyFeatures(aContext, aDocument, aTargetDataOwner, adapter, mergedSpan, aSourceFs);
                 mergedSpanAddr = getAddr(mergedSpan);
             }
-            catch (AnnotationException e) {
+            catch (AnnotationException | RuntimeException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
                 adapter.delete(aDocument, aTargetDataOwner, aTargetCas, VID.of(mergedSpan));

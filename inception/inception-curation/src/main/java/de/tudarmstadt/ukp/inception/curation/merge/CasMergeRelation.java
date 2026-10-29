@@ -103,7 +103,7 @@ class CasMergeRelation
                 copyFeatures(aContext, aDocument, aTargetDataOwner, relationAdapter, mergedRelation,
                         aSourceFs);
             }
-            catch (AnnotationException e) {
+            catch (AnnotationException | RuntimeException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
                 relationAdapter.delete(aDocument, aTargetDataOwner, aTargetCas,
