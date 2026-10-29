@@ -121,6 +121,33 @@ public class CasMergeRelationTest
     }
 
     @Test
+    void thatUncheckedFailureToCopyFeaturesLeavesNoPartialRelation() throws Exception
+    {
+        doThrow(new IllegalStateException("Unexpected failure")) //
+                .when(schemaService).createMissingTag(any(), eq("BADTAG"));
+
+        var srcToken = createTokenAndOptionalPos(sourceCas, 0, 0, "NN");
+        var tgtToken = createTokenAndOptionalPos(sourceCas, 1, 1, "NN");
+        var clickedFs = buildAnnotation(sourceCas, Dependency.class) //
+                .at(tgtToken.getBegin(), tgtToken.getEnd()) //
+                .withFeature(FEAT_REL_SOURCE, srcToken) //
+                .withFeature(FEAT_REL_TARGET, tgtToken) //
+                .withFeature(depFeature.getName(), "BADTAG") //
+                .buildAndAddToIndexes();
+
+        createTokenAndOptionalPos(targetCas, 0, 0, "NN");
+        createTokenAndOptionalPos(targetCas, 1, 1, "NN");
+
+        assertThatExceptionOfType(IllegalStateException.class) //
+                .isThrownBy(() -> sut.mergeRelationAnnotation(document, DUMMY_USER, depLayer,
+                        targetCas, clickedFs));
+
+        assertThat(targetCas.select(Dependency.class).asList()) //
+                .as("No partial relation annotation is left behind after a failed feature copy") //
+                .isEmpty();
+    }
+
+    @Test
     public void simpleCopyRelationToStackedTargetsTest() throws Exception
     {
         // Set up source

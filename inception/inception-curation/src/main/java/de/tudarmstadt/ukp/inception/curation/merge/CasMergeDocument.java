@@ -94,7 +94,7 @@ class CasMergeDocument
                 copyFeatures(aContext, aDocument, aTargetDataOwner, aAdapter, mergedAnn, aSourceFs);
                 mergedSpanAddr = getAddr(mergedAnn);
             }
-            catch (AnnotationException e) {
+            catch (AnnotationException | RuntimeException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
                 aAdapter.delete(aDocument, aTargetDataOwner, aTargetCas, VID.of(mergedAnn));
