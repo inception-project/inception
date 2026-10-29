@@ -54,25 +54,50 @@ class CasMergeDocument
                     "The annotation already exists in the target document.");
         }
 
+        // A silenced adapter publishes nothing anyway - batching would only make it build the
+        // events and throw them away
+        if (adapter.isSilenced()) {
+            return mergeIntoTarget(aContext, aDocument, aTargetDataOwner, adapter, allowStacking,
+                    aTargetCas, aSourceFs);
+        }
+
+        // Publish the events of the merge only if it succeeds - the events of a failed merge must
+        // not end up e.g. in the undo history. Mind that a failed merge only removes an annotation
+        // it created; when it updates an existing annotation, values copied before the failure
+        // remain set.
+        try (var eventBatch = adapter.batchEvents()) {
+            var result = mergeIntoTarget(aContext, aDocument, aTargetDataOwner, adapter,
+                    allowStacking, aTargetCas, aSourceFs);
+            eventBatch.commit();
+            return result;
+        }
+    }
+
+    private static CasMergeOperationResult mergeIntoTarget(CasMergeContext aContext,
+            SourceDocument aDocument, String aTargetDataOwner,
+            DocumentMetadataLayerAdapter aAdapter, boolean aAllowStacking, CAS aTargetCas,
+            AnnotationBase aSourceFs)
+        throws AnnotationException
+    {
         // a) if stacking allowed add this new annotation to the merge view
-        var targetType = adapter.getAnnotationType(aTargetCas).get();
+        var targetType = aAdapter.getAnnotationType(aTargetCas).get();
         var existingAnnos = aTargetCas.select(targetType);
-        if (existingAnnos.isEmpty() || allowStacking) {
+        if (existingAnnos.isEmpty() || aAllowStacking) {
             // Create the annotation via the adapter - this also takes care of attaching to an
             // annotation if necessary
-            var mergedAnn = adapter.handle(CreateDocumentAnnotationRequest.builder() //
+            var mergedAnn = aAdapter.handle(CreateDocumentAnnotationRequest.builder() //
                     .withDocument(aDocument, aTargetDataOwner, aTargetCas) //
                     .build());
 
             var mergedSpanAddr = -1;
             try {
-                copyFeatures(aContext, aDocument, aTargetDataOwner, adapter, mergedAnn, aSourceFs);
+                copyFeatures(aContext, aDocument, aTargetDataOwner, aAdapter, mergedAnn, aSourceFs);
                 mergedSpanAddr = getAddr(mergedAnn);
             }
             catch (AnnotationException e) {
                 // If there was an error while setting the features, then we skip the entire
                 // annotation
-                adapter.delete(aDocument, aTargetDataOwner, aTargetCas, VID.of(mergedAnn));
+                aAdapter.delete(aDocument, aTargetDataOwner, aTargetCas, VID.of(mergedAnn));
                 throw e;
             }
             return new CasMergeOperationResult(CREATED, mergedSpanAddr);
@@ -86,7 +111,7 @@ class CasMergeDocument
         }
         else {
             var annoToUpdate = existingAnnos.get(0);
-            copyFeatures(aContext, aDocument, aTargetDataOwner, adapter, annoToUpdate, aSourceFs);
+            copyFeatures(aContext, aDocument, aTargetDataOwner, aAdapter, annoToUpdate, aSourceFs);
             var mergedSpanAddr = getAddr(annoToUpdate);
             return new CasMergeOperationResult(UPDATED, mergedSpanAddr);
         }

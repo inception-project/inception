@@ -30,6 +30,7 @@ import de.tudarmstadt.ukp.clarin.webanno.api.export.DocumentImportExportService;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
+import de.tudarmstadt.ukp.inception.curation.api.DocumentAnnotationMergeService;
 import de.tudarmstadt.ukp.inception.curation.export.CuratedDocumentsExporter;
 import de.tudarmstadt.ukp.inception.curation.export.CurationWorkflowExporter;
 import de.tudarmstadt.ukp.inception.curation.merge.strategy.DefaultMergeStrategyFactory;
@@ -47,6 +48,7 @@ import de.tudarmstadt.ukp.inception.curation.service.CurationMergeServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.service.CurationService;
 import de.tudarmstadt.ukp.inception.curation.service.CurationServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.service.CurationSessionServiceImpl;
+import de.tudarmstadt.ukp.inception.curation.service.DocumentAnnotationMergeServiceImpl;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsMenuItem;
 import de.tudarmstadt.ukp.inception.curation.settings.CurationProjectSettingsPanelFactory;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
@@ -103,6 +105,15 @@ public class CurationServiceAutoConfiguration
             ApplicationEventPublisher aApplicationEventPublisher)
     {
         return new CurationMergeServiceImpl(aAnnotationService, aDiffAdapterRegistry,
+                aApplicationEventPublisher);
+    }
+
+    @Bean
+    public DocumentAnnotationMergeService documentAnnotationMergeService(
+            AnnotationSchemaService aAnnotationService,
+            ApplicationEventPublisher aApplicationEventPublisher)
+    {
+        return new DocumentAnnotationMergeServiceImpl(aAnnotationService,
                 aApplicationEventPublisher);
     }
 

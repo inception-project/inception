@@ -34,6 +34,7 @@ import de.tudarmstadt.ukp.inception.project.initializers.doclabeling.config.Ince
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.testscenarios.accounts.ScenarioAccountService;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationAnonymousScenarioInitializer;
+import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationDocumentMetadataOutsideTagsetScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationDocumentMetadataScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationMixedEditabilityScenarioInitializer;
 import de.tudarmstadt.ukp.inception.testscenarios.curation.CurationScenarioInitializer;
@@ -112,6 +113,17 @@ public class InceptionTestScenariosAutoConfiguration
     {
         return new CurationDocumentMetadataScenarioInitializer(aDocumentService, aProjectService,
                 aUserService, aScenarioAccountService);
+    }
+
+    // The document label layer only exists if document metadata support is enabled
+    @ConditionalOnBean(BasicDocumentLabelLayerInitializer.class)
+    @Bean
+    public CurationDocumentMetadataOutsideTagsetScenarioInitializer curationDocumentMetadataOutsideTagsetScenarioInitializer(
+            DocumentService aDocumentService, ProjectService aProjectService, UserDao aUserService,
+            ScenarioAccountService aScenarioAccountService)
+    {
+        return new CurationDocumentMetadataOutsideTagsetScenarioInitializer(aDocumentService,
+                aProjectService, aUserService, aScenarioAccountService);
     }
 
     @Bean

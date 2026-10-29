@@ -64,7 +64,6 @@ import de.tudarmstadt.ukp.inception.rendering.editorstate.AnnotationException;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.IllegalFeatureValueException;
 import de.tudarmstadt.ukp.inception.schema.api.adapter.TypeAdapter;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.support.logging.LogMessage;
 import de.tudarmstadt.ukp.inception.support.uima.WebAnnoCasUtil;
 
@@ -628,9 +627,8 @@ public class CasMerge
     {
         // Cache the feature list instead of hammering the database
         var features = aContext.listSupportedFeatures(aAdapter.getLayer());
-        var sourceFsType = aAdapter.getAnnotationType(aSourceFs.getCAS())
-                .orElseThrow(() -> new IllegalStateException("Source CAS does not define the type ["
-                        + aAdapter.getAnnotationTypeName() + "]"));
+        aAdapter.getAnnotationType(aSourceFs.getCAS()).orElseThrow(() -> new IllegalStateException(
+                "Source CAS does not define the type [" + aAdapter.getAnnotationTypeName() + "]"));
         try (var featureUpdateCtx = aAdapter.updateFeatureValues(aDocument, aTargetDataOwner,
                 aTargetFS.getCAS(), getAddr(aTargetFS))) {
             for (var feature : features) {
@@ -638,16 +636,14 @@ public class CasMerge
                     continue;
                 }
 
-                FeatureUtil.getFeature(sourceFsType, feature)
-                        .orElseThrow(() -> new IllegalStateException("Source CAS type ["
-                                + sourceFsType.getName() + "] does not define a feature named ["
-                                + feature.getName() + "]"));
-
                 if (!aAdapter.getFeatureSupport(feature.getName())
                         .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
                     continue;
                 }
 
+                // If the source CAS has not been upgraded since the feature was added to the layer,
+                // the feature support returns its value for an unset feature - see
+                // FeatureSupport.getNullFeatureValue().
                 var value = aAdapter.getFeatureValue(feature, aSourceFs);
 
                 try {

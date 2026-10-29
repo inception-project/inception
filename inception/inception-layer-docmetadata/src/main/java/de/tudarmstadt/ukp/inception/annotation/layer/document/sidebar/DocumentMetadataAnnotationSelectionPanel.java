@@ -26,7 +26,6 @@ import static de.tudarmstadt.ukp.inception.support.lambda.HtmlElementEvents.CLIC
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.enabledWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhen;
 import static de.tudarmstadt.ukp.inception.support.lambda.LambdaBehavior.visibleWhenNot;
-import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.getAddr;
 import static de.tudarmstadt.ukp.inception.support.uima.ICasUtil.selectFsByAddr;
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
@@ -56,7 +55,6 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.uima.UIMAException;
 import org.apache.uima.cas.CAS;
-import org.apache.uima.cas.FeatureStructure;
 import org.apache.uima.jcas.cas.AnnotationBase;
 import org.apache.wicket.AttributeModifier;
 import org.apache.wicket.Component;
@@ -84,18 +82,16 @@ import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationFeature;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationLayer;
 import de.tudarmstadt.ukp.clarin.webanno.model.AnnotationSet;
 import de.tudarmstadt.ukp.clarin.webanno.model.Project;
-import de.tudarmstadt.ukp.clarin.webanno.model.SourceDocument;
 import de.tudarmstadt.ukp.clarin.webanno.security.UserDao;
 import de.tudarmstadt.ukp.inception.annotation.events.AnnotationEvent;
 import de.tudarmstadt.ukp.inception.annotation.events.FeatureValueUpdatedEvent;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.api.CreateDocumentAnnotationRequest;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerAdapter;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerSupport;
-import de.tudarmstadt.ukp.inception.annotation.layer.document.api.DocumentMetadataLayerTraits;
 import de.tudarmstadt.ukp.inception.annotation.layer.document.api.event.DocumentMetadataEvent;
 import de.tudarmstadt.ukp.inception.curation.api.CurationSessionService;
 import de.tudarmstadt.ukp.inception.curation.api.CurationVID;
 import de.tudarmstadt.ukp.inception.curation.api.DiffAdapterRegistry;
+import de.tudarmstadt.ukp.inception.curation.api.DocumentAnnotationMergeService;
 import de.tudarmstadt.ukp.inception.curation.api.Position;
 import de.tudarmstadt.ukp.inception.documents.api.DocumentService;
 import de.tudarmstadt.ukp.inception.recommendation.api.RecommendationService;
@@ -112,7 +108,6 @@ import de.tudarmstadt.ukp.inception.rendering.selection.EditorContentReplacedEve
 import de.tudarmstadt.ukp.inception.rendering.vmodel.VID;
 import de.tudarmstadt.ukp.inception.schema.api.AnnotationSchemaService;
 import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureSupportRegistry;
-import de.tudarmstadt.ukp.inception.schema.api.feature.FeatureUtil;
 import de.tudarmstadt.ukp.inception.schema.api.feature.TypeUtil;
 import de.tudarmstadt.ukp.inception.schema.api.layer.LayerSupportRegistry;
 import de.tudarmstadt.ukp.inception.support.lambda.LambdaAjaxEventBehavior;
@@ -151,6 +146,7 @@ public class DocumentMetadataAnnotationSelectionPanel
     private @SpringBean RecommendationService recommendationService;
     private @SpringBean CurationSessionService curationSessionService;
     private @SpringBean DiffAdapterRegistry diffAdapterRegistry;
+    private @SpringBean DocumentAnnotationMergeService documentAnnotationMergeService;
     private @SpringBean DocumentService documentService;
     private @SpringBean UserDao userService;
 
@@ -284,7 +280,8 @@ public class DocumentMetadataAnnotationSelectionPanel
         }
 
         var targetCas = aContext.getEditorCas();
-        mergeDocumentMetadataAnnotation(state, aItem.layer, targetCas, sourceAnnotation);
+        documentAnnotationMergeService.mergeDocumentAnnotation(state.getDocument(),
+                state.getUser().getUsername(), aItem.layer, targetCas, sourceAnnotation);
         aContext.getActionHandler().writeEditorCas(targetCas);
         aTarget.add(layersContainer);
         aContext.actionRefreshDocument(aTarget);
@@ -847,98 +844,6 @@ public class DocumentMetadataAnnotationSelectionPanel
     {
         return Objects.equals(aLayer.getName(), aPosition.getType())
                 && !aPosition.isLinkFeaturePosition();
-    }
-
-    private void mergeDocumentMetadataAnnotation(AnnotatorState aState, AnnotationLayer aLayer,
-            CAS aTargetCas, AnnotationBase aSourceAnnotation)
-        throws AnnotationException
-    {
-        var adapter = (DocumentMetadataLayerAdapter) annotationService.getAdapter(aLayer);
-        var document = aState.getDocument();
-        var dataOwner = aState.getUser().getUsername();
-
-        try (var eventBatch = adapter.batchEvents()) {
-            if (existsEquivalent(aTargetCas, adapter, aSourceAnnotation)) {
-                throw new AnnotationException(
-                        "The annotation already exists in the target document.");
-            }
-
-            var allowStacking = !adapter.getTraits(DocumentMetadataLayerTraits.class)
-                    .map(DocumentMetadataLayerTraits::isSingleton).orElse(false);
-
-            var targetType = adapter.getAnnotationType(aTargetCas)
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Target CAS does not define the document metadata type"));
-            var existingAnnotations = aTargetCas.select(targetType).asList();
-
-            AnnotationBase targetAnnotation;
-            var annotationCreated = false;
-            if (existingAnnotations.isEmpty() || allowStacking) {
-                targetAnnotation = adapter.handle(CreateDocumentAnnotationRequest.builder() //
-                        .withDocument(document, dataOwner, aTargetCas) //
-                        .build());
-                annotationCreated = true;
-            }
-            else {
-                targetAnnotation = (AnnotationBase) existingAnnotations.get(0);
-            }
-
-            try {
-                copyCuratableFeatures(document, dataOwner, adapter, targetAnnotation,
-                        aSourceAnnotation);
-            }
-            catch (AnnotationException e) {
-                if (annotationCreated) {
-                    adapter.delete(document, dataOwner, aTargetCas, VID.of(targetAnnotation));
-                }
-                throw e;
-            }
-
-            eventBatch.commit();
-        }
-    }
-
-    private void copyCuratableFeatures(SourceDocument aDocument, String aDataOwner,
-            DocumentMetadataLayerAdapter aAdapter, FeatureStructure aTargetAnnotation,
-            FeatureStructure aSourceAnnotation)
-        throws AnnotationException
-    {
-        try (var ctx = aAdapter.updateFeatureValues(aDocument, aDataOwner,
-                aTargetAnnotation.getCAS(), getAddr(aTargetAnnotation))) {
-            for (var feature : annotationService.listSupportedFeatures(aAdapter.getLayer())) {
-                if (!feature.isCuratable()) {
-                    continue;
-                }
-
-                var sourceType = aAdapter.getAnnotationType(aSourceAnnotation.getCAS())
-                        .orElseThrow(() -> new IllegalStateException(
-                                "Source CAS does not define the document metadata type"));
-                FeatureUtil.getFeature(sourceType, feature)
-                        .orElseThrow(() -> new IllegalStateException("Source CAS type ["
-                                + sourceType.getName() + "] does not define a feature named ["
-                                + feature.getName() + "]"));
-
-                if (!aAdapter.getFeatureSupport(feature.getName())
-                        .map(fs -> fs.isCopyOnCurationMerge(feature)).orElse(false)) {
-                    continue;
-                }
-
-                var value = aAdapter.getFeatureValue(feature, aSourceAnnotation);
-                ctx.setFeatureValue(feature, value);
-            }
-        }
-    }
-
-    private boolean existsEquivalent(CAS aTargetCas, DocumentMetadataLayerAdapter aAdapter,
-            AnnotationBase aSourceAnnotation)
-    {
-        var targetType = aAdapter.getAnnotationType(aTargetCas);
-        if (targetType.isEmpty()) {
-            return false;
-        }
-
-        return aTargetCas.<AnnotationBase> select(targetType.get())
-                .anyMatch(fs -> aAdapter.isEquivalentAnnotation(fs, aSourceAnnotation));
     }
 
     private boolean existsAnyAnnotation(CAS aTargetCas, DocumentMetadataLayerAdapter aAdapter)
